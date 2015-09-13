@@ -16,4 +16,13 @@ class CacheAnnotationClass
     {
         return true;
     }
+
+    /**
+     * @Cache
+     */
+    public function aMethodWithParameters(Cache $param1, $param2)
+    {
+        return true;
+    }
+
 }

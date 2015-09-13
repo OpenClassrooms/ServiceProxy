@@ -9,5 +9,5 @@ use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
  */
 interface ServiceProxyCacheInterface
 {
-    public function setCacheProvider(CacheProviderDecorator $cacheProvider);
+    public function proxy_setCacheProvider(CacheProviderDecorator $cacheProvider);
 }

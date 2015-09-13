@@ -58,7 +58,7 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
      */
     public function generateProperties()
     {
-        return [new PropertyGenerator('cacheProvider', null, PropertyGenerator::FLAG_PRIVATE)];
+        return [new PropertyGenerator(self::PROPERTY_PREFIX.'cacheProvider', null, PropertyGenerator::FLAG_PRIVATE)];
     }
 
     /**
@@ -68,7 +68,7 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
     {
         return [
             new MethodGenerator(
-                'setCacheProvider',
+                self::METHOD_PREFIX.'setCacheProvider',
                 [
                     [
                         'name' => 'cacheProvider',
@@ -76,7 +76,7 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
                     ],
                 ],
                 MethodGenerator::FLAG_PUBLIC,
-                '$this->cacheProvider = $cacheProvider;'
+                '$this->'.self::PROPERTY_PREFIX.'cacheProvider = $cacheProvider;'
             ),
         ];
     }

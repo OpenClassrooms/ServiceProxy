@@ -10,6 +10,8 @@ use ProxyManager\ProxyGenerator\Assertion\CanProxyAssertion;
 use ProxyManager\ProxyGenerator\ProxyGeneratorInterface;
 use ReflectionClass;
 use Zend\Code\Generator\ClassGenerator;
+use Zend\Code\Generator\MethodGenerator;
+use Zend\Code\Reflection\MethodReflection;
 
 /**
  * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
@@ -44,7 +46,13 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
         $interfacesToAdd = ['OpenClassrooms\\ServiceProxy\\ServiceProxyInterface'];
         $propertiesToAdd = [];
         $methodsToAdd = [];
+        $preSource = '';
+        $postSource = '';
+        $exceptionSource = '';
+
         foreach ($methodsAnnotations as $methodAnnotation) {
+            /** @var \ReflectionMethod $method */
+            $method = $methodAnnotation['method'];
             foreach ($methodAnnotation['annotations'] as $annotation) {
                 if ($annotation instanceof Cache) {
                     $interfacesToAdd['cache'] = 'OpenClassrooms\\ServiceProxy\\ServiceProxyCacheInterface';
@@ -53,17 +61,24 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
                             ->create()
                             ->withAnnotation($annotation)
                             ->withClass($originalClass)
-                            ->withMethod($methodAnnotation['method'])
+                            ->withMethod($method)
                             ->build()
                     );
-                    foreach ($response->getMethods() as $methodToAdd) {
-                        $methodsToAdd[$methodToAdd->getName()] = $methodToAdd;
-                    }
-                    foreach ($response->getProperties() as $propertyToAdd) {
-                        $propertiesToAdd[] = $propertyToAdd;
-                    }
                 }
+
+                foreach ($response->getMethods() as $methodToAdd) {
+                    $methodsToAdd[$methodToAdd->getName()] = $methodToAdd;
+                }
+                foreach ($response->getProperties() as $propertyToAdd) {
+                    $propertiesToAdd[$propertyToAdd->getName()] = $propertyToAdd;
+                }
+                $preSource .= $response->getPreSource();
+                $postSource .= $response->getPostSource();
+                $exceptionSource .= $response->getExceptionSource();
             }
+            $classGenerator->addMethodFromGenerator(
+                $this->generateProxyMethod($method, $preSource, $postSource, $exceptionSource)
+            );
         }
         $classGenerator->setImplementedInterfaces($interfacesToAdd);
         $classGenerator->addProperties($propertiesToAdd);
@@ -91,6 +106,35 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
         }
 
         return $methodsAnnotations;
+    }
+
+    /**
+     * @return MethodGenerator
+     */
+    private function generateProxyMethod(\ReflectionMethod $method, $preSource, $postSource, $exceptionSource)
+    {
+        $methodReflection = new MethodReflection($method->getDeclaringClass()->getName(), $method->getName());
+        $methodGenerator = MethodGenerator::fromReflection($methodReflection);
+
+        $parametersString = '(';
+        $i = count($method->getParameters());
+        foreach ($method->getParameters() as $parameter) {
+            $parametersString .= $parameter->getName().(--$i > 0 ? "," : "");
+        }
+        $parametersString .= ')';
+        $methodGenerator->setBody(
+            "try{\n"
+            .$preSource."\n"
+            ."\$data = parent::".$method->getName().$parametersString.";\n"
+            .$postSource."\n"
+            ."return \$data;\n"
+            ."} catch(\\Exception \$e){\n"
+            .$exceptionSource."\n"
+            ."throw \$e;\n"
+            ."};"
+        );
+
+        return $methodGenerator;
     }
 
     public function setAnnotationReader(AnnotationReader $annotationReader)

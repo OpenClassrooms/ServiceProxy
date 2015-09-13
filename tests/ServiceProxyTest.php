@@ -90,7 +90,7 @@ trait ServiceProxyTest
         Assert::assertInstanceOf('OpenClassrooms\ServiceProxy\ServiceProxyCacheInterface', $proxy);
         Assert::assertAttributeInstanceOf(
             'OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator',
-            'cacheProvider',
+            'proxy_cacheProvider',
             $proxy
         );
     }

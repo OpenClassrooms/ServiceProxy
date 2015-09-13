@@ -10,6 +10,10 @@ use OpenClassrooms\ServiceProxy\Proxy\Strategy\Response\ServiceProxyStrategyResp
  */
 interface ServiceProxyStrategyInterface
 {
+    const METHOD_PREFIX = 'proxy_';
+
+    const PROPERTY_PREFIX = 'proxy_';
+
     /**
      * @return ServiceProxyStrategyResponseInterface
      */

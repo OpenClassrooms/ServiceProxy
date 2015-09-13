@@ -28,7 +28,7 @@ class ServiceProxyFactory implements ServiceProxyFactoryInterface
         $proxy = $this->createSimpleProxy($class);
 
         if ($proxy instanceof ServiceProxyCacheInterface) {
-            $proxy->setCacheProvider($this->cacheProvider);
+            $proxy->proxy_setCacheProvider($this->cacheProvider);
         }
 
         return $proxy;
