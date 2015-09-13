@@ -13,4 +13,14 @@ interface ServiceProxyStrategyRequestInterface
      * @return Cache
      */
     public function getAnnotation();
+
+    /**
+     * @return \ReflectionClass
+     */
+    public function getClass();
+
+    /**
+     * @return \ReflectionMethod
+     */
+    public function getMethod();
 }

@@ -25,9 +25,19 @@ class ServiceProxyStrategyResponseBuilder implements ServiceProxyStrategyRespons
     /**
      * @inheritdoc
      */
-    public function withPreSource($preSource)
+    public function withExceptionSource($exceptionSource)
     {
-        $this->response->preSource = $preSource;
+        $this->response->exceptionSource = $exceptionSource;
+
+        return $this;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function withMethods(array $methods)
+    {
+        $this->response->methods = $methods;
 
         return $this;
     }
@@ -45,19 +55,19 @@ class ServiceProxyStrategyResponseBuilder implements ServiceProxyStrategyRespons
     /**
      * @inheritdoc
      */
-    public function withExceptionSource($exceptionSource)
+    public function withPreSource($preSource)
     {
-        $this->response->exceptionSource = $exceptionSource;
+        $this->response->preSource = $preSource;
 
         return $this;
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
-    public function withMethods(array $methods)
+    public function withProperties(array $properties)
     {
-        $this->response->methods = $methods;
+        $this->response->properties = $properties;
 
         return $this;
     }

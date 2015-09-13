@@ -35,9 +35,28 @@ class ServiceProxyStrategyRequestBuilder implements ServiceProxyStrategyRequestB
     /**
      * @inheritdoc
      */
+    public function withClass(\ReflectionClass $class)
+    {
+        $this->request->class = $class;
+
+        return $this;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function withMethod(\ReflectionMethod $method)
+    {
+        $this->request->method = $method;
+
+        return $this;
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function build()
     {
         return $this->request;
     }
 }
-

@@ -2,6 +2,9 @@
 
 namespace OpenClassrooms\ServiceProxy\Proxy\Strategy\Response;
 
+use Zend\Code\Generator\MethodGenerator;
+use Zend\Code\Generator\PropertyGenerator;
+
 /**
  * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
  */
@@ -10,7 +13,12 @@ class ServiceProxyStrategyResponse implements ServiceProxyStrategyResponseInterf
     /**
      * @var string
      */
-    public $preSource;
+    public $exceptionSource;
+
+    /**
+     * @var MethodGenerator[]
+     */
+    public $methods = [];
 
     /**
      * @var string
@@ -20,12 +28,12 @@ class ServiceProxyStrategyResponse implements ServiceProxyStrategyResponseInterf
     /**
      * @var string
      */
-    public $exceptionSource;
+    public $preSource;
 
     /**
-     * @var array
+     * @var PropertyGenerator[]
      */
-    public $methods = [];
+    public $properties = [];
 
     /**
      * @inheritdoc
@@ -49,6 +57,14 @@ class ServiceProxyStrategyResponse implements ServiceProxyStrategyResponseInterf
     public function getExceptionSource()
     {
         return $this->exceptionSource;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getProperties()
+    {
+        return $this->properties;
     }
 
     /**

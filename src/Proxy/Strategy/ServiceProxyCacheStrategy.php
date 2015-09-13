@@ -6,6 +6,7 @@ use OpenClassrooms\ServiceProxy\Annotations\Cache;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\Request\ServiceProxyStrategyRequestInterface;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\Response\ServiceProxyStrategyResponseBuilderInterface;
 use Zend\Code\Generator\MethodGenerator;
+use Zend\Code\Generator\PropertyGenerator;
 
 /**
  * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
@@ -26,6 +27,7 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
             ->create()
             ->withPreSource($this->generatePreSource($request->getAnnotation()))
             ->withPostSource($this->generatePostSource($request->getAnnotation()))
+            ->withProperties($this->generateProperties())
             ->withMethods($this->generateMethods())
             ->build();
     }
@@ -35,6 +37,11 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
      */
     private function generatePreSource(Cache $annotation)
     {
+        //        $class = new \ReflectionClass('');
+//        $method = new \ReflectionMethod('', '');
+//        $cacheId = md5($class->getName().'::'.$method->getName());
+
+//        md5(get_class($useCase).serialize($useCaseRequest));
         return '';
     }
 
@@ -47,17 +54,36 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
     }
 
     /**
+     * @return PropertyGenerator[]
+     */
+    public function generateProperties()
+    {
+        return [new PropertyGenerator('cacheProvider', null, PropertyGenerator::FLAG_PRIVATE)];
+    }
+
+    /**
      * @return MethodGenerator[]
      */
     public function generateMethods()
     {
-        return array();
+        return [
+            new MethodGenerator(
+                'setCacheProvider',
+                [
+                    [
+                        'name' => 'cacheProvider',
+                        'type' => '\\OpenClassrooms\\DoctrineCacheExtension\\CacheProviderDecorator',
+                    ],
+                ],
+                MethodGenerator::FLAG_PUBLIC,
+                '$this->cacheProvider = $cacheProvider;'
+            ),
+        ];
     }
 
     public function setServiceProxyStrategyResponseBuilder(
         ServiceProxyStrategyResponseBuilderInterface $serviceProxyStrategyResponseBuilder
-    )
-    {
+    ) {
         $this->serviceProxyStrategyResponseBuilder = $serviceProxyStrategyResponseBuilder;
     }
 }

@@ -18,6 +18,16 @@ interface ServiceProxyStrategyRequestBuilderInterface
     public function withAnnotation($annotation);
 
     /**
+     * @return ServiceProxyStrategyRequestBuilderInterface
+     */
+    public function withClass(\ReflectionClass $class);
+
+    /**
+     * @return ServiceProxyStrategyRequestBuilderInterface
+     */
+    public function withMethod(\ReflectionMethod $method);
+
+    /**
      * @return ServiceProxyStrategyRequestInterface
      */
     public function build();

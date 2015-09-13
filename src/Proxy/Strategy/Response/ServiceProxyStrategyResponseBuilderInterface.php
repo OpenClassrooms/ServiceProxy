@@ -15,7 +15,12 @@ interface ServiceProxyStrategyResponseBuilderInterface
     /**
      * @return ServiceProxyStrategyResponseBuilderInterface
      */
-    public function withPreSource($preSource);
+    public function withExceptionSource($exceptionSource);
+
+    /**
+     * @return ServiceProxyStrategyResponseBuilderInterface
+     */
+    public function withMethods(array $methods);
 
     /**
      * @return ServiceProxyStrategyResponseBuilderInterface
@@ -25,12 +30,12 @@ interface ServiceProxyStrategyResponseBuilderInterface
     /**
      * @return ServiceProxyStrategyResponseBuilderInterface
      */
-    public function withExceptionSource($exceptionSource);
+    public function withPreSource($preSource);
 
     /**
      * @return ServiceProxyStrategyResponseBuilderInterface
      */
-    public function withMethods(array $methods);
+    public function withProperties(array $properties);
 
     /**
      * @return ServiceProxyStrategyResponseInterface

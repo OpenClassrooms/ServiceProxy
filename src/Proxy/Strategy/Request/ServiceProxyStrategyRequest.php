@@ -15,10 +15,36 @@ class ServiceProxyStrategyRequest implements ServiceProxyStrategyRequestInterfac
     public $annotation;
 
     /**
+     * @var \ReflectionClass
+     */
+    public $class;
+
+    /**
+     * @var \ReflectionMethod
+     */
+    public $method;
+
+    /**
      * @inheritDoc
      */
     public function getAnnotation()
     {
         return $this->annotation;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getClass()
+    {
+        return $this->class;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getMethod()
+    {
+        return $this->method;
     }
 }

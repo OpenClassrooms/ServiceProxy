@@ -10,8 +10,6 @@ use ProxyManager\ProxyGenerator\Assertion\CanProxyAssertion;
 use ProxyManager\ProxyGenerator\ProxyGeneratorInterface;
 use ReflectionClass;
 use Zend\Code\Generator\ClassGenerator;
-use Zend\Code\Generator\MethodGenerator;
-use Zend\Code\Generator\PropertyGenerator;
 
 /**
  * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
@@ -39,67 +37,60 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
     public function generate(ReflectionClass $originalClass, ClassGenerator $classGenerator)
     {
         CanProxyAssertion::assertClassCanBeProxied($originalClass);
-
-        $interfaces = ['OpenClassrooms\\ServiceProxy\\ServiceProxyInterface'];
         $classGenerator->setExtendedClass($originalClass->getName());
 
-        list($methodsAnnotations, $annotationTypes) = $this->getMethodsAnnotations($originalClass);
-        if (isset($annotationTypes['Cache'])) {
-            $this->buildClassCacheStrategy($classGenerator);
-            $interfaces[] = 'OpenClassrooms\\ServiceProxy\\ServiceProxyCacheInterface';
-        }
-        foreach ($methodsAnnotations as $method => $annotations) {
-            foreach ($annotations as $annotation) {
+        $methodsAnnotations = $this->getMethodsAnnotations($originalClass);
+
+        $interfacesToAdd = ['OpenClassrooms\\ServiceProxy\\ServiceProxyInterface'];
+        $propertiesToAdd = [];
+        $methodsToAdd = [];
+        foreach ($methodsAnnotations as $methodAnnotation) {
+            foreach ($methodAnnotation['annotations'] as $annotation) {
                 if ($annotation instanceof Cache) {
+                    $interfacesToAdd['cache'] = 'OpenClassrooms\\ServiceProxy\\ServiceProxyCacheInterface';
                     $response = $this->cacheStrategy->execute(
                         $this->serviceProxyStrategyRequestBuilder
                             ->create()
                             ->withAnnotation($annotation)
+                            ->withClass($originalClass)
+                            ->withMethod($methodAnnotation['method'])
                             ->build()
                     );
-                    $classGenerator->addMethods($response->getMethods());
+                    foreach ($response->getMethods() as $methodToAdd) {
+                        $methodsToAdd[$methodToAdd->getName()] = $methodToAdd;
+                    }
+                    foreach ($response->getProperties() as $propertyToAdd) {
+                        $propertiesToAdd[] = $propertyToAdd;
+                    }
                 }
             }
         }
-
-        $classGenerator->setImplementedInterfaces($interfaces);
+        $classGenerator->setImplementedInterfaces($interfacesToAdd);
+        $classGenerator->addProperties($propertiesToAdd);
+        $classGenerator->addMethods($methodsToAdd);
     }
 
     /**
-     * @return array
+     * @return [][]
      */
     private function getMethodsAnnotations(ReflectionClass $originalClass)
     {
-        $methods = $originalClass->getMethods(\ReflectionMethod::IS_PUBLIC);
         $methodsAnnotations = [];
-        $annotationTypes = [];
+
+        $methods = $originalClass->getMethods(\ReflectionMethod::IS_PUBLIC);
         foreach ($methods as $method) {
             $methodAnnotations = $this->annotationReader->getMethodAnnotations($method);
-            foreach ($methodAnnotations as $annotation) {
-                if (!isset($annotationTypes['Cache']) && $annotation instanceof Cache) {
-                    $annotationTypes['Cache'] = true;
+            if (!empty($methodAnnotations)) {
+                $methodsAnnotations[$method->getName()] = ['method' => $method, 'annotations' => []];
+                foreach ($methodAnnotations as $annotation) {
+                    if ($annotation instanceof Cache) {
+                        $methodsAnnotations[$method->getName()]['annotations'][] = $annotation;
+                    }
                 }
             }
-            $methodsAnnotations[$method->getName()] = $methodAnnotations;
         }
 
-        return array($methodsAnnotations, $annotationTypes);
-    }
-
-    private function buildClassCacheStrategy(ClassGenerator $classGenerator)
-    {
-        $classGenerator->addProperty('cacheProvider', null, PropertyGenerator::FLAG_PRIVATE);
-        $classGenerator->addMethod(
-            'setCacheProvider',
-            [
-                [
-                    'name' => 'cacheProvider',
-                    'type' => '\\OpenClassrooms\\DoctrineCacheExtension\\CacheProviderDecorator'
-                ]
-            ],
-            MethodGenerator::FLAG_PUBLIC,
-            '$this->cacheProvider = $cacheProvider;'
-        );
+        return $methodsAnnotations;
     }
 
     public function setAnnotationReader(AnnotationReader $annotationReader)
@@ -114,8 +105,7 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
 
     public function setServiceProxyStrategyRequestBuilder(
         ServiceProxyStrategyRequestBuilderInterface $serviceProxyStrategyRequestBuilder
-    )
-    {
+    ) {
         $this->serviceProxyStrategyRequestBuilder = $serviceProxyStrategyRequestBuilder;
     }
 }

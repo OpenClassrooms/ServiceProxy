@@ -7,5 +7,4 @@ namespace OpenClassrooms\ServiceProxy;
  */
 interface ServiceProxyInterface
 {
-
 }
