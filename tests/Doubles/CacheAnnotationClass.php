@@ -24,5 +24,4 @@ class CacheAnnotationClass
     {
         return true;
     }
-
 }

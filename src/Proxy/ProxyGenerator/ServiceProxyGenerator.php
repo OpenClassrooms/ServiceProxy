@@ -119,7 +119,7 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
         $parametersString = '(';
         $i = count($method->getParameters());
         foreach ($method->getParameters() as $parameter) {
-            $parametersString .= $parameter->getName().(--$i > 0 ? "," : "");
+            $parametersString .= $parameter->getName().(--$i > 0 ? ',' : '');
         }
         $parametersString .= ')';
         $methodGenerator->setBody(
@@ -131,7 +131,7 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
             ."} catch(\\Exception \$e){\n"
             .$exceptionSource."\n"
             ."throw \$e;\n"
-            ."};"
+            .'};'
         );
 
         return $methodGenerator;

@@ -7,5 +7,4 @@ namespace OpenClassrooms\ServiceProxy\Tests\Doubles\DifferentNamespace;
  */
 class AClass
 {
-
 }
