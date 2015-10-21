@@ -15,22 +15,6 @@ class CacheAnnotationClass
     /**
      * @Cache
      */
-    public function aMethod()
-    {
-        return true;
-    }
-
-    /**
-     * @Cache
-     */
-    public function aMethodWithParameters(ParameterClassStub $param1, $param2)
-    {
-        return true;
-    }
-
-    /**
-     * @Cache
-     */
     public function cacheMethodWithException()
     {
         throw new \Exception();
@@ -39,7 +23,15 @@ class CacheAnnotationClass
     /**
      * @Cache
      */
-    public function onlyCacheMethod()
+    public function aMethod()
+    {
+        return true;
+    }
+
+    /**
+     * @Cache
+     */
+    public function onlyCache()
     {
         return self::DATA;
     }
@@ -54,9 +46,27 @@ class CacheAnnotationClass
     }
 
     /**
+     * @Cache(id="'test'")
+     * @return string
+     */
+    public function cacheWithId()
+    {
+        return self::DATA;
+    }
+
+    /**
+     * @Cache(id="'test' ~ param1.publicField")
+     * @return string
+     */
+    public function cacheWithIdAndParameters(ParameterClassStub $param1, $param2)
+    {
+        return self::DATA;
+    }
+
+    /**
      * @Cache(namespace="'test-namespace'")
      */
-    public function cacheWithNamespaceMethod()
+    public function cacheWithNamespace()
     {
         return self::DATA;
     }
@@ -64,7 +74,7 @@ class CacheAnnotationClass
     /**
      * @Cache(namespace="'test-namespace' ~ param1.publicField")
      */
-    public function cacheWithNamespaceAndParametersMethod(ParameterClassStub $param1, $param2)
+    public function cacheWithNamespaceAndParameters(ParameterClassStub $param1, $param2)
     {
         return self::DATA;
     }

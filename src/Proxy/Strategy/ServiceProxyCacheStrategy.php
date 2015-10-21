@@ -53,12 +53,7 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
         $source = '';
         $annotation = $request->getAnnotation();
         if (null !== $annotation->getNamespace()) {
-            $parameters = $request->getMethod()->getParameters();
-            $parametersLanguage = '[';
-            foreach ($parameters as $parameter) {
-                $parametersLanguage .= "'".$parameter->getName()."' => \$".$parameter->getName().',';
-            }
-            $parametersLanguage .= ']';
+            $parametersLanguage = $this->getParametersLanguage($request);
             $source = "\$expressionLanguage = new \\Symfony\\Component\\ExpressionLanguage\\ExpressionLanguage();\n"
                 .'$namespace = md5($expressionLanguage->evaluate("'
                 .$annotation->getNamespace().'",'.$parametersLanguage."));\n";
@@ -70,16 +65,38 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
     /**
      * @return string
      */
+    private function getParametersLanguage(ServiceProxyStrategyRequestInterface $request)
+    {
+        $parameters = $request->getMethod()->getParameters();
+        $parametersLanguage = '[';
+        foreach ($parameters as $parameter) {
+            $parametersLanguage .= "'".$parameter->getName()."' => \$".$parameter->getName().',';
+        }
+        $parametersLanguage .= ']';
+
+        return $parametersLanguage;
+    }
+
+    /**
+     * @return string
+     */
     private function generateProxyId(ServiceProxyStrategyRequestInterface $request)
     {
-        $source = "\$proxy_id = md5('".$request->getClass()->getName().'::'.$request->getMethod()->getName()."'";
-        $parameters = $request->getMethod()->getParameters();
-        if (0 < count($parameters)) {
-            foreach ($parameters as $parameter) {
-                $source .= ".'::'.serialize(\$".$parameter->getName().')';
+        if (null !== $request->getAnnotation()->getId()) {
+            $parametersLanguage = $this->getParametersLanguage($request);
+            $source = "\$expressionLanguage = new \\Symfony\\Component\\ExpressionLanguage\\ExpressionLanguage();\n"
+                .'$proxy_id = $expressionLanguage->evaluate("'.$request->getAnnotation()->getId(
+                ).'",'.$parametersLanguage.");\n";
+        } else {
+            $source = "\$proxy_id = md5('".$request->getClass()->getName().'::'.$request->getMethod()->getName()."'";
+            $parameters = $request->getMethod()->getParameters();
+            if (0 < count($parameters)) {
+                foreach ($parameters as $parameter) {
+                    $source .= ".'::'.serialize(\$".$parameter->getName().')';
+                }
             }
+            $source .= ");\n";
         }
-        $source .= ");\n";
 
         return $source;
     }

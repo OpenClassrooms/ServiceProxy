@@ -5,6 +5,7 @@ namespace OpenClassrooms\ServiceProxy\Tests;
 use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
 use OpenClassrooms\ServiceProxy\Tests\Doubles\CacheAnnotationClass;
 use OpenClassrooms\ServiceProxy\Tests\Doubles\CacheProviderDecoratorMock;
+use OpenClassrooms\ServiceProxy\Tests\Doubles\ExceptionCacheAnnotationClass;
 
 /**
  * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
@@ -45,12 +46,12 @@ class ServiceProxyCacheTest extends \PHPUnit_Framework_TestCase
      */
     public function NotInCache_ReturnData()
     {
-        $data = $this->proxy->onlyCacheMethod();
+        $data = $this->proxy->onlyCache();
         $this->assertEquals(CacheAnnotationClass::DATA, $data);
         $this->assertEquals(
             CacheAnnotationClass::DATA,
             $this->cacheProviderDecorator->fetch(
-                md5('OpenClassrooms\ServiceProxy\Tests\Doubles\CacheAnnotationClass::onlyCacheMethod')
+                md5('OpenClassrooms\ServiceProxy\Tests\Doubles\CacheAnnotationClass::onlyCache')
             )
         );
     }
@@ -62,10 +63,10 @@ class ServiceProxyCacheTest extends \PHPUnit_Framework_TestCase
     {
         $inCacheData = 'InCacheData';
         $this->cacheProviderDecorator->save(
-            md5('OpenClassrooms\ServiceProxy\Tests\Doubles\CacheAnnotationClass::onlyCacheMethod'),
+            md5('OpenClassrooms\ServiceProxy\Tests\Doubles\CacheAnnotationClass::onlyCache'),
             $inCacheData
         );
-        $data = $this->proxy->onlyCacheMethod();
+        $data = $this->proxy->onlyCache();
         $this->assertEquals($inCacheData, $data);
     }
 
@@ -81,17 +82,51 @@ class ServiceProxyCacheTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @test
+     * @expectedException \OpenClassrooms\ServiceProxy\Annotations\InvalidCacheIdException
+     */
+    public function TooLongId_WithId_ThrowException()
+    {
+        /** @var ExceptionCacheAnnotationClass $proxy */
+        $proxy = $this->buildServiceProxyBuilder()
+            ->create(new ExceptionCacheAnnotationClass())
+            ->withCache($this->cacheProviderDecorator)
+            ->build();
+        $proxy->cacheWithTooLongId();
+    }
+
+    /**
+     * @test
+     */
+    public function WithId_ReturnData()
+    {
+        $data = $this->proxy->cacheWithId();
+        $this->assertEquals(CacheAnnotationClass::DATA, $data);
+        $this->assertEquals(CacheAnnotationClass::DATA, $this->cacheProviderDecorator->fetch('test'));
+    }
+
+    /**
+     * @test
+     */
+    public function WithIdAndParameters_ReturnData()
+    {
+        $data = $this->proxy->cacheWithIdAndParameters(new ParameterClassStub(), 'param 2');
+        $this->assertEquals(CacheAnnotationClass::DATA, $data);
+        $this->assertEquals(CacheAnnotationClass::DATA, $this->cacheProviderDecorator->fetch('test1'));
+    }
+
+    /**
+     * @test
      */
     public function WithNamespace_ReturnData()
     {
-        $data = $this->proxy->cacheWithNamespaceMethod();
+        $data = $this->proxy->cacheWithNamespace();
 
         $this->assertEquals(CacheAnnotationClass::DATA, $data);
         $this->assertEquals(
             CacheAnnotationClass::DATA,
             $this->cacheProviderDecorator->fetch(
                 $this->cacheProviderDecorator->fetch(md5('test-namespace')).
-                md5('OpenClassrooms\ServiceProxy\Tests\Doubles\CacheAnnotationClass::cacheWithNamespaceMethod')
+                md5('OpenClassrooms\ServiceProxy\Tests\Doubles\CacheAnnotationClass::cacheWithNamespace')
             )
         );
     }
@@ -101,7 +136,7 @@ class ServiceProxyCacheTest extends \PHPUnit_Framework_TestCase
      */
     public function WithNamespaceAndParameters_ReturnData()
     {
-        $data = $this->proxy->cacheWithNamespaceAndParametersMethod(new ParameterClassStub(), 'param 2');
+        $data = $this->proxy->cacheWithNamespaceAndParameters(new ParameterClassStub(), 'param 2');
 
         $this->assertEquals(CacheAnnotationClass::DATA, $data);
         $this->assertEquals(
@@ -109,7 +144,7 @@ class ServiceProxyCacheTest extends \PHPUnit_Framework_TestCase
             $this->cacheProviderDecorator->fetch(
                 $this->cacheProviderDecorator->fetch(md5('test-namespace1')).
                 md5(
-                    'OpenClassrooms\ServiceProxy\Tests\Doubles\CacheAnnotationClass::cacheWithNamespaceAndParametersMethod'
+                    'OpenClassrooms\ServiceProxy\Tests\Doubles\CacheAnnotationClass::cacheWithNamespaceAndParameters'
                     .'::'.serialize(new ParameterClassStub()).'::'.serialize('param 2')
                 )
             )
@@ -127,45 +162,4 @@ class ServiceProxyCacheTest extends \PHPUnit_Framework_TestCase
             ->withCache($this->cacheProviderDecorator)
             ->build();
     }
-//
-//    /**
-//     * @test
-//     */
-//    public function CachedWithNamespace_Cache_ReturnResponse()
-//    {
-//        $this->useCaseProxy->setUseCase(new NamespaceCacheUseCaseStub());
-//        $this->useCaseProxy->execute(new UseCaseRequestStub());
-//        $this->assertTrue($this->cache->savedWithNamespace);
-//        $this->cache->savedWithNamespace = false;
-//        $response = $this->useCaseProxy->execute(new UseCaseRequestStub());
-//        $this->assertEquals(new UseCaseResponseStub(), $response);
-//        $this->assertTrue($this->cache->fetched);
-//        $this->assertFalse($this->cache->savedWithNamespace);
-//    }
-//
-//    /**
-//     * @test
-//     */
-//    public function WithLifeTime_Cache_ReturnResponse()
-//    {
-//        $this->useCaseProxy->setUseCase(new LifeTimeCacheUseCaseStub());
-//        $response = $this->useCaseProxy->execute(new UseCaseRequestStub());
-//        $this->assertEquals(new UseCaseResponseStub(), $response);
-//        $this->assertTrue($this->cache->saved);
-//        $this->assertEquals(LifeTimeCacheUseCaseStub::LIFETIME, $this->cache->lifeTime);
-//    }
-//
-//    /**
-//     * @test
-//     */
-//    public function CacheOnException_DonTSave()
-//    {
-//        try {
-//            $this->useCaseProxy->setUseCase(new ExceptionCacheUseCaseStub());
-//            $this->useCaseProxy->execute(new UseCaseRequestStub());
-//            $this->fail('Exception should be thrown');
-//        } catch (UseCaseException $e) {
-//            $this->assertFalse($this->cache->saved);
-//        }
-//    }
 }
