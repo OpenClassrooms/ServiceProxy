@@ -30,7 +30,6 @@ class Cache
     public function getId()
     {
         if (null !== $this->id && 244 < mb_strlen($this->id)) {
-            var_dump(strlen($this->id));
             throw new InvalidCacheIdException('id is too long, MUST be inferior to 240');
         }
 
