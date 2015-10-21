@@ -25,7 +25,7 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
     {
         return $this->serviceProxyStrategyResponseBuilder
             ->create()
-            ->withPreSource($this->generatePreSource($request->getAnnotation(), $request))
+            ->withPreSource($this->generatePreSource($request))
             ->withPostSource($this->generatePostSource($request->getAnnotation()))
             ->withProperties($this->generateProperties())
             ->withMethods($this->generateMethods())
@@ -35,33 +35,63 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
     /**
      * @return string
      */
-    private function generatePreSource(Cache $annotation, ServiceProxyStrategyRequestInterface $request)
+    private function generatePreSource(ServiceProxyStrategyRequestInterface $request)
     {
-        $parameters = $request->getMethod()->getParameters();
-
         $source = '';
+        $source .= $this->generateNamespace($request);
+        $source .= $this->generateProxyId($request);
+        $source .= $this->generateFetch($request);
+
+        return $source;
+    }
+
+    /**
+     * @return string
+     */
+    private function generateNamespace(ServiceProxyStrategyRequestInterface $request)
+    {
+        $source = '';
+        $annotation = $request->getAnnotation();
         if (null !== $annotation->getNamespace()) {
-            $parametersLanguage = "[";
+            $parameters = $request->getMethod()->getParameters();
+            $parametersLanguage = '[';
             foreach ($parameters as $parameter) {
-                $parametersLanguage .= "'".$parameter->getName()."' => \$".$parameter->getName().",";
+                $parametersLanguage .= "'".$parameter->getName()."' => \$".$parameter->getName().',';
             }
-            $parametersLanguage .= "]";
+            $parametersLanguage .= ']';
             $source = "\$expressionLanguage = new \\Symfony\\Component\\ExpressionLanguage\\ExpressionLanguage();\n"
                 .'$namespace = md5($expressionLanguage->evaluate("'
-                .$annotation->getNamespace()."\",".$parametersLanguage."));\n";
+                .$annotation->getNamespace().'",'.$parametersLanguage."));\n";
         }
 
-        $source .= "\$proxy_id = md5('".$request->getClass()->getName().'::'.$request->getMethod()->getName()."'";
+        return $source;
+    }
 
+    /**
+     * @return string
+     */
+    private function generateProxyId(ServiceProxyStrategyRequestInterface $request)
+    {
+        $source = "\$proxy_id = md5('".$request->getClass()->getName().'::'.$request->getMethod()->getName()."'";
+        $parameters = $request->getMethod()->getParameters();
         if (0 < count($parameters)) {
             foreach ($parameters as $parameter) {
                 $source .= ".'::'.serialize(\$".$parameter->getName().')';
             }
         }
-        $source .= ");\n"
-            .'$data = $this->'.self::PROPERTY_PREFIX."cacheProvider->fetchWithNamespace(\$proxy_id";
-        if (null !== $annotation->getNamespace()) {
-            $source .= ", \$namespace";
+        $source .= ");\n";
+
+        return $source;
+    }
+
+    /**
+     * @return string
+     */
+    private function generateFetch(ServiceProxyStrategyRequestInterface $request)
+    {
+        $source = '$data = $this->'.self::PROPERTY_PREFIX.'cacheProvider->fetchWithNamespace($proxy_id';
+        if (null !== $request->getAnnotation()->getNamespace()) {
+            $source .= ', $namespace';
         }
         $source .= ");\n"
             ."if (false !== \$data){\n"
@@ -76,17 +106,17 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
      */
     private function generatePostSource(Cache $annotation)
     {
-        $source = "\$this->".self::PROPERTY_PREFIX."cacheProvider->saveWithNamespace(\$proxy_id, \$data";
+        $source = '$this->'.self::PROPERTY_PREFIX.'cacheProvider->saveWithNamespace($proxy_id, $data';
         if (null !== $annotation->getNamespace()) {
-            $source .= ",\$namespace";
+            $source .= ',$namespace';
         } else {
-            $source .= ",null";
+            $source .= ',null';
         }
         $lifetime = $annotation->getLifetime();
         if (null !== $lifetime) {
-            $source .= ",".$lifetime;
+            $source .= ','.$lifetime;
         }
-        $source .= ");";
+        $source .= ');';
 
         return $source;
     }

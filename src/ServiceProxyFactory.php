@@ -3,7 +3,8 @@
 namespace OpenClassrooms\ServiceProxy;
 
 use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
-use OpenClassrooms\ServiceProxy\Proxy\Factory\ServiceProxyFactory as ProxyFactory;
+use OpenClassrooms\ServiceProxy\Proxy\Factory\ProxyFactory as ProxyFactory;
+use ProxyManager\Factory\AbstractBaseFactory;
 
 /**
  * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
@@ -47,7 +48,7 @@ class ServiceProxyFactory implements ServiceProxyFactoryInterface
         $this->cacheProvider = $cacheProvider;
     }
 
-    public function setProxyFactory($proxyFactory)
+    public function setProxyFactory(AbstractBaseFactory $proxyFactory)
     {
         $this->proxyFactory = $proxyFactory;
     }

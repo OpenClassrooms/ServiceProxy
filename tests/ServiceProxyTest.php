@@ -5,7 +5,7 @@ namespace OpenClassrooms\ServiceProxy\Tests;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Cache\ArrayCache;
 use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
-use OpenClassrooms\ServiceProxy\Proxy\Factory\ServiceProxyFactory as ProxyFactory;
+use OpenClassrooms\ServiceProxy\Proxy\Factory\ProxyFactory as ProxyFactory;
 use OpenClassrooms\ServiceProxy\Proxy\ProxyGenerator\ServiceProxyGenerator;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\Request\ServiceProxyStrategyRequestBuilder;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\Response\ServiceProxyStrategyResponseBuilder;
@@ -17,6 +17,7 @@ use OpenClassrooms\ServiceProxy\ServiceProxyFactory;
 use OpenClassrooms\ServiceProxy\ServiceProxyFactoryInterface;
 use OpenClassrooms\ServiceProxy\ServiceProxyInterface;
 use PHPUnit_Framework_Assert as Assert;
+use ProxyManager\Factory\AbstractBaseFactory;
 
 /**
  * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
@@ -47,7 +48,7 @@ trait ServiceProxyTest
     }
 
     /**
-     * @return ServiceProxyFactoryInterface
+     * @return AbstractBaseFactory
      */
     private function buildProxyFactory()
     {

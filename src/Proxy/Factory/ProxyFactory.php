@@ -8,7 +8,7 @@ use ProxyManager\Factory\AbstractBaseFactory;
 /**
  * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
  */
-class ServiceProxyFactory extends AbstractBaseFactory
+class ProxyFactory extends AbstractBaseFactory
 {
     /**
      * @var ServiceProxyGenerator
