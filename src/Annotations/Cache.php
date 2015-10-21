@@ -25,6 +25,7 @@ class Cache
 
     /**
      * @return string
+     *
      * @throws InvalidCacheIdException
      */
     public function getId()

@@ -38,6 +38,7 @@ class CacheAnnotationClass
 
     /**
      * @Cache(lifetime=60)
+     *
      * @return string
      */
     public function cacheWithLifeTime()
@@ -47,6 +48,7 @@ class CacheAnnotationClass
 
     /**
      * @Cache(id="'test'")
+     *
      * @return string
      */
     public function cacheWithId()
@@ -56,6 +58,7 @@ class CacheAnnotationClass
 
     /**
      * @Cache(id="'test' ~ param1.publicField")
+     *
      * @return string
      */
     public function cacheWithIdAndParameters(ParameterClassStub $param1, $param2)
@@ -78,5 +81,4 @@ class CacheAnnotationClass
     {
         return self::DATA;
     }
-
 }

@@ -7,5 +7,4 @@ namespace OpenClassrooms\ServiceProxy\Annotations;
  */
 class InvalidCacheIdException extends \Exception
 {
-
 }

@@ -22,7 +22,7 @@ class CacheProviderDecoratorMock extends CacheProviderDecorator
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function saveWithNamespace($id, $data, $namespaceId = null, $lifeTime = null)
     {
