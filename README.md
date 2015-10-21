@@ -65,25 +65,40 @@ class AClass
     }
 }
 ```
-The id is equal to : ```md5('MyProject\AClass::aMethod::'.serialize($useCaseRequest))``` and the TTL is the default one.
+The id is equal to : ```md5('MyProject\AClass::aMethod::'.serialize($aParameter))``` and the TTL is the default one.
 
-Other options:
+#### Other options:
+##### Lifetime:
 ```php
 /**
  * @Cache(lifetime=1000)
  * Add a TTL of 1000 seconds
- *
+ */
+```
+##### Id (key):
+```php
+/**
  * @Cache(id="'key'")
  * Set the id to "key"
- * Supports ExpressionLanguage
- *
+ */
+```
+Supports Symfony ExpressionLanguage, for example:
+```php
+/**
  * @Cache(id="'key' ~ aParameter.field")
  * Set the id to 'key'.$aParameter->field
- *
+ */
+```
+##### Namespace:
+```php
+/**
  * @Cache(namespace="'namespace'")
  * Add a namespace to the id with a namespace id equals to "namespace" 
- * Supports ExpressionLanguage
- *
+ */
+```
+Supports Symfony ExpressionLanguage, for example:
+```php
+/**
  * @Cache(namespace="'namespace' ~ aParameter.field")
  * Add a namespace to the id with a namespace id equals to 'namespace'.$aParameter->field
  */
