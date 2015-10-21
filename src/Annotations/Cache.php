@@ -11,12 +11,7 @@ class Cache
     /**
      * @var string
      */
-    public $namespacePrefix;
-
-    /**
-     * @var string
-     */
-    public $namespaceAttribute;
+    public $namespace;
 
     /**
      * @var int
@@ -26,17 +21,9 @@ class Cache
     /**
      * @return string
      */
-    public function getNamespaceAttribute()
+    public function getNamespace()
     {
-        return $this->namespaceAttribute;
-    }
-
-    /**
-     * @return string
-     */
-    public function getNamespacePrefix()
-    {
-        return $this->namespacePrefix;
+        return $this->namespace;
     }
 
     /**

@@ -25,7 +25,7 @@ class ServiceProxyBuilder implements ServiceProxyBuilderInterface
     private $serviceProxyFactory;
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function create($class)
     {
@@ -36,7 +36,7 @@ class ServiceProxyBuilder implements ServiceProxyBuilderInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function withCache(CacheProviderDecorator $cacheProvider)
     {
@@ -46,7 +46,7 @@ class ServiceProxyBuilder implements ServiceProxyBuilderInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function build()
     {

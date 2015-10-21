@@ -16,7 +16,7 @@ class ServiceProxyFactory extends AbstractBaseFactory
     private $generator;
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function createProxy($instanceOrClassName)
     {
@@ -27,7 +27,7 @@ class ServiceProxyFactory extends AbstractBaseFactory
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function getGenerator()
     {

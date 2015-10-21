@@ -19,13 +19,13 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
     private $serviceProxyStrategyResponseBuilder;
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function execute(ServiceProxyStrategyRequestInterface $request)
     {
         return $this->serviceProxyStrategyResponseBuilder
             ->create()
-            ->withPreSource($this->generatePreSource($request->getAnnotation()))
+            ->withPreSource($this->generatePreSource($request->getAnnotation(), $request))
             ->withPostSource($this->generatePostSource($request->getAnnotation()))
             ->withProperties($this->generateProperties())
             ->withMethods($this->generateMethods())
@@ -35,14 +35,40 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
     /**
      * @return string
      */
-    private function generatePreSource(Cache $annotation)
+    private function generatePreSource(Cache $annotation, ServiceProxyStrategyRequestInterface $request)
     {
-        //        $class = new \ReflectionClass('');
-//        $method = new \ReflectionMethod('', '');
-//        $cacheId = md5($class->getName().'::'.$method->getName());
+        $parameters = $request->getMethod()->getParameters();
 
-//        md5(get_class($useCase).serialize($useCaseRequest));
-        return '';
+        $source = '';
+        if (null !== $annotation->getNamespace()) {
+            $parametersLanguage = "[";
+            foreach ($parameters as $parameter) {
+                $parametersLanguage .= "'".$parameter->getName()."' => \$".$parameter->getName().",";
+            }
+            $parametersLanguage .= "]";
+            $source = "\$expressionLanguage = new \\Symfony\\Component\\ExpressionLanguage\\ExpressionLanguage();\n"
+                .'$namespace = md5($expressionLanguage->evaluate("'
+                .$annotation->getNamespace()."\",".$parametersLanguage."));\n";
+        }
+
+        $source .= "\$proxy_id = md5('".$request->getClass()->getName().'::'.$request->getMethod()->getName()."'";
+
+        if (0 < count($parameters)) {
+            foreach ($parameters as $parameter) {
+                $source .= ".'::'.serialize(\$".$parameter->getName().')';
+            }
+        }
+        $source .= ");\n"
+            .'$data = $this->'.self::PROPERTY_PREFIX."cacheProvider->fetchWithNamespace(\$proxy_id";
+        if (null !== $annotation->getNamespace()) {
+            $source .= ", \$namespace";
+        }
+        $source .= ");\n"
+            ."if (false !== \$data){\n"
+            ."return \$data;\n"
+            .'}';
+
+        return $source;
     }
 
     /**
@@ -50,7 +76,19 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
      */
     private function generatePostSource(Cache $annotation)
     {
-        return '';
+        $source = "\$this->".self::PROPERTY_PREFIX."cacheProvider->saveWithNamespace(\$proxy_id, \$data";
+        if (null !== $annotation->getNamespace()) {
+            $source .= ",\$namespace";
+        } else {
+            $source .= ",null";
+        }
+        $lifetime = $annotation->getLifetime();
+        if (null !== $lifetime) {
+            $source .= ",".$lifetime;
+        }
+        $source .= ");";
+
+        return $source;
     }
 
     /**

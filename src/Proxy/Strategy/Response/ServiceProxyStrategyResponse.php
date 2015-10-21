@@ -36,7 +36,7 @@ class ServiceProxyStrategyResponse implements ServiceProxyStrategyResponseInterf
     public $properties = [];
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getPreSource()
     {
@@ -44,7 +44,7 @@ class ServiceProxyStrategyResponse implements ServiceProxyStrategyResponseInterf
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getPostSource()
     {
@@ -52,7 +52,7 @@ class ServiceProxyStrategyResponse implements ServiceProxyStrategyResponseInterf
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getExceptionSource()
     {
@@ -60,7 +60,7 @@ class ServiceProxyStrategyResponse implements ServiceProxyStrategyResponseInterf
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getProperties()
     {
@@ -68,7 +68,7 @@ class ServiceProxyStrategyResponse implements ServiceProxyStrategyResponseInterf
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getMethods()
     {

@@ -13,7 +13,7 @@ class ServiceProxyStrategyResponseBuilder implements ServiceProxyStrategyRespons
     public $response;
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function create()
     {
@@ -23,7 +23,7 @@ class ServiceProxyStrategyResponseBuilder implements ServiceProxyStrategyRespons
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function withExceptionSource($exceptionSource)
     {
@@ -33,7 +33,7 @@ class ServiceProxyStrategyResponseBuilder implements ServiceProxyStrategyRespons
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function withMethods(array $methods)
     {
@@ -43,7 +43,7 @@ class ServiceProxyStrategyResponseBuilder implements ServiceProxyStrategyRespons
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function withPostSource($postSource)
     {
@@ -53,7 +53,7 @@ class ServiceProxyStrategyResponseBuilder implements ServiceProxyStrategyRespons
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function withPreSource($preSource)
     {
@@ -63,7 +63,7 @@ class ServiceProxyStrategyResponseBuilder implements ServiceProxyStrategyRespons
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function withProperties(array $properties)
     {
@@ -73,7 +73,7 @@ class ServiceProxyStrategyResponseBuilder implements ServiceProxyStrategyRespons
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function build()
     {

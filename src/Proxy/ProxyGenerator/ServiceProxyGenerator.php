@@ -34,7 +34,7 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
     private $serviceProxyStrategyRequestBuilder;
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function generate(ReflectionClass $originalClass, ClassGenerator $classGenerator)
     {
@@ -46,11 +46,11 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
         $interfacesToAdd = ['OpenClassrooms\\ServiceProxy\\ServiceProxyInterface'];
         $propertiesToAdd = [];
         $methodsToAdd = [];
-        $preSource = '';
-        $postSource = '';
-        $exceptionSource = '';
 
         foreach ($methodsAnnotations as $methodAnnotation) {
+            $preSource = '';
+            $postSource = '';
+            $exceptionSource = '';
             /** @var \ReflectionMethod $method */
             $method = $methodAnnotation['method'];
             foreach ($methodAnnotation['annotations'] as $annotation) {
@@ -119,13 +119,13 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
         $parametersString = '(';
         $i = count($method->getParameters());
         foreach ($method->getParameters() as $parameter) {
-            $parametersString .= $parameter->getName().(--$i > 0 ? ',' : '');
+            $parametersString .= '$'.$parameter->getName().(--$i > 0 ? ',' : '');
         }
         $parametersString .= ')';
         $methodGenerator->setBody(
-            "try{\n"
+            "try {\n"
             .$preSource."\n"
-            ."\$data = parent::".$method->getName().$parametersString.";\n"
+            .'$data = parent::'.$method->getName().$parametersString.";\n"
             .$postSource."\n"
             ."return \$data;\n"
             ."} catch(\\Exception \$e){\n"

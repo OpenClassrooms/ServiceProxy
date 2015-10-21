@@ -21,7 +21,7 @@ class ServiceProxyFactory implements ServiceProxyFactoryInterface
     private $proxyFactory;
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function createProxy($class)
     {
@@ -35,7 +35,7 @@ class ServiceProxyFactory implements ServiceProxyFactoryInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function createSimpleProxy($class)
     {

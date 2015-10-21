@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenClassrooms\Tests\ServiceProxy;
+namespace OpenClassrooms\ServiceProxy\Tests;
 
 use Doctrine\Common\Cache\ArrayCache;
 use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
@@ -9,7 +9,6 @@ use OpenClassrooms\ServiceProxy\ServiceProxyCacheInterface;
 use OpenClassrooms\ServiceProxy\ServiceProxyInterface;
 use OpenClassrooms\ServiceProxy\Tests\Doubles\CacheAnnotationClass;
 use OpenClassrooms\ServiceProxy\Tests\Doubles\WithoutAnnotationClass;
-use OpenClassrooms\ServiceProxy\Tests\ServiceProxyTest;
 
 /**
  * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>

@@ -25,7 +25,7 @@ class ServiceProxyStrategyRequest implements ServiceProxyStrategyRequestInterfac
     public $method;
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function getAnnotation()
     {
@@ -33,7 +33,7 @@ class ServiceProxyStrategyRequest implements ServiceProxyStrategyRequestInterfac
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getClass()
     {
@@ -41,7 +41,7 @@ class ServiceProxyStrategyRequest implements ServiceProxyStrategyRequestInterfac
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getMethod()
     {

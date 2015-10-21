@@ -13,7 +13,7 @@ class ServiceProxyStrategyRequestBuilder implements ServiceProxyStrategyRequestB
     private $request;
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function create()
     {
@@ -23,7 +23,7 @@ class ServiceProxyStrategyRequestBuilder implements ServiceProxyStrategyRequestB
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function withAnnotation($annotation)
     {
@@ -33,7 +33,7 @@ class ServiceProxyStrategyRequestBuilder implements ServiceProxyStrategyRequestB
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function withClass(\ReflectionClass $class)
     {
@@ -43,7 +43,7 @@ class ServiceProxyStrategyRequestBuilder implements ServiceProxyStrategyRequestB
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function withMethod(\ReflectionMethod $method)
     {
@@ -53,7 +53,7 @@ class ServiceProxyStrategyRequestBuilder implements ServiceProxyStrategyRequestB
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function build()
     {
