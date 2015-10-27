@@ -19,8 +19,11 @@ class ProxyFactory extends AbstractBaseFactory
     /**
      * @param string $cacheDir
      */
-    public function __construct($cacheDir)
+    public function __construct($cacheDir = null)
     {
+        if (null === $cacheDir) {
+            $cacheDir = sys_get_temp_dir();
+        }
         $configuration = new Configuration();
         $configuration->setProxiesTargetDir($cacheDir);
         parent::__construct($configuration);
