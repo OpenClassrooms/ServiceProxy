@@ -3,6 +3,7 @@
 namespace OpenClassrooms\ServiceProxy\Proxy\Factory;
 
 use OpenClassrooms\ServiceProxy\Proxy\ProxyGenerator\ServiceProxyGenerator;
+use ProxyManager\Configuration;
 use ProxyManager\Factory\AbstractBaseFactory;
 
 /**
@@ -14,6 +15,16 @@ class ProxyFactory extends AbstractBaseFactory
      * @var ServiceProxyGenerator
      */
     private $generator;
+
+    /**
+     * @param string $cacheDir
+     */
+    public function __construct($cacheDir)
+    {
+        $configuration = new Configuration();
+        $configuration->setProxiesTargetDir($cacheDir);
+        parent::__construct($configuration);
+    }
 
     /**
      * {@inheritdoc}
