@@ -38,6 +38,7 @@ class ServiceProxyBuilderTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($proxy->aMethodWithoutServiceProxyAnnotation());
 
         $this->assertNotInstanceOf('OpenClassrooms\ServiceProxy\ServiceProxyCacheInterface', $proxy);
+        $this->assertTrue($proxy->aMethodWithoutAnnotation());
     }
 
     /**
@@ -53,7 +54,7 @@ class ServiceProxyBuilderTest extends \PHPUnit_Framework_TestCase
             ->build();
 
         $this->assertServiceCacheProxy($inputClass, $proxy);
-        $this->assertTrue($proxy->aMethod());
+        $this->assertTrue($proxy->aMethodWithoutAnnotation());
     }
 
     /**

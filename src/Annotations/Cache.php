@@ -8,6 +8,8 @@ namespace OpenClassrooms\ServiceProxy\Annotations;
  */
 class Cache
 {
+    const MEMCACHE_KEY_MAX_LENGTH = 244;
+
     /**
      * @var string
      */
@@ -30,7 +32,7 @@ class Cache
      */
     public function getId()
     {
-        if (null !== $this->id && 244 < mb_strlen($this->id)) {
+        if (null !== $this->id && self::MEMCACHE_KEY_MAX_LENGTH < mb_strlen($this->id)) {
             throw new InvalidCacheIdException('id is too long, MUST be inferior to 240');
         }
 

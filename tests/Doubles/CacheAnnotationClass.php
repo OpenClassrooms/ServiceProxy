@@ -13,19 +13,19 @@ class CacheAnnotationClass
     const DATA = 'data';
 
     /**
-     * @Cache
+     * @return bool
      */
-    public function cacheMethodWithException()
+    public function aMethodWithoutAnnotation()
     {
-        throw new \Exception();
+        return true;
     }
 
     /**
      * @Cache
      */
-    public function aMethod()
+    public function cacheMethodWithException()
     {
-        return true;
+        throw new \Exception();
     }
 
     /**

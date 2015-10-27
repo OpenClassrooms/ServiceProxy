@@ -45,7 +45,7 @@ class ServiceProxyFactoryTest extends \PHPUnit_Framework_TestCase
         $proxy = $this->factory->createProxy($inputClass);
 
         $this->assertServiceCacheProxy($inputClass, $proxy);
-        $this->assertTrue($proxy->aMethod());
+        $this->assertTrue($proxy->aMethodWithoutAnnotation());
     }
 
     /**

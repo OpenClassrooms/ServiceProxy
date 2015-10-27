@@ -18,12 +18,15 @@ use OpenClassrooms\ServiceProxy\ServiceProxyFactoryInterface;
 use OpenClassrooms\ServiceProxy\ServiceProxyInterface;
 use PHPUnit_Framework_Assert as Assert;
 use ProxyManager\Factory\AbstractBaseFactory;
+use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
  */
 trait ServiceProxyTest
 {
+    protected static $cacheDir = __DIR__.'/cache';
+
     /**
      * @return ServiceProxyBuilderInterface
      */
@@ -52,7 +55,9 @@ trait ServiceProxyTest
      */
     private function buildProxyFactory()
     {
-        $proxyFactory = new ProxyFactory();
+        $fs = new Filesystem();
+        $fs->mkdir(self::$cacheDir);
+        $proxyFactory = new ProxyFactory(self::$cacheDir);
         $proxyFactory->setGenerator($this->buildGenerator());
 
         return $proxyFactory;
@@ -100,5 +105,11 @@ trait ServiceProxyTest
     {
         Assert::assertInstanceOf(get_class($inputClass), $proxy);
         Assert::assertInstanceOf('OpenClassrooms\ServiceProxy\ServiceProxyInterface', $proxy);
+    }
+
+    protected function tearDown()
+    {
+        $fs = new Filesystem();
+        $fs->remove(self::$cacheDir);
     }
 }

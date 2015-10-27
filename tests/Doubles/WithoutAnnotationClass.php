@@ -7,6 +7,9 @@ namespace OpenClassrooms\ServiceProxy\Tests\Doubles;
  */
 class WithoutAnnotationClass
 {
+    /**
+     * @return bool
+     */
     public function aMethodWithoutAnnotation()
     {
         return true;
