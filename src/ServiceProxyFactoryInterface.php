@@ -11,9 +11,4 @@ interface ServiceProxyFactoryInterface
      * @return ServiceProxyInterface|ServiceProxyCacheInterface
      */
     public function createProxy($class);
-
-    /**
-     * @return ServiceProxyInterface|ServiceProxyCacheInterface
-     */
-    public function createSimpleProxy($class);
 }

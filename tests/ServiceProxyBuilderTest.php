@@ -4,6 +4,7 @@ namespace OpenClassrooms\ServiceProxy\Tests;
 
 use Doctrine\Common\Cache\ArrayCache;
 use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
+use OpenClassrooms\ServiceProxy\Helpers\ServiceProxyHelper;
 use OpenClassrooms\ServiceProxy\ServiceProxyBuilderInterface;
 use OpenClassrooms\ServiceProxy\ServiceProxyCacheInterface;
 use OpenClassrooms\ServiceProxy\ServiceProxyInterface;
@@ -15,6 +16,8 @@ use OpenClassrooms\ServiceProxy\Tests\Doubles\WithoutAnnotationClass;
  */
 class ServiceProxyBuilderTest extends \PHPUnit_Framework_TestCase
 {
+    use ServiceProxyHelper;
+
     use ServiceProxyTest;
 
     /**
@@ -43,6 +46,17 @@ class ServiceProxyBuilderTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @test
+     * @expectedException \OpenClassrooms\ServiceProxy\Exceptions\InvalidCacheProviderException
+     */
+    public function WithCacheAnnotationWithoutCacheProvider_ThrowException()
+    {
+        $inputClass = new CacheAnnotationClass();
+        /* @var ServiceProxyCacheInterface|CacheAnnotationClass $proxy */
+        $this->builder->create($inputClass)->build();
+    }
+
+    /**
+     * @test
      */
     public function WithCacheAnnotation_ReturnServiceProxyCacheInterface()
     {
@@ -62,6 +76,6 @@ class ServiceProxyBuilderTest extends \PHPUnit_Framework_TestCase
      */
     protected function setUp()
     {
-        $this->builder = $this->buildServiceProxyBuilder();
+        $this->builder = $this->getServiceProxyBuilder(self::$cacheDir);
     }
 }

@@ -10,7 +10,7 @@ Service Proxy is a library that provides facilities to manage technical code ove
 - Logs
 
 ## Installation
-The easiest way to install DoctrineCacheExtension is via [composer](http://getcomposer.org/).
+The easiest way to install ServiceProxy is via [composer](http://getcomposer.org/).
 
 Create the following `composer.json` file and run the `php composer.phar install` command to install it.
 
@@ -34,9 +34,15 @@ use OpenClassrooms\ServiceProxy\ServiceProxy;
 ## Usage
 ### Instanciation
 
+If you plan to use ServiceProxy in a Symfony2 project, checkout the [ServiceProxyBundle](http://github.com/openclassrooms/ServiceProxyBundle).
+The bundle provide an easy configuration for this library.
+
 #### Basic
 ``` php
-$factory =  new ServiceProxyFactory();
+$proxyFactory = new ProxyFactory();
+
+$serviceProxyFactory = new ServiceProxyFactory();
+
 $proxy = $factory->createProxy('classname');
 ```
 
@@ -103,3 +109,6 @@ Supports Symfony ExpressionLanguage, for example:
  * Add a namespace to the id with a namespace id equals to 'namespace'.$aParameter->field
  */
 ```
+
+## Known limitations
+- a class could not have different cache providers

@@ -2,7 +2,10 @@
 
 namespace OpenClassrooms\ServiceProxy\Tests;
 
-use OpenClassrooms\ServiceProxy\ServiceProxyFactoryInterface;
+use Doctrine\Common\Cache\ArrayCache;
+use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
+use OpenClassrooms\ServiceProxy\Helpers\ServiceProxyHelper;
+use OpenClassrooms\ServiceProxy\ServiceProxyFactory;
 use OpenClassrooms\ServiceProxy\ServiceProxyInterface;
 use OpenClassrooms\ServiceProxy\Tests\Doubles\CacheAnnotationClass;
 use OpenClassrooms\ServiceProxy\Tests\Doubles\WithoutAnnotationClass;
@@ -12,10 +15,12 @@ use OpenClassrooms\ServiceProxy\Tests\Doubles\WithoutAnnotationClass;
  */
 class ServiceProxyFactoryTest extends \PHPUnit_Framework_TestCase
 {
+    use ServiceProxyHelper;
+
     use ServiceProxyTest;
 
     /**
-     * @var ServiceProxyFactoryInterface
+     * @var ServiceProxyFactory
      */
     private $factory;
 
@@ -37,10 +42,22 @@ class ServiceProxyFactoryTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @test
+     * @expectedException \OpenClassrooms\ServiceProxy\Exceptions\InvalidCacheProviderException
+     */
+    public function WithCacheAnnotationWithoutCacheProvider_ThrowException()
+    {
+        $inputClass = new CacheAnnotationClass();
+        $this->factory->createProxy($inputClass);
+    }
+
+    /**
+     * @test
      */
     public function WithCacheAnnotation_ReturnServiceProxyCacheInterface()
     {
         $inputClass = new CacheAnnotationClass();
+
+        $this->factory->setCacheProvider(new CacheProviderDecorator(new ArrayCache()));
         /** @var ServiceProxyInterface|CacheAnnotationClass $proxy */
         $proxy = $this->factory->createProxy($inputClass);
 
@@ -53,6 +70,6 @@ class ServiceProxyFactoryTest extends \PHPUnit_Framework_TestCase
      */
     protected function setUp()
     {
-        $this->factory = $this->buildServiceProxyFactory();
+        $this->factory = $this->getServiceProxyFactory();
     }
 }

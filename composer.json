@@ -29,6 +29,7 @@
     "ocramius/proxy-manager": "1.0.*",
     "openclassrooms/doctrine-cache-extension": "1.0.*@dev",
     "symfony/expression-language": "~2.7",
+    "symfony/filesystem": "~2.7",
     "zendframework/zend-code": "2.5.*"
   },
   "require-dev": {

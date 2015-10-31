@@ -3,8 +3,9 @@
 namespace OpenClassrooms\ServiceProxy;
 
 use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
+use OpenClassrooms\ServiceProxy\Exceptions\InvalidCacheProviderException;
 use OpenClassrooms\ServiceProxy\Proxy\Factory\ProxyFactory as ProxyFactory;
-use ProxyManager\Factory\AbstractBaseFactory;
+use OpenClassrooms\ServiceProxy\Proxy\Factory\ProxyFactoryInterface;
 
 /**
  * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
@@ -26,21 +27,16 @@ class ServiceProxyFactory implements ServiceProxyFactoryInterface
      */
     public function createProxy($class)
     {
-        $proxy = $this->createSimpleProxy($class);
+        $proxy = $this->proxyFactory->createProxy($class);
 
         if ($proxy instanceof ServiceProxyCacheInterface) {
+            if (null === $this->cacheProvider) {
+                throw new InvalidCacheProviderException();
+            }
             $proxy->proxy_setCacheProvider($this->cacheProvider);
         }
 
         return $proxy;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function createSimpleProxy($class)
-    {
-        return $this->proxyFactory->createProxy($class);
     }
 
     public function setCacheProvider(CacheProviderDecorator $cacheProvider)
@@ -48,7 +44,7 @@ class ServiceProxyFactory implements ServiceProxyFactoryInterface
         $this->cacheProvider = $cacheProvider;
     }
 
-    public function setProxyFactory(AbstractBaseFactory $proxyFactory)
+    public function setProxyFactory(ProxyFactoryInterface $proxyFactory)
     {
         $this->proxyFactory = $proxyFactory;
     }

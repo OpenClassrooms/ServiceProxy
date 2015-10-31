@@ -3,6 +3,8 @@
 namespace OpenClassrooms\ServiceProxy\Tests;
 
 use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
+use OpenClassrooms\ServiceProxy\Helpers\ServiceProxyHelper;
+use OpenClassrooms\ServiceProxy\ServiceProxyBuilder;
 use OpenClassrooms\ServiceProxy\Tests\Doubles\CacheAnnotationClass;
 use OpenClassrooms\ServiceProxy\Tests\Doubles\CacheProviderDecoratorMock;
 use OpenClassrooms\ServiceProxy\Tests\Doubles\ExceptionCacheAnnotationClass;
@@ -12,6 +14,8 @@ use OpenClassrooms\ServiceProxy\Tests\Doubles\ExceptionCacheAnnotationClass;
  */
 class ServiceProxyCacheTest extends \PHPUnit_Framework_TestCase
 {
+    use ServiceProxyHelper;
+
     use ServiceProxyTest;
 
     /**
@@ -23,6 +27,11 @@ class ServiceProxyCacheTest extends \PHPUnit_Framework_TestCase
      * @var CacheAnnotationClass
      */
     private $proxy;
+
+    /**
+     * @var ServiceProxyBuilder
+     */
+    private $serviceProxyBuilder;
 
     /**
      * @test
@@ -87,7 +96,7 @@ class ServiceProxyCacheTest extends \PHPUnit_Framework_TestCase
     public function TooLongId_WithId_ThrowException()
     {
         /** @var ExceptionCacheAnnotationClass $proxy */
-        $proxy = $this->buildServiceProxyBuilder()
+        $proxy = $this->getServiceProxyBuilder()
             ->create(new ExceptionCacheAnnotationClass())
             ->withCache($this->cacheProviderDecorator)
             ->build();
@@ -156,8 +165,9 @@ class ServiceProxyCacheTest extends \PHPUnit_Framework_TestCase
      */
     protected function setUp()
     {
+        $this->serviceProxyBuilder = $this->getServiceProxyBuilder(self::$cacheDir);
         $this->cacheProviderDecorator = new CacheProviderDecoratorMock();
-        $this->proxy = $this->buildServiceProxyBuilder()
+        $this->proxy = $this->serviceProxyBuilder
             ->create(new CacheAnnotationClass())
             ->withCache($this->cacheProviderDecorator)
             ->build();
