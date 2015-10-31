@@ -4,13 +4,11 @@ namespace OpenClassrooms\ServiceProxy\Helpers;
 
 use Doctrine\Common\Annotations\AnnotationReader;
 use OpenClassrooms\ServiceProxy\Proxy\Factory\ProxyFactory;
-use OpenClassrooms\ServiceProxy\Proxy\Factory\ProxyFactoryInterface;
 use OpenClassrooms\ServiceProxy\Proxy\ProxyGenerator\ServiceProxyGenerator;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\Request\ServiceProxyStrategyRequestBuilder;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\Response\ServiceProxyStrategyResponseBuilder;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\ServiceProxyCacheStrategy;
 use OpenClassrooms\ServiceProxy\ServiceProxyBuilder;
-use OpenClassrooms\ServiceProxy\ServiceProxyBuilderInterface;
 use OpenClassrooms\ServiceProxy\ServiceProxyFactory;
 
 /**
@@ -30,7 +28,7 @@ trait ServiceProxyHelper
     }
 
     /**
-     * @return ProxyFactoryInterface
+     * @return \OpenClassrooms\ServiceProxy\Proxy\Factory\ProxyFactoryInterface
      */
     protected function buildProxyFactory($cacheDir = null)
     {
@@ -65,7 +63,7 @@ trait ServiceProxyHelper
     }
 
     /**
-     * @return ServiceProxyBuilderInterface
+     * @return \OpenClassrooms\ServiceProxy\ServiceProxyBuilderInterface
      */
     public function getServiceProxyBuilder($cacheDir = null)
     {
