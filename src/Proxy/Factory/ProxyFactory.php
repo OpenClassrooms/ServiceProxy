@@ -3,6 +3,7 @@
 namespace OpenClassrooms\ServiceProxy\Proxy\Factory;
 
 use OpenClassrooms\ServiceProxy\Proxy\ProxyGenerator\ServiceProxyGenerator;
+use OpenClassrooms\ServiceProxy\ServiceProxyInterface;
 use ProxyManager\Configuration;
 use ProxyManager\Factory\AbstractBaseFactory;
 use Symfony\Component\Filesystem\Filesystem;
@@ -35,12 +36,14 @@ class ProxyFactory extends AbstractBaseFactory implements ProxyFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function createProxy($instanceOrClassName)
+    public function createProxy($instance)
     {
-        $className = is_object($instanceOrClassName) ? get_class($instanceOrClassName) : $instanceOrClassName;
-        $proxyClassName = $this->generateProxy($className);
+        $proxyClassName = $this->generateProxy(get_class($instance));
+        /** @var ServiceProxyInterface $proxy */
+        $proxy = new $proxyClassName();
+        $proxy->setProxy_RealSubject($instance);
 
-        return new $proxyClassName();
+        return $proxy;
     }
 
     /**

@@ -8,11 +8,21 @@ namespace OpenClassrooms\ServiceProxy\Tests\Doubles;
 class WithoutAnnotationClass
 {
     /**
+     * @var mixed
+     */
+    public $field;
+
+    /**
      * @return bool
      */
     public function aMethodWithoutAnnotation()
     {
-        return true;
+        return $this->field;
+    }
+
+    public function aSetterMethod($value)
+    {
+        $this->field = $value;
     }
 
     /**

@@ -28,7 +28,6 @@ class ServiceProxyFactory implements ServiceProxyFactoryInterface
     public function createProxy($class)
     {
         $proxy = $this->proxyFactory->createProxy($class);
-
         if ($proxy instanceof ServiceProxyCacheInterface) {
             if (null === $this->cacheProvider) {
                 throw new InvalidCacheProviderException();

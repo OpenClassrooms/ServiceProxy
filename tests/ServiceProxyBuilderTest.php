@@ -31,6 +31,7 @@ class ServiceProxyBuilderTest extends \PHPUnit_Framework_TestCase
     public function WithoutAnnotation_ReturnServiceProxyInterface()
     {
         $inputClass = new WithoutAnnotationClass();
+        $inputClass->field = true;
         /** @var WithoutAnnotationClass|ServiceProxyInterface $proxy */
         $proxy = $this->builder
             ->create($inputClass)

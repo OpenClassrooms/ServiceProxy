@@ -7,4 +7,5 @@ namespace OpenClassrooms\ServiceProxy;
  */
 interface ServiceProxyInterface
 {
+    public function setProxy_RealSubject($realSubject);
 }

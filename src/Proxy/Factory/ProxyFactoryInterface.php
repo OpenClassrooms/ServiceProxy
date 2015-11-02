@@ -12,5 +12,5 @@ interface ProxyFactoryInterface
     /**
      * @return ServiceProxyInterface|object
      */
-    public function createProxy($instanceOrClassName);
+    public function createProxy($instance);
 }

@@ -27,6 +27,7 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
             ->create()
             ->withPreSource($this->generatePreSource($request))
             ->withPostSource($this->generatePostSource($request->getAnnotation()))
+            ->withExceptionSource('')
             ->withProperties($this->generateProperties())
             ->withMethods($this->generateMethods())
             ->build();
