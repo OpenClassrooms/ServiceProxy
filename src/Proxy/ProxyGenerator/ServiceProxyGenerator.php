@@ -111,7 +111,7 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
         } else {
             $body = "try {\n"
                 .$preSource."\n"
-                .'$data = parent::'.$method->getName().$parametersString.";\n"
+                ."\$data = \$this->proxy_realSubject->".$method->getName().$parametersString.";\n"
                 .$postSource."\n"
                 ."return \$data;\n"
                 ."} catch(\\Exception \$e){\n"
