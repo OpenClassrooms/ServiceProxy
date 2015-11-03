@@ -10,6 +10,7 @@ use OpenClassrooms\ServiceProxy\Proxy\Strategy\Response\ServiceProxyStrategyResp
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\ServiceProxyCacheStrategy;
 use OpenClassrooms\ServiceProxy\ServiceProxyBuilder;
 use OpenClassrooms\ServiceProxy\ServiceProxyFactory;
+use ProxyManager\Configuration;
 
 /**
  * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
@@ -19,10 +20,12 @@ trait ServiceProxyHelper
     /**
      * @return ServiceProxyFactory
      */
-    public function getServiceProxyFactory($cacheDir = null)
+    protected function getServiceProxyFactory($cacheDir = null)
     {
         $serviceProxyFactory = new ServiceProxyFactory();
-        $serviceProxyFactory->setProxyFactory($this->buildProxyFactory($cacheDir));
+        $configuration = new Configuration();
+        $configuration->setProxiesTargetDir($cacheDir);
+        $serviceProxyFactory->setProxyFactory($this->buildProxyFactory($configuration));
 
         return $serviceProxyFactory;
     }
@@ -30,9 +33,9 @@ trait ServiceProxyHelper
     /**
      * @return \OpenClassrooms\ServiceProxy\Proxy\Factory\ProxyFactoryInterface
      */
-    protected function buildProxyFactory($cacheDir = null)
+    protected function buildProxyFactory(Configuration $configuration = null)
     {
-        $proxyFactory = new ProxyFactory($cacheDir);
+        $proxyFactory = new ProxyFactory($configuration);
         $proxyFactory->setGenerator($this->buildGenerator());
 
         return $proxyFactory;
@@ -65,10 +68,12 @@ trait ServiceProxyHelper
     /**
      * @return \OpenClassrooms\ServiceProxy\ServiceProxyBuilderInterface
      */
-    public function getServiceProxyBuilder($cacheDir = null)
+    protected function getServiceProxyBuilder($cacheDir = null)
     {
         $serviceProxyBuilder = new ServiceProxyBuilder();
-        $serviceProxyBuilder->setProxyFactory($this->buildProxyFactory($cacheDir));
+        $configuration = new Configuration();
+        $configuration->setProxiesTargetDir($cacheDir);
+        $serviceProxyBuilder->setProxyFactory($this->buildProxyFactory($configuration));
 
         return $serviceProxyBuilder;
     }

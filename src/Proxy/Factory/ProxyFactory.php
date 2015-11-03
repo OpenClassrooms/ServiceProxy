@@ -19,17 +19,14 @@ class ProxyFactory extends AbstractBaseFactory implements ProxyFactoryInterface
     private $generator;
 
     /**
-     * @param string $cacheDir
+     * @inheritDoc
      */
-    public function __construct($cacheDir = null)
+    public function __construct(Configuration $configuration = null)
     {
-        if (null === $cacheDir) {
-            $cacheDir = sys_get_temp_dir();
+        if (sys_get_temp_dir() !== $configuration->getProxiesTargetDir()) {
+            $fs = new Filesystem();
+            $fs->mkdir($configuration->getProxiesTargetDir());
         }
-        $fs = new Filesystem();
-        $fs->mkdir($cacheDir);
-        $configuration = new Configuration();
-        $configuration->setProxiesTargetDir($cacheDir);
         parent::__construct($configuration);
     }
 
