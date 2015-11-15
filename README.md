@@ -1,13 +1,14 @@
 # Service Proxy
+[![Build Status](https://travis-ci.org/OpenClassrooms/ServiceProxy.svg?branch=master)](https://travis-ci.org/OpenClassrooms/ServiceProxy)
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/e0840e44-8f14-4620-96cf-76300727e808/mini.png)](https://insight.sensiolabs.com/projects/e0840e44-8f14-4620-96cf-76300727e808)
 [![Coverage Status](https://coveralls.io/repos/OpenClassrooms/ServiceProxy/badge.svg?branch=master&service=github)](https://coveralls.io/github/OpenClassrooms/ServiceProxy?branch=master)
 
 Service Proxy is a library that provides facilities to manage technical code over a class
-- Security access
+- Security access (not implemented yet)
 - Cache management
-- Transactional context
-- Events
-- Logs
+- Transactional context (not implemented yet)
+- Events (not implemented yet)
+- Logs (not implemented yet)
 
 ## Installation
 The easiest way to install ServiceProxy is via [composer](http://getcomposer.org/).
@@ -38,15 +39,49 @@ If you plan to use ServiceProxy in a Symfony2 project, checkout the [ServiceProx
 The bundle provide an easy configuration for this library.
 
 #### Basic
+##### Factory
 ``` php
-$proxyFactory = new ProxyFactory();
+use OpenClassrooms\ServiceProxy\Helpers\ServiceProxyHelper;
 
-$serviceProxyFactory = new ServiceProxyFactory();
+$serviceProxyFactory = $this->getServiceProxyFactory();
+$proxy = $serviceProxyFactory->createProxy(new Class());
 
-$proxy = $factory->createProxy('classname');
 ```
 
-#### With Default
+##### Builder
+
+``` php
+use OpenClassrooms\ServiceProxy\Helpers\ServiceProxyHelper;
+
+$proxy = $this->getServiceProxyBuilder()
+              ->create(new Class())
+              ->withCache(new CacheProviderDecorator(new ArrayCache()))
+              ->build();
+```
+
+#### Custom
+See [ProxyManager](https://github.com/Ocramius/ProxyManager)
+##### Factory
+``` php
+use OpenClassrooms\ServiceProxy\Helpers\ServiceProxyHelper;
+
+$serviceProxyFactory = $this->getServiceProxyFactory();
+$serviceProxyFactory->setCacheProvider(new CacheProviderDecorator(new ArrayCache()));
+$serviceProxyFactory->setProxyFactory($this->buildProxyFactory(new Configuration()));
+$proxy = $serviceProxyFactory->createProxy(new Class());
+```
+
+##### Builder
+``` php
+use OpenClassrooms\ServiceProxy\Helpers\ServiceProxyHelper;
+
+$proxyBuilder = $this->getServiceProxyBuilder();
+$proxyBuilder->setProxyFactory($this->buildProxyFactory(new Configuration()));
+
+$proxy = $proxyBuilder->create(new Class())
+             ->withCache(new CacheProviderDecorator(new ArrayCache()))
+             ->build();
+```
 
 ### Cache
 @Cache annotation allows to manage cache.
