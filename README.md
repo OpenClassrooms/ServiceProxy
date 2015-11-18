@@ -3,10 +3,10 @@
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/e0840e44-8f14-4620-96cf-76300727e808/mini.png)](https://insight.sensiolabs.com/projects/e0840e44-8f14-4620-96cf-76300727e808)
 [![Coverage Status](https://coveralls.io/repos/OpenClassrooms/ServiceProxy/badge.svg?branch=master&service=github)](https://coveralls.io/github/OpenClassrooms/ServiceProxy?branch=master)
 
-Service Proxy is a library that provides facilities to manage technical code over a class
+Service Proxy is a library that provides facilities to manage technical code over a class:
+- Transactional context (not implemented yet)
 - Security access (not implemented yet)
 - Cache management
-- Transactional context (not implemented yet)
 - Events (not implemented yet)
 - Logs (not implemented yet)
 
@@ -147,3 +147,6 @@ Supports Symfony ExpressionLanguage, for example:
 
 ## Known limitations
 - a class could not have different cache providers
+
+## Acknowledgments  
+This library is based on the top of [Ocramius\ProxyManager](https://github.com/Ocramius/ProxyManager).
