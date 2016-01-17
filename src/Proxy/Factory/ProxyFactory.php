@@ -23,7 +23,7 @@ class ProxyFactory extends AbstractBaseFactory implements ProxyFactoryInterface
      */
     public function __construct(Configuration $configuration = null)
     {
-        if (sys_get_temp_dir() !== $configuration->getProxiesTargetDir()) {
+        if (null !== $configuration && sys_get_temp_dir() !== $configuration->getProxiesTargetDir()) {
             $fs = new Filesystem();
             $fs->mkdir($configuration->getProxiesTargetDir());
         }
