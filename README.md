@@ -3,7 +3,7 @@
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/e0840e44-8f14-4620-96cf-76300727e808/mini.png)](https://insight.sensiolabs.com/projects/e0840e44-8f14-4620-96cf-76300727e808)
 [![Coverage Status](https://coveralls.io/repos/OpenClassrooms/ServiceProxy/badge.svg?branch=master&service=github)](https://coveralls.io/github/OpenClassrooms/ServiceProxy?branch=master)
 
-Service Proxy is a library that provides facilities to manage technical code over a class:
+Service Proxy is a library that provides functionality to manage technical code over a class:
 - Transactional context (not implemented yet)
 - Security access (not implemented yet)
 - Cache management
@@ -33,10 +33,10 @@ use OpenClassrooms\ServiceProxy\ServiceProxy;
 <a name="install-nocomposer"/>
 
 ## Usage
-### Instanciation
+### Instantiation
 
-If you plan to use ServiceProxy in a Symfony2 project, checkout the [ServiceProxyBundle](http://github.com/openclassrooms/ServiceProxyBundle).
-The bundle provide an easy configuration for this library.
+If you plan to use ServiceProxy in a Symfony2 project, check out the [ServiceProxyBundle](http://github.com/openclassrooms/ServiceProxyBundle).
+The bundle provides an easy configuration option for this library.
 
 #### Basic
 ##### Factory
@@ -84,7 +84,7 @@ $proxy = $proxyBuilder->create(new Class())
 ```
 
 ### Cache
-@Cache annotation allows to manage cache.
+@Cache annotation allows cache management.
 
 ```php
 namespace MyProject\AClass;
@@ -106,7 +106,7 @@ class AClass
     }
 }
 ```
-The id is equal to : ```md5('MyProject\AClass::aMethod::'.serialize($aParameter))``` and the TTL is the default one.
+The id is equal to: ```md5('MyProject\AClass::aMethod::'.serialize($aParameter))``` and the TTL is the default.
 
 #### Other options:
 ##### Lifetime:
@@ -146,7 +146,7 @@ Supports Symfony ExpressionLanguage, for example:
 ```
 
 ## Known limitations
-- a class could not have different cache providers
+- a class can not have different cache providers
 
 ## Acknowledgments  
-This library is based on the top of [Ocramius\ProxyManager](https://github.com/Ocramius/ProxyManager).
+This library is based on [Ocramius\ProxyManager](https://github.com/Ocramius/ProxyManager).
