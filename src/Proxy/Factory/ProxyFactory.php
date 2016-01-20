@@ -19,7 +19,7 @@ class ProxyFactory extends AbstractBaseFactory implements ProxyFactoryInterface
     private $generator;
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function __construct(Configuration $configuration = null)
     {
