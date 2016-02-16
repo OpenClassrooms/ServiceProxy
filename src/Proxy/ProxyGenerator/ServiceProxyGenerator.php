@@ -62,6 +62,7 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
             $methodAnnotations = $this->annotationReader->getMethodAnnotations($method);
             foreach ($methodAnnotations as $methodAnnotation) {
                 if ($methodAnnotation instanceof Cache) {
+                    $this->addCacheAnnotation($classGenerator);
                     $additionalInterfaces['cache'] = 'OpenClassrooms\\ServiceProxy\\ServiceProxyCacheInterface';
                     $response = $this->cacheStrategy->execute(
                         $this->serviceProxyStrategyRequestBuilder
@@ -143,5 +144,13 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
         ServiceProxyStrategyRequestBuilderInterface $serviceProxyStrategyRequestBuilder
     ) {
         $this->serviceProxyStrategyRequestBuilder = $serviceProxyStrategyRequestBuilder;
+    }
+
+    private function addCacheAnnotation(ClassGenerator $classGenerator)
+    {
+        $uses = $classGenerator->getUses();
+        if (!in_array(Cache::class, $uses)){
+            $classGenerator->addUse(Cache::class);
+        }
     }
 }
