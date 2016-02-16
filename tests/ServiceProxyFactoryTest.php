@@ -8,6 +8,7 @@ use OpenClassrooms\ServiceProxy\Helpers\ServiceProxyHelper;
 use OpenClassrooms\ServiceProxy\ServiceProxyFactory;
 use OpenClassrooms\ServiceProxy\ServiceProxyInterface;
 use OpenClassrooms\ServiceProxy\Tests\Doubles\CacheAnnotationClass;
+use OpenClassrooms\ServiceProxy\Tests\Doubles\CacheAnnotationWithConstructorClass;
 use OpenClassrooms\ServiceProxy\Tests\Doubles\WithoutAnnotationClass;
 
 /**
@@ -57,6 +58,21 @@ class ServiceProxyFactoryTest extends \PHPUnit_Framework_TestCase
     public function WithCacheAnnotation_ReturnServiceProxyCacheInterface()
     {
         $inputClass = new CacheAnnotationClass();
+
+        $this->factory->setCacheProvider(new CacheProviderDecorator(new ArrayCache()));
+        /** @var ServiceProxyInterface|CacheAnnotationClass $proxy */
+        $proxy = $this->factory->createProxy($inputClass);
+
+        $this->assertServiceCacheProxy($inputClass, $proxy);
+        $this->assertTrue($proxy->aMethodWithoutAnnotation());
+    }
+
+    /**
+     * @test
+     */
+    public function WithCacheAnnotationWithConstructor_ReturnServiceProxyCacheInterface()
+    {
+        $inputClass = new CacheAnnotationWithConstructorClass('test');
 
         $this->factory->setCacheProvider(new CacheProviderDecorator(new ArrayCache()));
         /** @var ServiceProxyInterface|CacheAnnotationClass $proxy */

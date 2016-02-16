@@ -98,28 +98,33 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
     private function generateProxyMethod(\ReflectionMethod $method, $preSource, $postSource, $exceptionSource)
     {
         $methodReflection = new MethodReflection($method->getDeclaringClass()->getName(), $method->getName());
-        $methodGenerator = MethodGenerator::fromReflection($methodReflection);
-
-        $parametersString = '(';
-        $i = count($method->getParameters());
-        foreach ($method->getParameters() as $parameter) {
-            $parametersString .= '$'.$parameter->getName().(--$i > 0 ? ',' : '');
-        }
-        $parametersString .= ')';
-        if ('' === $preSource && '' === $postSource && '' === $exceptionSource) {
-            $body = 'return $this->proxy_realSubject->'.$method->getName().$parametersString.";\n";
+        if ('__construct' === $methodReflection->getName()) {
+            $methodGenerator = MethodGenerator::fromArray(
+                ['name' => $methodReflection->getName(), 'body' => '']
+            );
         } else {
-            $body = "try {\n"
-                .$preSource."\n"
-                .'$data = $this->proxy_realSubject->'.$method->getName().$parametersString.";\n"
-                .$postSource."\n"
-                ."return \$data;\n"
-                ."} catch(\\Exception \$e){\n"
-                .$exceptionSource."\n"
-                ."throw \$e;\n"
-                .'};';
+            $methodGenerator = MethodGenerator::fromReflection($methodReflection);
+            $parametersString = '(';
+            $i = count($method->getParameters());
+            foreach ($method->getParameters() as $parameter) {
+                $parametersString .= '$'.$parameter->getName().(--$i > 0 ? ',' : '');
+            }
+            $parametersString .= ')';
+            if ('' === $preSource && '' === $postSource && '' === $exceptionSource) {
+                $body = 'return $this->proxy_realSubject->'.$method->getName().$parametersString.";\n";
+            } else {
+                $body = "try {\n"
+                    .$preSource."\n"
+                    .'$data = $this->proxy_realSubject->'.$method->getName().$parametersString.";\n"
+                    .$postSource."\n"
+                    ."return \$data;\n"
+                    ."} catch(\\Exception \$e){\n"
+                    .$exceptionSource."\n"
+                    ."throw \$e;\n"
+                    .'};';
+            }
+            $methodGenerator->setBody($body);
         }
-        $methodGenerator->setBody($body);
 
         return $methodGenerator;
     }
