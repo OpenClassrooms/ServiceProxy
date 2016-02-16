@@ -34,9 +34,9 @@
   },
   "require-dev": {
     "fabpot/php-cs-fixer": "1.*",
-    "mockery/mockery": "dev-master",
+    "mockery/mockery": "0.*",
     "phpunit/phpunit": "~5.0",
-    "satooshi/php-coveralls": "dev-master"
+    "satooshi/php-coveralls": "1.*"
   },
   "extra": {
     "branch-alias": {
