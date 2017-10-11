@@ -25,6 +25,11 @@ class WithoutAnnotationClass
         $this->field = $value;
     }
 
+    public function aSetterMethodWithType(string $value): string
+    {
+        return $value;
+    }
+
     /**
      * @return bool
      */

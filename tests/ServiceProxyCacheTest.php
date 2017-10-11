@@ -96,7 +96,7 @@ class ServiceProxyCacheTest extends \PHPUnit_Framework_TestCase
     public function TooLongId_WithId_ThrowException()
     {
         /** @var ExceptionCacheAnnotationClass $proxy */
-        $proxy = $this->getServiceProxyBuilder()
+        $proxy = $this->getServiceProxyBuilder(self::$cacheDir)
             ->create(new ExceptionCacheAnnotationClass())
             ->withCache($this->cacheProviderDecorator)
             ->build();

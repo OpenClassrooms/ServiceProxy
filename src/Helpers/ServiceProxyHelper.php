@@ -20,7 +20,7 @@ trait ServiceProxyHelper
     /**
      * @return ServiceProxyFactory
      */
-    protected function getServiceProxyFactory($cacheDir = null)
+    protected function getServiceProxyFactory(string $cacheDir)
     {
         $serviceProxyFactory = new ServiceProxyFactory();
         $configuration = new Configuration();
@@ -68,7 +68,7 @@ trait ServiceProxyHelper
     /**
      * @return \OpenClassrooms\ServiceProxy\ServiceProxyBuilderInterface
      */
-    protected function getServiceProxyBuilder($cacheDir = null)
+    protected function getServiceProxyBuilder(string $cacheDir)
     {
         $serviceProxyBuilder = new ServiceProxyBuilder();
         $configuration = new Configuration();

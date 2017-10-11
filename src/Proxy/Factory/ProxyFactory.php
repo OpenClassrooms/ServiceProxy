@@ -6,6 +6,7 @@ use OpenClassrooms\ServiceProxy\Proxy\ProxyGenerator\ServiceProxyGenerator;
 use OpenClassrooms\ServiceProxy\ServiceProxyInterface;
 use ProxyManager\Configuration;
 use ProxyManager\Factory\AbstractBaseFactory;
+use ProxyManager\ProxyGenerator\ProxyGeneratorInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
@@ -46,7 +47,7 @@ class ProxyFactory extends AbstractBaseFactory implements ProxyFactoryInterface
     /**
      * {@inheritdoc}
      */
-    protected function getGenerator()
+    protected function getGenerator() : ProxyGeneratorInterface
     {
         return $this->generator;
     }

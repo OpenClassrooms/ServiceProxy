@@ -87,6 +87,6 @@ class ServiceProxyFactoryTest extends \PHPUnit_Framework_TestCase
      */
     protected function setUp()
     {
-        $this->factory = $this->getServiceProxyFactory();
+        $this->factory = $this->getServiceProxyFactory(self::$cacheDir);
     }
 }
