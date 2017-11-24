@@ -1,7 +1,7 @@
 # Service Proxy
 [![Build Status](https://travis-ci.org/OpenClassrooms/ServiceProxy.svg?branch=master)](https://travis-ci.org/OpenClassrooms/ServiceProxy)
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/e0840e44-8f14-4620-96cf-76300727e808/mini.png)](https://insight.sensiolabs.com/projects/e0840e44-8f14-4620-96cf-76300727e808)
-[![Coverage Status](https://coveralls.io/repos/OpenClassrooms/ServiceProxy/badge.svg?branch=master&service=github)](https://coveralls.io/github/OpenClassrooms/ServiceProxy?branch=master)
+[![Coverage Status](https://codecov.io/gh/OpenClassrooms/ServiceProxy/branch/master/graph/badge.svg)](https://codecov.io/gh/OpenClassrooms/ServiceProxy)
 
 Service Proxy is a library that provides functionality to manage technical code over a class:
 - Transactional context (not implemented yet)
