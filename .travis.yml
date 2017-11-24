@@ -1,16 +1,17 @@
 language: php
 
+sudo: false
+
 php:
   - "7.0"
   - "7.1"
 
 before_script:
-  - composer self-update
-  - composer install --no-scripts --no-interaction --dev
+  - composer install --no-scripts --no-interaction
   - composer dump-autoload -o
 
 after_script:
-    - php vendor/bin/coveralls -v
+    - bash <(curl -s https://codecov.io/bash)
 
 script:
-    - ./vendor/bin/phpunit --coverage-clover build/logs/clover.xml
+    - ./vendor/bin/phpunit --coverage-clover=coverage.xml
