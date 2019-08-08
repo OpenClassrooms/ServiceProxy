@@ -4,7 +4,7 @@ namespace OpenClassrooms\ServiceProxy\Tests;
 
 use OpenClassrooms\ServiceProxy\ServiceProxyCacheInterface;
 use OpenClassrooms\ServiceProxy\ServiceProxyInterface;
-use PHPUnit_Framework_Assert as Assert;
+use PHPUnit\Framework\TestCase as Assert;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
@@ -12,7 +12,7 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 trait ServiceProxyTest
 {
-    protected static $cacheDir = __DIR__.'/cache';
+    protected static $cacheDir = __DIR__ . '/cache';
 
     /**
      * @param ServiceProxyInterface|ServiceProxyCacheInterface $proxy
