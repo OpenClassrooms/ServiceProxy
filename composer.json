@@ -28,13 +28,13 @@
     "doctrine/annotations": "~1.2",
     "ocramius/proxy-manager": "~2.0",
     "openclassrooms/doctrine-cache-extension": "1.0.*@dev",
-    "symfony/expression-language": "~3.4 || ~4.3",
-    "symfony/filesystem": "~3.4 || ~4.3",
+    "symfony/expression-language": "~3.4 || ~4.0",
+    "symfony/filesystem": "~3.4 || ~4.0",
     "zendframework/zend-code": "~3.0"
   },
   "require-dev": {
-    "friendsofphp/php-cs-fixer": "~2.8",
-    "phpunit/phpunit": "~7.0"
+    "friendsofphp/php-cs-fixer": "~2.15",
+    "phpunit/phpunit": "~7.5"
   },
   "extra": {
     "branch-alias": {
