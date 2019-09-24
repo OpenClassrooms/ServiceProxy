@@ -10,11 +10,12 @@ use OpenClassrooms\ServiceProxy\ServiceProxyInterface;
 use OpenClassrooms\ServiceProxy\Tests\Doubles\CacheAnnotationClass;
 use OpenClassrooms\ServiceProxy\Tests\Doubles\CacheAnnotationWithConstructorClass;
 use OpenClassrooms\ServiceProxy\Tests\Doubles\WithoutAnnotationClass;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
  */
-class ServiceProxyFactoryTest extends \PHPUnit_Framework_TestCase
+class ServiceProxyFactoryTest extends TestCase
 {
     use ServiceProxyHelper;
 

@@ -8,11 +8,12 @@ use OpenClassrooms\ServiceProxy\ServiceProxyBuilder;
 use OpenClassrooms\ServiceProxy\Tests\Doubles\CacheAnnotationClass;
 use OpenClassrooms\ServiceProxy\Tests\Doubles\CacheProviderDecoratorMock;
 use OpenClassrooms\ServiceProxy\Tests\Doubles\ExceptionCacheAnnotationClass;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
  */
-class ServiceProxyCacheTest extends \PHPUnit_Framework_TestCase
+class ServiceProxyCacheTest extends TestCase
 {
     use ServiceProxyHelper;
 
@@ -134,7 +135,7 @@ class ServiceProxyCacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(
             CacheAnnotationClass::DATA,
             $this->cacheProviderDecorator->fetch(
-                $this->cacheProviderDecorator->fetch(md5('test-namespace')).
+                $this->cacheProviderDecorator->fetch(md5('test-namespace')) .
                 md5('OpenClassrooms\ServiceProxy\Tests\Doubles\CacheAnnotationClass::cacheWithNamespace')
             )
         );
@@ -151,10 +152,10 @@ class ServiceProxyCacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(
             CacheAnnotationClass::DATA,
             $this->cacheProviderDecorator->fetch(
-                $this->cacheProviderDecorator->fetch(md5('test-namespace1')).
+                $this->cacheProviderDecorator->fetch(md5('test-namespace1')) .
                 md5(
                     'OpenClassrooms\ServiceProxy\Tests\Doubles\CacheAnnotationClass::cacheWithNamespaceAndParameters'
-                    .'::'.serialize(new ParameterClassStub()).'::'.serialize('param 2')
+                    . '::' . serialize(new ParameterClassStub()) . '::' . serialize('param 2')
                 )
             )
         );
