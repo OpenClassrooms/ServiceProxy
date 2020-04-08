@@ -24,7 +24,7 @@
     }
   },
   "require": {
-    "php": ">=7.0",
+    "php": ">=7.1",
     "doctrine/annotations": "~1.2",
     "ocramius/proxy-manager": "~2.0",
     "openclassrooms/doctrine-cache-extension": "1.0.*@dev",
