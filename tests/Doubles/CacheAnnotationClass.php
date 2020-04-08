@@ -15,7 +15,7 @@ class CacheAnnotationClass
     /**
      * @return bool
      */
-    public function aMethodWithoutAnnotation()
+    public function aMethodWithoutAnnotation(): bool
     {
         return true;
     }
@@ -26,6 +26,23 @@ class CacheAnnotationClass
     public function cacheMethodWithException()
     {
         throw new \Exception();
+    }
+
+    /**
+     * @Cache
+     */
+    public function cacheMethodWithVoidReturn(): void
+    {
+        $doSomething = function () {};
+
+        $doSomething();
+    }
+
+    public function methodWithVoidReturn(): void
+    {
+        $doSomething = function () {};
+
+        $doSomething();
     }
 
     /**
