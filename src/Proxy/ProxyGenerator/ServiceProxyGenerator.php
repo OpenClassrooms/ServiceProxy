@@ -6,6 +6,7 @@ use Doctrine\Common\Annotations\AnnotationReader;
 use OpenClassrooms\ServiceProxy\Annotations\Cache;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\Request\ServiceProxyStrategyRequestBuilderInterface;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\ServiceProxyCacheStrategy;
+use OpenClassrooms\ServiceProxy\ServiceProxyCacheInterface;
 use ProxyManager\ProxyGenerator\Assertion\CanProxyAssertion;
 use ProxyManager\ProxyGenerator\ProxyGeneratorInterface;
 use ReflectionClass;
@@ -47,11 +48,33 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
             null,
             PropertyGenerator::FLAG_PRIVATE
         );
+
+        $propsInit = [];
+        $properties = $originalClass->getProperties();
+        foreach ($properties as $property) {
+            $propertyName = $property->getName();
+            $getter = 'get'.ucfirst($propertyName);
+            $flag = PropertyGenerator::FLAG_PUBLIC;
+            if ($property->isPrivate()) {
+                $flag = PropertyGenerator::FLAG_PRIVATE;
+            } 
+            if ($property->isProtected()) {
+                $flag = PropertyGenerator::FLAG_PROTECTED;
+            }
+            $classGenerator->addProperty(
+                $propertyName,
+                null,
+                $flag
+            );
+            $propsInit[] = "\${$getter} = function() {return \$this->{$propertyName};};
+            \$this->{$propertyName} = \${$getter}->call(\$realSubject);";
+        }
+        
         $additionalMethods['setProxy_realSubject'] = new MethodGenerator(
             'setProxy_realSubject',
             [['name' => 'realSubject']],
             MethodGenerator::FLAG_PUBLIC,
-            '$this->proxy_realSubject = $realSubject;'
+            "\$this->proxy_realSubject = \$realSubject;\n" . implode("\n", $propsInit)
         );
 
         $methods = $originalClass->getMethods(\ReflectionMethod::IS_PUBLIC);
@@ -61,9 +84,9 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
             $exceptionSource = '';
             $methodAnnotations = $this->annotationReader->getMethodAnnotations($method);
             foreach ($methodAnnotations as $methodAnnotation) {
+                $classGenerator->addUse(get_class($methodAnnotation));
                 if ($methodAnnotation instanceof Cache) {
-                    $this->addCacheAnnotation($classGenerator);
-                    $additionalInterfaces['cache'] = 'OpenClassrooms\\ServiceProxy\\ServiceProxyCacheInterface';
+                    $additionalInterfaces['cache'] = ServiceProxyCacheInterface::class;
                     $response = $this->cacheStrategy->execute(
                         $this->serviceProxyStrategyRequestBuilder
                             ->create()
@@ -83,51 +106,17 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
                     $exceptionSource .= $response->getExceptionSource();
                 }
             }
-            $classGenerator->addMethodFromGenerator(
-                $this->generateProxyMethod($method, $preSource, $postSource, $exceptionSource)
-            );
-        }
 
+            $methodReflection = new MethodReflection($method->getDeclaringClass()->getName(), $method->getName());
+
+            $generated = $this->generateProxyMethod($methodReflection, $preSource, $postSource, $exceptionSource);
+            if ($generated) {
+                $classGenerator->addMethodFromGenerator($generated);
+            }
+        }
         $classGenerator->setImplementedInterfaces($additionalInterfaces);
         $classGenerator->addProperties($additionalProperties);
         $classGenerator->addMethods($additionalMethods);
-    }
-
-    /**
-     * @return MethodGenerator
-     */
-    private function generateProxyMethod(\ReflectionMethod $method, $preSource, $postSource, $exceptionSource)
-    {
-        $methodReflection = new MethodReflection($method->getDeclaringClass()->getName(), $method->getName());
-        if ('__construct' === $methodReflection->getName()) {
-            $methodGenerator = MethodGenerator::fromArray(
-                ['name' => $methodReflection->getName(), 'body' => '']
-            );
-        } else {
-            $methodGenerator = MethodGenerator::fromReflection($methodReflection);
-            $parametersString = '(';
-            $i = count($method->getParameters());
-            foreach ($method->getParameters() as $parameter) {
-                $parametersString .= '$'.$parameter->getName().(--$i > 0 ? ',' : '');
-            }
-            $parametersString .= ')';
-            if ('' === $preSource && '' === $postSource && '' === $exceptionSource) {
-                $body = 'return $this->proxy_realSubject->'.$method->getName().$parametersString.";\n";
-            } else {
-                $body = "try {\n"
-                    .$preSource."\n"
-                    .'$data = $this->proxy_realSubject->'.$method->getName().$parametersString.";\n"
-                    .$postSource."\n"
-                    ."return \$data;\n"
-                    ."} catch(\\Exception \$e){\n"
-                    .$exceptionSource."\n"
-                    ."throw \$e;\n"
-                    .'};';
-            }
-            $methodGenerator->setBody($body);
-        }
-
-        return $methodGenerator;
     }
 
     public function setAnnotationReader(AnnotationReader $annotationReader)
@@ -146,11 +135,40 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
         $this->serviceProxyStrategyRequestBuilder = $serviceProxyStrategyRequestBuilder;
     }
 
-    private function addCacheAnnotation(ClassGenerator $classGenerator)
+    /**
+     * @return MethodGenerator|null
+     */
+    private function generateProxyMethod(MethodReflection $method, $preSource, $postSource, $exceptionSource)
     {
-        $uses = $classGenerator->getUses();
-        if (!in_array(Cache::class, $uses)){
-            $classGenerator->addUse(Cache::class);
+        $methodGenerator = MethodGenerator::fromReflection($method);
+        if ($method->getName() === '__construct') {
+            return MethodGenerator::fromArray(
+                [
+                    'name' => '__construct',
+                    'body' => null,
+                ]
+            );
         }
+        if ('' === $preSource && '' === $postSource && '' === $exceptionSource) {
+            return null;
+        }
+        $parameters = [];
+        foreach ($method->getParameters() as $parameter) {
+            $parameters[] .= '$' . $parameter->getName();
+        }
+        $parametersString = implode(', ', $parameters);
+        $body = "
+        try {
+            $preSource
+            \$data = \$this->proxy_realSubject->{$method->getName()}($parametersString);
+            $postSource
+            return \$data;
+        } catch(\\Exception \$e) {
+            $exceptionSource
+            throw \$e;
+        }";
+        $methodGenerator->setBody($body);
+
+        return $methodGenerator;
     }
 }

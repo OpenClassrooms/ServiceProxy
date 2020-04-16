@@ -4,6 +4,7 @@ namespace OpenClassrooms\ServiceProxy\Tests;
 
 use Doctrine\Common\Cache\ArrayCache;
 use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
+use OpenClassrooms\ServiceProxy\Exceptions\InvalidCacheProviderException;
 use OpenClassrooms\ServiceProxy\Helpers\ServiceProxyHelper;
 use OpenClassrooms\ServiceProxy\ServiceProxyBuilderInterface;
 use OpenClassrooms\ServiceProxy\ServiceProxyCacheInterface;
@@ -42,16 +43,16 @@ class ServiceProxyBuilderTest extends TestCase
         $this->assertTrue($proxy->aMethodWithoutAnnotation());
         $this->assertTrue($proxy->aMethodWithoutServiceProxyAnnotation());
 
-        $this->assertNotInstanceOf('OpenClassrooms\ServiceProxy\ServiceProxyCacheInterface', $proxy);
+        $this->assertNotInstanceOf(ServiceProxyCacheInterface::class, $proxy);
         $this->assertTrue($proxy->aMethodWithoutAnnotation());
     }
 
     /**
      * @test
-     * @expectedException \OpenClassrooms\ServiceProxy\Exceptions\InvalidCacheProviderException
      */
     public function WithCacheAnnotationWithoutCacheProvider_ThrowException()
     {
+        $this->expectException(InvalidCacheProviderException::class);
         $inputClass = new CacheAnnotationClass();
         /* @var ServiceProxyCacheInterface|CacheAnnotationClass $proxy */
         $this->builder->create($inputClass)->build();

@@ -83,6 +83,20 @@ class ServiceProxyCacheTest extends TestCase
     /**
      * @test
      */
+    public function WithInternalCall_ReturnData()
+    {
+        $inCacheData = 'InCacheData';
+        $this->cacheProviderDecorator->save(
+            md5('OpenClassrooms\ServiceProxy\Tests\Doubles\CacheAnnotationClass::onlyCache'),
+            $inCacheData
+        );
+        $data = $this->proxy->internalCallToCache();
+        $this->assertEquals($inCacheData, $data);
+    }
+    
+    /**
+     * @test
+     */
     public function WithLifeTime_ReturnData()
     {
         $data = $this->proxy->cacheWithLifeTime();

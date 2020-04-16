@@ -36,6 +36,11 @@ class CacheAnnotationClass
         return self::DATA;
     }
 
+    public function internalCallToCache()
+    {
+        return $this->onlyCache();
+    }
+
     /**
      * @Cache(lifetime=60)
      *
@@ -73,7 +78,7 @@ class CacheAnnotationClass
     {
         return self::DATA;
     }
-
+    
     /**
      * @Cache(namespace="'test-namespace' ~ param1.publicField")
      */
