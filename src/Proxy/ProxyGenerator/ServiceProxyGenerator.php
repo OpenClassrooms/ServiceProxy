@@ -6,6 +6,7 @@ use Doctrine\Common\Annotations\AnnotationReader;
 use OpenClassrooms\ServiceProxy\Annotations\Cache;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\Request\ServiceProxyStrategyRequestBuilderInterface;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\ServiceProxyCacheStrategy;
+use OpenClassrooms\ServiceProxy\ServiceProxyCacheInterface;
 use ProxyManager\ProxyGenerator\Assertion\CanProxyAssertion;
 use ProxyManager\ProxyGenerator\ProxyGeneratorInterface;
 use ReflectionClass;
@@ -61,9 +62,9 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
             $exceptionSource = '';
             $methodAnnotations = $this->annotationReader->getMethodAnnotations($method);
             foreach ($methodAnnotations as $methodAnnotation) {
+                $classGenerator->addUse(get_class($methodAnnotation));
                 if ($methodAnnotation instanceof Cache) {
-                    $this->addCacheAnnotation($classGenerator);
-                    $additionalInterfaces['cache'] = 'OpenClassrooms\\ServiceProxy\\ServiceProxyCacheInterface';
+                    $additionalInterfaces['cache'] = ServiceProxyCacheInterface::class;
                     $response = $this->cacheStrategy->execute(
                         $this->serviceProxyStrategyRequestBuilder
                             ->create()
@@ -144,13 +145,5 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
         ServiceProxyStrategyRequestBuilderInterface $serviceProxyStrategyRequestBuilder
     ) {
         $this->serviceProxyStrategyRequestBuilder = $serviceProxyStrategyRequestBuilder;
-    }
-
-    private function addCacheAnnotation(ClassGenerator $classGenerator)
-    {
-        $uses = $classGenerator->getUses();
-        if (!in_array(Cache::class, $uses)){
-            $classGenerator->addUse(Cache::class);
-        }
     }
 }
