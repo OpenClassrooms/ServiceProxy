@@ -104,6 +104,13 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
                 ['name' => $methodReflection->getName(), 'body' => '']
             );
         } else {
+            $return = 'return ';
+            if (($returnType = $method->getReturnType()) instanceof \ReflectionNamedType) {
+                if ('void' === $returnType->getName()) {
+                    $return = '';
+                }
+            }
+
             $methodGenerator = MethodGenerator::fromReflection($methodReflection);
             $parametersString = '(';
             $i = count($method->getParameters());
@@ -112,13 +119,13 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
             }
             $parametersString .= ')';
             if ('' === $preSource && '' === $postSource && '' === $exceptionSource) {
-                $body = 'return $this->proxy_realSubject->'.$method->getName().$parametersString.";\n";
+                $body = $return . '$this->proxy_realSubject->'.$method->getName().$parametersString.";\n";
             } else {
                 $body = "try {\n"
                     .$preSource."\n"
                     .'$data = $this->proxy_realSubject->'.$method->getName().$parametersString.";\n"
                     .$postSource."\n"
-                    ."return \$data;\n"
+                    ."$return \$data;\n"
                     ."} catch(\\Exception \$e){\n"
                     .$exceptionSource."\n"
                     ."throw \$e;\n"

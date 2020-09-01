@@ -107,6 +107,12 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
      */
     private function generateFetch(ServiceProxyStrategyRequestInterface $request)
     {
+        if (($returnType = $request->getMethod()->getReturnType()) instanceof \ReflectionNamedType) {
+            if ('void' === $returnType->getName()) {
+                return '';
+            }
+        }
+
         $source = '$data = $this->'.self::PROPERTY_PREFIX.'cacheProvider->fetchWithNamespace($proxy_id';
         if (null !== $request->getAnnotation()->getNamespace()) {
             $source .= ', $namespace';
