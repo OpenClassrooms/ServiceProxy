@@ -1,26 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy;
 
 use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 interface ServiceProxyBuilderInterface
 {
-    /**
-     * @return ServiceProxyBuilderInterface
-     */
-    public function create($class);
+    public function create(object $class): ServiceProxyBuilderInterface;
 
-    /**
-     * @return ServiceProxyBuilderInterface
-     */
-    public function withCache(CacheProviderDecorator $cacheProvider);
+    public function withCache(CacheProviderDecorator $cacheProvider): ServiceProxyBuilderInterface;
 
-    /**
-     * @return ServiceProxyInterface|ServiceProxyCacheInterface
-     */
-    public function build();
+    public function build(): ServiceProxyInterface;
 }

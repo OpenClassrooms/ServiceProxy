@@ -1,81 +1,56 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Proxy\Strategy\Response;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 class ServiceProxyStrategyResponseBuilder implements ServiceProxyStrategyResponseBuilderInterface
 {
-    /**
-     * @var ServiceProxyStrategyResponse
-     */
-    public $response;
+    public ServiceProxyStrategyResponse $response;
 
-    /**
-     * {@inheritdoc}
-     */
-    public function create()
+    public function create(): ServiceProxyStrategyResponseBuilderInterface
     {
         $this->response = new ServiceProxyStrategyResponse();
 
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function withExceptionSource($exceptionSource)
+    public function withExceptionSource(string $exceptionSource): ServiceProxyStrategyResponseBuilderInterface
     {
         $this->response->exceptionSource = $exceptionSource;
 
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function withMethods(array $methods)
+    public function withMethods(array $methods): ServiceProxyStrategyResponseBuilderInterface
     {
         $this->response->methods = $methods;
 
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function withPostSource($postSource)
+    public function withPostSource(string $postSource): ServiceProxyStrategyResponseBuilderInterface
     {
         $this->response->postSource = $postSource;
 
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function withPreSource($preSource)
+    public function withPreSource(string $preSource): ServiceProxyStrategyResponseBuilderInterface
     {
         $this->response->preSource = $preSource;
 
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function withProperties(array $properties)
+    public function withProperties(array $properties): ServiceProxyStrategyResponseBuilderInterface
     {
         $this->response->properties = $properties;
 
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function build()
+    public function build(): ServiceProxyStrategyResponseInterface
     {
         return $this->response;
     }

@@ -1,61 +1,42 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Proxy\Strategy\Request;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 class ServiceProxyStrategyRequestBuilder implements ServiceProxyStrategyRequestBuilderInterface
 {
-    /**
-     * @var ServiceProxyStrategyRequest
-     */
-    private $request;
+    private ServiceProxyStrategyRequest $request;
 
-    /**
-     * {@inheritdoc}
-     */
-    public function create()
+    public function create(): ServiceProxyStrategyRequestBuilderInterface
     {
         $this->request = new ServiceProxyStrategyRequest();
 
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function withAnnotation($annotation)
+    public function withAnnotation($annotation): ServiceProxyStrategyRequestBuilderInterface
     {
         $this->request->annotation = $annotation;
 
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function withClass(\ReflectionClass $class)
+    public function withClass(\ReflectionClass $class): ServiceProxyStrategyRequestBuilderInterface
     {
         $this->request->class = $class;
 
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function withMethod(\ReflectionMethod $method)
+    public function withMethod(\ReflectionMethod $method): ServiceProxyStrategyRequestBuilderInterface
     {
         $this->request->method = $method;
 
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function build()
+    public function build(): ServiceProxyStrategyRequestInterface
     {
         return $this->request;
     }

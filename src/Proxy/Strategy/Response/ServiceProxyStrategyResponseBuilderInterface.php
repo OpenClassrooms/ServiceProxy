@@ -1,44 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Proxy\Strategy\Response;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 interface ServiceProxyStrategyResponseBuilderInterface
 {
-    /**
-     * @return ServiceProxyStrategyResponseBuilderInterface
-     */
-    public function create();
+    public function create(): ServiceProxyStrategyResponseBuilderInterface;
 
-    /**
-     * @return ServiceProxyStrategyResponseBuilderInterface
-     */
-    public function withExceptionSource($exceptionSource);
+    public function withExceptionSource(string $exceptionSource): ServiceProxyStrategyResponseBuilderInterface;
 
-    /**
-     * @return ServiceProxyStrategyResponseBuilderInterface
-     */
-    public function withMethods(array $methods);
+    public function withMethods(array $methods): ServiceProxyStrategyResponseBuilderInterface;
 
-    /**
-     * @return ServiceProxyStrategyResponseBuilderInterface
-     */
-    public function withPostSource($postSource);
+    public function withPostSource(string $postSource): ServiceProxyStrategyResponseBuilderInterface;
 
-    /**
-     * @return ServiceProxyStrategyResponseBuilderInterface
-     */
-    public function withPreSource($preSource);
+    public function withPreSource(string $preSource): ServiceProxyStrategyResponseBuilderInterface;
 
-    /**
-     * @return ServiceProxyStrategyResponseBuilderInterface
-     */
-    public function withProperties(array $properties);
+    public function withProperties(array $properties): ServiceProxyStrategyResponseBuilderInterface;
 
-    /**
-     * @return ServiceProxyStrategyResponseInterface
-     */
-    public function build();
+    public function build(): ServiceProxyStrategyResponseInterface;
 }

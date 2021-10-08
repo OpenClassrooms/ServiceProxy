@@ -1,35 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy;
 
 use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
 use OpenClassrooms\ServiceProxy\Exceptions\InvalidCacheProviderException;
 use OpenClassrooms\ServiceProxy\Proxy\Factory\ProxyFactoryInterface;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 class ServiceProxyBuilder implements ServiceProxyBuilderInterface
 {
-    /**
-     * @var CacheProviderDecorator
-     */
-    private $cacheProvider;
+    private ?CacheProviderDecorator $cacheProvider = null;
 
-    /**
-     * @var object
-     */
-    private $class;
+    private object $class;
 
-    /**
-     * @var ProxyFactoryInterface
-     */
-    private $proxyFactory;
+    private ProxyFactoryInterface $proxyFactory;
 
-    /**
-     * {@inheritdoc}
-     */
-    public function create($class)
+    public function create(object $class): ServiceProxyBuilderInterface
     {
         $this->class = $class;
         $this->cacheProvider = null;
@@ -37,10 +24,7 @@ class ServiceProxyBuilder implements ServiceProxyBuilderInterface
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function withCache(CacheProviderDecorator $cacheProvider)
+    public function withCache(CacheProviderDecorator $cacheProvider): ServiceProxyBuilderInterface
     {
         $this->cacheProvider = $cacheProvider;
 
@@ -48,11 +32,12 @@ class ServiceProxyBuilder implements ServiceProxyBuilderInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @throws \OpenClassrooms\ServiceProxy\Exceptions\InvalidCacheProviderException
      */
-    public function build()
+    public function build(): ServiceProxyInterface
     {
         $proxy = $this->proxyFactory->createProxy($this->class);
+
         if ($proxy instanceof ServiceProxyCacheInterface) {
             if (null === $this->cacheProvider) {
                 throw new InvalidCacheProviderException();
@@ -63,7 +48,7 @@ class ServiceProxyBuilder implements ServiceProxyBuilderInterface
         return $proxy;
     }
 
-    public function setProxyFactory(ProxyFactoryInterface $proxyFactory)
+    public function setProxyFactory(ProxyFactoryInterface $proxyFactory): void
     {
         $this->proxyFactory = $proxyFactory;
     }
