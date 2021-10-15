@@ -11,8 +11,13 @@ use Laminas\Code\Generator\MethodGenerator;
 use Laminas\Code\Generator\PropertyGenerator;
 use Laminas\Code\Reflection\MethodReflection;
 use OpenClassrooms\ServiceProxy\Annotations\Cache;
+use OpenClassrooms\ServiceProxy\Annotations\ServiceProxyAnnotation;
+use OpenClassrooms\ServiceProxy\Annotations\Transaction;
+use OpenClassrooms\ServiceProxy\Exceptions\InvalidServiceProxyAnnotationException;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\Request\ServiceProxyStrategyRequestBuilderInterface;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\ServiceProxyCacheStrategy;
+use OpenClassrooms\ServiceProxy\Proxy\Strategy\ServiceProxyTransactionStrategy;
+use OpenClassrooms\ServiceProxy\ServiceProxyTransactionInterface;
 use ProxyManager\ProxyGenerator\Assertion\CanProxyAssertion;
 use ProxyManager\ProxyGenerator\ProxyGeneratorInterface;
 use ReflectionClass;
@@ -25,10 +30,13 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
 
     private ServiceProxyCacheStrategy $cacheStrategy;
 
+    private ServiceProxyTransactionStrategy $transactionStrategy;
+
     private ServiceProxyStrategyRequestBuilderInterface $serviceProxyStrategyRequestBuilder;
 
     /**
      * @throws \OpenClassrooms\ServiceProxy\Annotations\InvalidCacheIdException
+     * @throws \OpenClassrooms\ServiceProxy\Exceptions\InvalidServiceProxyAnnotationException
      * @throws \ReflectionException
      */
     public function generate(ReflectionClass $originalClass, ClassGenerator $classGenerator): void
@@ -57,17 +65,25 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
             $exceptionSource = '';
             $methodAnnotations = $this->annotationReader->getMethodAnnotations($method);
             foreach ($methodAnnotations as $methodAnnotation) {
-                if ($methodAnnotation instanceof Cache) {
-                    $this->addCacheAnnotation($classGenerator);
-                    $additionalInterfaces['cache'] = ServiceProxyCacheInterface::class;
-                    $response = $this->cacheStrategy->execute(
-                        $this->serviceProxyStrategyRequestBuilder
-                            ->create()
-                            ->withAnnotation($methodAnnotation)
-                            ->withClass($originalClass)
-                            ->withMethod($method)
-                            ->build()
-                    );
+                if ($methodAnnotation instanceof ServiceProxyAnnotation) {
+                    $serviceProxyRequest = $this->serviceProxyStrategyRequestBuilder
+                        ->create()
+                        ->withAnnotation($methodAnnotation)
+                        ->withClass($originalClass)
+                        ->withMethod($method)
+                        ->build();
+
+                    if ($methodAnnotation instanceof Cache) {
+                        $this->addCacheAnnotation($classGenerator);
+                        $additionalInterfaces['cache'] = ServiceProxyCacheInterface::class;
+                        $response = $this->cacheStrategy->execute($serviceProxyRequest);
+                    } elseif ($methodAnnotation instanceof Transaction) {
+                        $additionalInterfaces['transaction'] = ServiceProxyTransactionInterface::class;
+                        $response = $this->transactionStrategy->execute($serviceProxyRequest);
+                    } else {
+                        throw new InvalidServiceProxyAnnotationException();
+                    }
+
                     foreach ($response->getMethods() as $methodToAdd) {
                         $additionalMethods[$methodToAdd->getName()] = $methodToAdd;
                     }
@@ -142,6 +158,11 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
     public function setCacheStrategy(ServiceProxyCacheStrategy $cacheStrategy): void
     {
         $this->cacheStrategy = $cacheStrategy;
+    }
+
+    public function setTransactionStrategy(ServiceProxyTransactionStrategy $transactionStrategy): void
+    {
+        $this->transactionStrategy = $transactionStrategy;
     }
 
     public function setServiceProxyStrategyRequestBuilder(

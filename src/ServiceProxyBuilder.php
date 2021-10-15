@@ -6,11 +6,15 @@ namespace OpenClassrooms\ServiceProxy;
 
 use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
 use OpenClassrooms\ServiceProxy\Exceptions\InvalidCacheProviderException;
+use OpenClassrooms\ServiceProxy\Exceptions\InvalidTransactionAdapterException;
 use OpenClassrooms\ServiceProxy\Proxy\Factory\ProxyFactoryInterface;
+use OpenClassrooms\ServiceProxy\Transaction\TransactionAdapterInterface;
 
 class ServiceProxyBuilder implements ServiceProxyBuilderInterface
 {
     private ?CacheProviderDecorator $cacheProvider = null;
+
+    private ?TransactionAdapterInterface $transactionAdapter = null;
 
     private object $class;
 
@@ -31,8 +35,16 @@ class ServiceProxyBuilder implements ServiceProxyBuilderInterface
         return $this;
     }
 
+    public function withTransaction(TransactionAdapterInterface $transactionAdapter): ServiceProxyBuilderInterface
+    {
+        $this->transactionAdapter = $transactionAdapter;
+
+        return $this;
+    }
+
     /**
      * @throws \OpenClassrooms\ServiceProxy\Exceptions\InvalidCacheProviderException
+     * @throws \OpenClassrooms\ServiceProxy\Exceptions\InvalidTransactionAdapterException
      */
     public function build(): ServiceProxyInterface
     {
@@ -43,6 +55,12 @@ class ServiceProxyBuilder implements ServiceProxyBuilderInterface
                 throw new InvalidCacheProviderException();
             }
             $proxy->proxy_setCacheProvider($this->cacheProvider);
+        }
+        if ($proxy instanceof ServiceProxyTransactionInterface) {
+            if (null === $this->transactionAdapter) {
+                throw new InvalidTransactionAdapterException();
+            }
+            $proxy->proxy_setTransactionAdapter($this->transactionAdapter);
         }
 
         return $proxy;

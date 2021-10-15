@@ -1,26 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Tests;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 class ParameterClassStub
 {
-    /**
-     * @var int
-     */
-    public $publicField = 1;
+    public int $publicField = 1;
 
-    /**
-     * @var int
-     */
-    private $privateField = 2;
+    private int $privateField = 2;
 
-    /**
-     * @return int
-     */
-    public function getPrivateField()
+    public function getPrivateField(): int
     {
         return $this->privateField;
     }

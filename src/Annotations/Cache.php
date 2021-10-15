@@ -7,7 +7,7 @@ namespace OpenClassrooms\ServiceProxy\Annotations;
 /**
  * @Annotation
  */
-class Cache
+class Cache implements ServiceProxyAnnotation
 {
     private const MEMCACHE_KEY_MAX_LENGTH = 240;
 

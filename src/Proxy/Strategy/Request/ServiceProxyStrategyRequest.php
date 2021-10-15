@@ -4,23 +4,17 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Proxy\Strategy\Request;
 
-use OpenClassrooms\ServiceProxy\Annotations\Cache;
+use OpenClassrooms\ServiceProxy\Annotations\ServiceProxyAnnotation;
 
 class ServiceProxyStrategyRequest implements ServiceProxyStrategyRequestInterface
 {
-    /**
-     * @var Cache
-     */
-    public $annotation;
+    public ServiceProxyAnnotation $annotation;
 
     public \ReflectionClass $class;
 
     public \ReflectionMethod $method;
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getAnnotation()
+    public function getAnnotation(): ServiceProxyAnnotation
     {
         return $this->annotation;
     }

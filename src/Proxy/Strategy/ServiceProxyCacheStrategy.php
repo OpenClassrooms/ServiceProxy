@@ -22,10 +22,12 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
      */
     public function execute(ServiceProxyStrategyRequestInterface $request): ServiceProxyStrategyResponseInterface
     {
+        $annotation = $request->getAnnotation();
+
         return $this->serviceProxyStrategyResponseBuilder
             ->create()
             ->withPreSource($this->generatePreSource($request))
-            ->withPostSource($this->generatePostSource($request->getAnnotation()))
+            ->withPostSource($this->generatePostSource($annotation))
             ->withExceptionSource('')
             ->withProperties($this->generateProperties())
             ->withMethods($this->generateMethods())

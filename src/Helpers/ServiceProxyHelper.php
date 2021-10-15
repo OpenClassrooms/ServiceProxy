@@ -11,6 +11,7 @@ use OpenClassrooms\ServiceProxy\Proxy\ProxyGenerator\ServiceProxyGenerator;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\Request\ServiceProxyStrategyRequestBuilder;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\Response\ServiceProxyStrategyResponseBuilder;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\ServiceProxyCacheStrategy;
+use OpenClassrooms\ServiceProxy\Proxy\Strategy\ServiceProxyTransactionStrategy;
 use OpenClassrooms\ServiceProxy\ServiceProxyBuilder;
 use OpenClassrooms\ServiceProxy\ServiceProxyBuilderInterface;
 use OpenClassrooms\ServiceProxy\ServiceProxyFactory;
@@ -41,6 +42,7 @@ trait ServiceProxyHelper
         $generator = new ServiceProxyGenerator();
         $generator->setAnnotationReader(new AnnotationReader());
         $generator->setCacheStrategy($this->buildCacheStrategy());
+        $generator->setTransactionStrategy($this->buildTransactionStrategy());
         $generator->setServiceProxyStrategyRequestBuilder(new ServiceProxyStrategyRequestBuilder());
 
         return $generator;
@@ -52,6 +54,14 @@ trait ServiceProxyHelper
         $cacheStrategy->setServiceProxyStrategyResponseBuilder(new ServiceProxyStrategyResponseBuilder());
 
         return $cacheStrategy;
+    }
+
+    private function buildTransactionStrategy(): ServiceProxyTransactionStrategy
+    {
+        $transactionStrategy = new ServiceProxyTransactionStrategy();
+        $transactionStrategy->setServiceProxyStrategyResponseBuilder(new ServiceProxyStrategyResponseBuilder());
+
+        return $transactionStrategy;
     }
 
 

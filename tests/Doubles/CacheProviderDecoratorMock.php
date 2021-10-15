@@ -1,19 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Tests\Doubles;
 
 use Doctrine\Common\Cache\ArrayCache;
 use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 class CacheProviderDecoratorMock extends CacheProviderDecorator
 {
-    /**
-     * @var int
-     */
-    public static $lifeTime;
+    public static ?int $lifeTime;
 
     public function __construct()
     {
@@ -24,7 +20,7 @@ class CacheProviderDecoratorMock extends CacheProviderDecorator
     /**
      * {@inheritdoc}
      */
-    public function saveWithNamespace($id, $data, $namespaceId = null, $lifeTime = null)
+    public function saveWithNamespace($id, $data, $namespaceId = null, $lifeTime = null): bool
     {
         self::$lifeTime = $lifeTime;
 

@@ -1,43 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Tests;
 
 use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
+use OpenClassrooms\ServiceProxy\Annotations\InvalidCacheIdException;
 use OpenClassrooms\ServiceProxy\Helpers\ServiceProxyHelper;
-use OpenClassrooms\ServiceProxy\ServiceProxyBuilder;
 use OpenClassrooms\ServiceProxy\Tests\Doubles\CacheAnnotationClass;
 use OpenClassrooms\ServiceProxy\Tests\Doubles\CacheProviderDecoratorMock;
 use OpenClassrooms\ServiceProxy\Tests\Doubles\ExceptionCacheAnnotationClass;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 class ServiceProxyCacheTest extends TestCase
 {
     use ServiceProxyHelper;
 
     use ServiceProxyTest;
 
-    /**
-     * @var CacheProviderDecorator
-     */
-    private $cacheProviderDecorator;
+    private CacheProviderDecorator $cacheProviderDecorator;
 
-    /**
-     * @var CacheAnnotationClass
-     */
-    private $proxy;
-
-    /**
-     * @var ServiceProxyBuilder
-     */
-    private $serviceProxyBuilder;
+    private CacheAnnotationClass $proxy;
 
     /**
      * @test
      */
-    public function CacheOnException_DonTSave()
+    public function CacheOnException_DonTSave(): void
     {
         try {
             $this->proxy->cacheMethodWithException();
@@ -54,7 +42,7 @@ class ServiceProxyCacheTest extends TestCase
     /**
      * @test
      */
-    public function NotInCache_ReturnData()
+    public function NotInCache_ReturnData(): void
     {
         $data = $this->proxy->onlyCache();
         $this->assertEquals(CacheAnnotationClass::DATA, $data);
@@ -69,7 +57,7 @@ class ServiceProxyCacheTest extends TestCase
     /**
      * @test
      */
-    public function InCache_ReturnData()
+    public function InCache_ReturnData(): void
     {
         $inCacheData = 'InCacheData';
         $this->cacheProviderDecorator->save(
@@ -83,7 +71,7 @@ class ServiceProxyCacheTest extends TestCase
     /**
      * @test
      */
-    public function WithLifeTime_ReturnData()
+    public function WithLifeTime_ReturnData(): void
     {
         $data = $this->proxy->cacheWithLifeTime();
         $this->assertEquals(CacheAnnotationClass::DATA, $data);
@@ -92,22 +80,24 @@ class ServiceProxyCacheTest extends TestCase
 
     /**
      * @test
-     * @expectedException \OpenClassrooms\ServiceProxy\Annotations\InvalidCacheIdException
      */
-    public function TooLongId_WithId_ThrowException()
+    public function TooLongId_WithId_ThrowException(): void
     {
+        $this->expectException(InvalidCacheIdException::class);
+
         /** @var ExceptionCacheAnnotationClass $proxy */
         $proxy = $this->getServiceProxyBuilder(self::$cacheDir)
             ->create(new ExceptionCacheAnnotationClass())
             ->withCache($this->cacheProviderDecorator)
             ->build();
+
         $proxy->cacheWithTooLongId();
     }
 
     /**
      * @test
      */
-    public function WithId_ReturnData()
+    public function WithId_ReturnData(): void
     {
         $data = $this->proxy->cacheWithId();
         $this->assertEquals(CacheAnnotationClass::DATA, $data);
@@ -117,7 +107,7 @@ class ServiceProxyCacheTest extends TestCase
     /**
      * @test
      */
-    public function WithIdAndParameters_ReturnData()
+    public function WithIdAndParameters_ReturnData(): void
     {
         $data = $this->proxy->cacheWithIdAndParameters(new ParameterClassStub(), 'param 2');
         $this->assertEquals(CacheAnnotationClass::DATA, $data);
@@ -127,7 +117,7 @@ class ServiceProxyCacheTest extends TestCase
     /**
      * @test
      */
-    public function WithNamespace_ReturnData()
+    public function WithNamespace_ReturnData(): void
     {
         $data = $this->proxy->cacheWithNamespace();
 
@@ -144,7 +134,7 @@ class ServiceProxyCacheTest extends TestCase
     /**
      * @test
      */
-    public function WithNamespaceAndParameters_ReturnData()
+    public function WithNamespaceAndParameters_ReturnData(): void
     {
         $data = $this->proxy->cacheWithNamespaceAndParameters(new ParameterClassStub(), 'param 2');
 
@@ -164,11 +154,11 @@ class ServiceProxyCacheTest extends TestCase
     /**
      * {@inheritdoc}
      */
-    protected function setUp()
+    protected function setUp(): void
     {
-        $this->serviceProxyBuilder = $this->getServiceProxyBuilder(self::$cacheDir);
+        $serviceProxyBuilder = $this->getServiceProxyBuilder(self::$cacheDir);
         $this->cacheProviderDecorator = new CacheProviderDecoratorMock();
-        $this->proxy = $this->serviceProxyBuilder
+        $this->proxy = $serviceProxyBuilder
             ->create(new CacheAnnotationClass())
             ->withCache($this->cacheProviderDecorator)
             ->build();

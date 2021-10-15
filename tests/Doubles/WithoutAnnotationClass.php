@@ -1,10 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Tests\Doubles;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 class WithoutAnnotationClass
 {
     /**
@@ -13,14 +12,17 @@ class WithoutAnnotationClass
     public $field;
 
     /**
-     * @return bool
+     * @return mixed
      */
     public function aMethodWithoutAnnotation()
     {
         return $this->field;
     }
 
-    public function aSetterMethod($value)
+    /**
+     * @param mixed $value
+     */
+    public function aSetterMethod($value): void
     {
         $this->field = $value;
     }
@@ -30,10 +32,7 @@ class WithoutAnnotationClass
         return $value;
     }
 
-    /**
-     * @return bool
-     */
-    public function aMethodWithoutServiceProxyAnnotation()
+    public function aMethodWithoutServiceProxyAnnotation(): bool
     {
         return true;
     }

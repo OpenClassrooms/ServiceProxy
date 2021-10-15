@@ -1,37 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Tests\Doubles;
 
 use OpenClassrooms\ServiceProxy\Annotations\Cache;
 use OpenClassrooms\ServiceProxy\Tests\ParameterClassStub;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 class CacheAnnotationWithConstructorClass
 {
-    const DATA = 'data';
+    public const DATA = 'data';
 
-    /**
-     * @inheritDoc
-     */
     public function __construct($argument)
     {
-
     }
 
-    /**
-     * @return bool
-     */
-    public function aMethodWithoutAnnotation()
+    public function aMethodWithoutAnnotation(): bool
     {
         return true;
     }
 
     /**
      * @Cache
+     *
+     * @throws \Exception
      */
-    public function cacheMethodWithException()
+    public function cacheMethodWithException(): void
     {
         throw new \Exception();
     }
@@ -39,37 +33,31 @@ class CacheAnnotationWithConstructorClass
     /**
      * @Cache
      */
-    public function onlyCache()
+    public function onlyCache(): string
     {
         return self::DATA;
     }
 
     /**
      * @Cache(lifetime=60)
-     *
-     * @return string
      */
-    public function cacheWithLifeTime()
+    public function cacheWithLifeTime(): string
     {
         return self::DATA;
     }
 
     /**
      * @Cache(id="'test'")
-     *
-     * @return string
      */
-    public function cacheWithId()
+    public function cacheWithId(): string
     {
         return self::DATA;
     }
 
     /**
      * @Cache(id="'test' ~ param1.publicField")
-     *
-     * @return string
      */
-    public function cacheWithIdAndParameters(ParameterClassStub $param1, $param2)
+    public function cacheWithIdAndParameters(ParameterClassStub $param1, $param2): string
     {
         return self::DATA;
     }
@@ -77,7 +65,7 @@ class CacheAnnotationWithConstructorClass
     /**
      * @Cache(namespace="'test-namespace'")
      */
-    public function cacheWithNamespace()
+    public function cacheWithNamespace(): string
     {
         return self::DATA;
     }
@@ -85,7 +73,7 @@ class CacheAnnotationWithConstructorClass
     /**
      * @Cache(namespace="'test-namespace' ~ param1.publicField")
      */
-    public function cacheWithNamespaceAndParameters(ParameterClassStub $param1, $param2)
+    public function cacheWithNamespaceAndParameters(ParameterClassStub $param1, $param2): string
     {
         return self::DATA;
     }

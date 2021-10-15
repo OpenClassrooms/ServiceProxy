@@ -4,9 +4,9 @@
 [![Coverage Status](https://codecov.io/gh/OpenClassrooms/ServiceProxy/branch/master/graph/badge.svg)](https://codecov.io/gh/OpenClassrooms/ServiceProxy)
 
 Service Proxy is a library that provides functionality to manage technical code over a class:
-- Transactional context (not implemented yet)
-- Security access (not implemented yet)
 - Cache management
+- Transactional context
+- Security access (not implemented yet)
 - Events (not implemented yet)
 - Logs (not implemented yet)
 
@@ -40,29 +40,30 @@ The bundle provides an easy configuration option for this library.
 
 #### Basic
 ##### Factory
-``` php
+```php
 use OpenClassrooms\ServiceProxy\Helpers\ServiceProxyHelper;
 
 $serviceProxyFactory = $this->getServiceProxyFactory();
 $proxy = $serviceProxyFactory->createProxy(new Class());
-
 ```
 
 ##### Builder
 
-``` php
+```php
 use OpenClassrooms\ServiceProxy\Helpers\ServiceProxyHelper;
+use OpenClassrooms\ServiceProxy\Transaction\PDOTransactionAdapter;
 
 $proxy = $this->getServiceProxyBuilder()
               ->create(new Class())
               ->withCache(new CacheProviderDecorator(new ArrayCache()))
+              ->withTransaction(new PDOTransactionAdapter(new \PDO(/* ...your config options */)))
               ->build();
 ```
 
 #### Custom
 See [ProxyManager](https://github.com/Ocramius/ProxyManager)
 ##### Factory
-``` php
+```php
 use OpenClassrooms\ServiceProxy\Helpers\ServiceProxyHelper;
 
 $serviceProxyFactory = $this->getServiceProxyFactory();
@@ -72,14 +73,16 @@ $proxy = $serviceProxyFactory->createProxy(new Class());
 ```
 
 ##### Builder
-``` php
+```php
 use OpenClassrooms\ServiceProxy\Helpers\ServiceProxyHelper;
+use OpenClassrooms\ServiceProxy\Transaction\PDOTransactionAdapter;
 
 $proxyBuilder = $this->getServiceProxyBuilder();
 $proxyBuilder->setProxyFactory($this->buildProxyFactory(new Configuration()));
 
 $proxy = $proxyBuilder->create(new Class())
              ->withCache(new CacheProviderDecorator(new ArrayCache()))
+             ->withTransaction(new PDOTransactionAdapter(new \PDO(/* ...your config options */)))
              ->build();
 ```
 
@@ -143,6 +146,52 @@ Supports Symfony ExpressionLanguage, for example:
  * @Cache(namespace="'namespace' ~ aParameter.field")
  * Add a namespace to the id with a namespace id equals to 'namespace'.$aParameter->field
  */
+```
+
+### Transaction
+
+`@Transaction` annotation will start a transaction (if not already started) at the beginning, commit at the end, and 
+rollback if an error is met.
+
+```php
+namespace MyProject\AClass;
+
+use OpenClassrooms\ServiceProxy\Annotations\Transaction;
+
+class AClass
+{
+    /**
+     * @Transaction
+     *
+     * @return mixed
+     */
+    public function execute($toSave)
+    {
+        $this->prepareSave($toSave);
+        
+        return $toSave;
+    }
+}
+```
+
+#### Handle conflicts
+
+The `@Transaction` will throw by default a `OpenClassrooms\ServiceProxy\Exceptions\TransactionConflictException` if a 
+conflict has been encountered while committing.
+
+This exception can be overridden this way:
+
+```php
+namespace MyProject\AClass;
+
+use OpenClassrooms\ServiceProxy\Annotations\Transaction;
+
+class AClass
+{
+    /**
+     * @Transaction(onConflictThrow="\MyProject\AClass\Exception\MyFunctionalException")
+     */
+}
 ```
 
 ## Known limitations
