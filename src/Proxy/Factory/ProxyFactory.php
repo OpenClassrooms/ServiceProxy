@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Proxy\Factory;
 
 use OpenClassrooms\ServiceProxy\Proxy\ProxyGenerator\ServiceProxyGenerator;
@@ -9,19 +11,10 @@ use ProxyManager\Factory\AbstractBaseFactory;
 use ProxyManager\ProxyGenerator\ProxyGeneratorInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 class ProxyFactory extends AbstractBaseFactory implements ProxyFactoryInterface
 {
-    /**
-     * @var ServiceProxyGenerator
-     */
-    private $generator;
+    private ServiceProxyGenerator $generator;
 
-    /**
-     * {@inheritdoc}
-     */
     public function __construct(Configuration $configuration = null)
     {
         if (null !== $configuration && sys_get_temp_dir() !== $configuration->getProxiesTargetDir()) {
@@ -31,28 +24,21 @@ class ProxyFactory extends AbstractBaseFactory implements ProxyFactoryInterface
         parent::__construct($configuration);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function createProxy($instance)
+    public function createProxy($instance): ServiceProxyInterface
     {
         $proxyClassName = $this->generateProxy(get_class($instance));
-        /** @var ServiceProxyInterface $proxy */
         $proxy = new $proxyClassName();
         $proxy->setProxy_RealSubject($instance);
 
         return $proxy;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function getGenerator() : ProxyGeneratorInterface
     {
         return $this->generator;
     }
 
-    public function setGenerator(ServiceProxyGenerator $generator)
+    public function setGenerator(ServiceProxyGenerator $generator): void
     {
         $this->generator = $generator;
     }

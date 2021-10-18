@@ -1,12 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Proxy\Strategy\Request;
 
 use OpenClassrooms\ServiceProxy\Annotations\Cache;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 class ServiceProxyStrategyRequest implements ServiceProxyStrategyRequestInterface
 {
     /**
@@ -14,15 +13,9 @@ class ServiceProxyStrategyRequest implements ServiceProxyStrategyRequestInterfac
      */
     public $annotation;
 
-    /**
-     * @var \ReflectionClass
-     */
-    public $class;
+    public \ReflectionClass $class;
 
-    /**
-     * @var \ReflectionMethod
-     */
-    public $method;
+    public \ReflectionMethod $method;
 
     /**
      * {@inheritdoc}
@@ -32,18 +25,12 @@ class ServiceProxyStrategyRequest implements ServiceProxyStrategyRequestInterfac
         return $this->annotation;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getClass()
+    public function getClass(): \ReflectionClass
     {
         return $this->class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getMethod()
+    public function getMethod(): \ReflectionMethod
     {
         return $this->method;
     }

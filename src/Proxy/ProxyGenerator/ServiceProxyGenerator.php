@@ -1,56 +1,52 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Proxy\ProxyGenerator;
 
 use Doctrine\Common\Annotations\AnnotationReader;
+use Laminas\Code\Generator\AbstractMemberGenerator;
+use Laminas\Code\Generator\ClassGenerator;
+use Laminas\Code\Generator\MethodGenerator;
+use Laminas\Code\Generator\PropertyGenerator;
+use Laminas\Code\Reflection\MethodReflection;
 use OpenClassrooms\ServiceProxy\Annotations\Cache;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\Request\ServiceProxyStrategyRequestBuilderInterface;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\ServiceProxyCacheStrategy;
 use ProxyManager\ProxyGenerator\Assertion\CanProxyAssertion;
 use ProxyManager\ProxyGenerator\ProxyGeneratorInterface;
 use ReflectionClass;
-use Zend\Code\Generator\ClassGenerator;
-use Zend\Code\Generator\MethodGenerator;
-use Zend\Code\Generator\PropertyGenerator;
-use Zend\Code\Reflection\MethodReflection;
+use OpenClassrooms\ServiceProxy\ServiceProxyInterface;
+use OpenClassrooms\ServiceProxy\ServiceProxyCacheInterface;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 class ServiceProxyGenerator implements ProxyGeneratorInterface
 {
-    /**
-     * @var AnnotationReader
-     */
-    private $annotationReader;
+    private AnnotationReader $annotationReader;
+
+    private ServiceProxyCacheStrategy $cacheStrategy;
+
+    private ServiceProxyStrategyRequestBuilderInterface $serviceProxyStrategyRequestBuilder;
 
     /**
-     * @var ServiceProxyCacheStrategy
+     * @throws \OpenClassrooms\ServiceProxy\Annotations\InvalidCacheIdException
+     * @throws \ReflectionException
      */
-    private $cacheStrategy;
-
-    /**
-     * @var ServiceProxyStrategyRequestBuilderInterface
-     */
-    private $serviceProxyStrategyRequestBuilder;
-
-    /**
-     * {@inheritdoc}
-     */
-    public function generate(ReflectionClass $originalClass, ClassGenerator $classGenerator)
+    public function generate(ReflectionClass $originalClass, ClassGenerator $classGenerator): void
     {
         CanProxyAssertion::assertClassCanBeProxied($originalClass);
         $classGenerator->setExtendedClass($originalClass->getName());
-        $additionalInterfaces = ['OpenClassrooms\\ServiceProxy\\ServiceProxyInterface'];
-        $additionalProperties['proxy_realSubject'] = new PropertyGenerator(
-            'proxy_realSubject',
-            null,
-            PropertyGenerator::FLAG_PRIVATE
-        );
+        $additionalInterfaces = [ServiceProxyInterface::class];
+        $additionalProperties = [
+            'proxy_realSubject' => new PropertyGenerator(
+                'proxy_realSubject',
+                null,
+                AbstractMemberGenerator::FLAG_PRIVATE
+            )
+        ];
         $additionalMethods['setProxy_realSubject'] = new MethodGenerator(
             'setProxy_realSubject',
             [['name' => 'realSubject']],
-            MethodGenerator::FLAG_PUBLIC,
+            AbstractMemberGenerator::FLAG_PUBLIC,
             '$this->proxy_realSubject = $realSubject;'
         );
 
@@ -63,7 +59,7 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
             foreach ($methodAnnotations as $methodAnnotation) {
                 if ($methodAnnotation instanceof Cache) {
                     $this->addCacheAnnotation($classGenerator);
-                    $additionalInterfaces['cache'] = 'OpenClassrooms\\ServiceProxy\\ServiceProxyCacheInterface';
+                    $additionalInterfaces['cache'] = ServiceProxyCacheInterface::class;
                     $response = $this->cacheStrategy->execute(
                         $this->serviceProxyStrategyRequestBuilder
                             ->create()
@@ -94,9 +90,9 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
     }
 
     /**
-     * @return MethodGenerator
+     * @throws \ReflectionException
      */
-    private function generateProxyMethod(\ReflectionMethod $method, $preSource, $postSource, $exceptionSource)
+    private function generateProxyMethod(\ReflectionMethod $method, $preSource, $postSource, $exceptionSource): MethodGenerator
     {
         $methodReflection = new MethodReflection($method->getDeclaringClass()->getName(), $method->getName());
         if ('__construct' === $methodReflection->getName()) {
@@ -105,10 +101,11 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
             );
         } else {
             $return = 'return ';
-            if (($returnType = $method->getReturnType()) instanceof \ReflectionNamedType) {
-                if ('void' === $returnType->getName()) {
-                    $return = '';
-                }
+            if (
+                ($returnType = $method->getReturnType()) instanceof \ReflectionNamedType
+                && 'void' === $returnType->getName()
+            ) {
+                $return = '';
             }
 
             $methodGenerator = MethodGenerator::fromReflection($methodReflection);
@@ -137,26 +134,26 @@ class ServiceProxyGenerator implements ProxyGeneratorInterface
         return $methodGenerator;
     }
 
-    public function setAnnotationReader(AnnotationReader $annotationReader)
+    public function setAnnotationReader(AnnotationReader $annotationReader): void
     {
         $this->annotationReader = $annotationReader;
     }
 
-    public function setCacheStrategy(ServiceProxyCacheStrategy $cacheStrategy)
+    public function setCacheStrategy(ServiceProxyCacheStrategy $cacheStrategy): void
     {
         $this->cacheStrategy = $cacheStrategy;
     }
 
     public function setServiceProxyStrategyRequestBuilder(
         ServiceProxyStrategyRequestBuilderInterface $serviceProxyStrategyRequestBuilder
-    ) {
+    ): void {
         $this->serviceProxyStrategyRequestBuilder = $serviceProxyStrategyRequestBuilder;
     }
 
-    private function addCacheAnnotation(ClassGenerator $classGenerator)
+    private function addCacheAnnotation(ClassGenerator $classGenerator): void
     {
         $uses = $classGenerator->getUses();
-        if (!in_array(Cache::class, $uses)){
+        if (!in_array(Cache::class, $uses, true)){
             $classGenerator->addUse(Cache::class);
         }
     }

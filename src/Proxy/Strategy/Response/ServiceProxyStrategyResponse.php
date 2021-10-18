@@ -1,76 +1,48 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Proxy\Strategy\Response;
 
-use Zend\Code\Generator\MethodGenerator;
-use Zend\Code\Generator\PropertyGenerator;
-
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 class ServiceProxyStrategyResponse implements ServiceProxyStrategyResponseInterface
 {
-    /**
-     * @var string
-     */
-    public $exceptionSource;
+    public string $exceptionSource;
 
     /**
-     * @var MethodGenerator[]
+     * @var \Laminas\Code\Generator\MethodGenerator[]
      */
-    public $methods = [];
+    public array $methods = [];
+
+    public string $postSource;
+
+    public string $preSource;
 
     /**
-     * @var string
+     * @var \Laminas\Code\Generator\PropertyGenerator[]
      */
-    public $postSource;
+    public array $properties = [];
 
-    /**
-     * @var string
-     */
-    public $preSource;
-
-    /**
-     * @var PropertyGenerator[]
-     */
-    public $properties = [];
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getPreSource()
+    public function getPreSource(): string
     {
         return $this->preSource;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getPostSource()
+    public function getPostSource(): string
     {
         return $this->postSource;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getExceptionSource()
+    public function getExceptionSource(): string
     {
         return $this->exceptionSource;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getProperties()
+    public function getProperties(): array
     {
         return $this->properties;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getMethods()
+    public function getMethods(): array
     {
         return $this->methods;
     }

@@ -1,14 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 interface ServiceProxyFactoryInterface
 {
-    /**
-     * @return ServiceProxyInterface|ServiceProxyCacheInterface
-     */
-    public function createProxy($class);
+    public function createProxy(object $class): ServiceProxyInterface;
 }

@@ -1,12 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Proxy\Strategy\Request;
 
 use OpenClassrooms\ServiceProxy\Annotations\Cache;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 interface ServiceProxyStrategyRequestInterface
 {
     /**
@@ -14,13 +13,7 @@ interface ServiceProxyStrategyRequestInterface
      */
     public function getAnnotation();
 
-    /**
-     * @return \ReflectionClass
-     */
-    public function getClass();
+    public function getClass(): \ReflectionClass;
 
-    /**
-     * @return \ReflectionMethod
-     */
-    public function getMethod();
+    public function getMethod(): \ReflectionMethod;
 }

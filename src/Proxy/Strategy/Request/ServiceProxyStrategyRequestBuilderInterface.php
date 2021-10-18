@@ -1,34 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Proxy\Strategy\Request;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 interface ServiceProxyStrategyRequestBuilderInterface
 {
-    /**
-     * @return ServiceProxyStrategyRequestBuilderInterface
-     */
-    public function create();
+    public function create(): ServiceProxyStrategyRequestBuilderInterface;
 
-    /**
-     * @return ServiceProxyStrategyRequestBuilderInterface
-     */
-    public function withAnnotation($annotation);
+    public function withAnnotation($annotation): ServiceProxyStrategyRequestBuilderInterface;
 
-    /**
-     * @return ServiceProxyStrategyRequestBuilderInterface
-     */
-    public function withClass(\ReflectionClass $class);
+    public function withClass(\ReflectionClass $class): ServiceProxyStrategyRequestBuilderInterface;
 
-    /**
-     * @return ServiceProxyStrategyRequestBuilderInterface
-     */
-    public function withMethod(\ReflectionMethod $method);
+    public function withMethod(\ReflectionMethod $method): ServiceProxyStrategyRequestBuilderInterface;
 
-    /**
-     * @return ServiceProxyStrategyRequestInterface
-     */
-    public function build();
+    public function build(): ServiceProxyStrategyRequestInterface;
 }

@@ -1,27 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Proxy\Strategy;
 
+use Laminas\Code\Generator\AbstractMemberGenerator;
+use Laminas\Code\Generator\MethodGenerator;
+use Laminas\Code\Generator\PropertyGenerator;
+use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
 use OpenClassrooms\ServiceProxy\Annotations\Cache;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\Request\ServiceProxyStrategyRequestInterface;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\Response\ServiceProxyStrategyResponseBuilderInterface;
-use Zend\Code\Generator\MethodGenerator;
-use Zend\Code\Generator\PropertyGenerator;
+use OpenClassrooms\ServiceProxy\Proxy\Strategy\Response\ServiceProxyStrategyResponseInterface;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
 {
-    /**
-     * @var ServiceProxyStrategyResponseBuilderInterface
-     */
-    private $serviceProxyStrategyResponseBuilder;
+    private ServiceProxyStrategyResponseBuilderInterface $serviceProxyStrategyResponseBuilder;
 
     /**
-     * {@inheritdoc}
+     * @throws \OpenClassrooms\ServiceProxy\Annotations\InvalidCacheIdException
      */
-    public function execute(ServiceProxyStrategyRequestInterface $request)
+    public function execute(ServiceProxyStrategyRequestInterface $request): ServiceProxyStrategyResponseInterface
     {
         return $this->serviceProxyStrategyResponseBuilder
             ->create()
@@ -34,22 +33,18 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
     }
 
     /**
-     * @return string
+     * @throws \OpenClassrooms\ServiceProxy\Annotations\InvalidCacheIdException
      */
-    private function generatePreSource(ServiceProxyStrategyRequestInterface $request)
+    private function generatePreSource(ServiceProxyStrategyRequestInterface $request): string
     {
-        $source = '';
-        $source .= $this->generateNamespace($request);
+        $source = $this->generateNamespace($request);
         $source .= $this->generateProxyId($request);
         $source .= $this->generateFetch($request);
 
         return $source;
     }
 
-    /**
-     * @return string
-     */
-    private function generateNamespace(ServiceProxyStrategyRequestInterface $request)
+    private function generateNamespace(ServiceProxyStrategyRequestInterface $request): string
     {
         $source = '';
         $annotation = $request->getAnnotation();
@@ -63,10 +58,7 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
         return $source;
     }
 
-    /**
-     * @return string
-     */
-    private function getParametersLanguage(ServiceProxyStrategyRequestInterface $request)
+    private function getParametersLanguage(ServiceProxyStrategyRequestInterface $request): string
     {
         $parameters = $request->getMethod()->getParameters();
         $parametersLanguage = '[';
@@ -79,9 +71,9 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
     }
 
     /**
-     * @return string
+     * @throws \OpenClassrooms\ServiceProxy\Annotations\InvalidCacheIdException
      */
-    private function generateProxyId(ServiceProxyStrategyRequestInterface $request)
+    private function generateProxyId(ServiceProxyStrategyRequestInterface $request): string
     {
         if (null !== $request->getAnnotation()->getId()) {
             $parametersLanguage = $this->getParametersLanguage($request);
@@ -102,15 +94,13 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
         return $source;
     }
 
-    /**
-     * @return string
-     */
-    private function generateFetch(ServiceProxyStrategyRequestInterface $request)
+    private function generateFetch(ServiceProxyStrategyRequestInterface $request): string
     {
-        if (($returnType = $request->getMethod()->getReturnType()) instanceof \ReflectionNamedType) {
-            if ('void' === $returnType->getName()) {
-                return '';
-            }
+        if (
+            ($returnType = $request->getMethod()->getReturnType()) instanceof \ReflectionNamedType
+            && 'void' === $returnType->getName()
+        ) {
+            return '';
         }
 
         $source = '$data = $this->'.self::PROPERTY_PREFIX.'cacheProvider->fetchWithNamespace($proxy_id';
@@ -125,10 +115,7 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
         return $source;
     }
 
-    /**
-     * @return string
-     */
-    private function generatePostSource(Cache $annotation)
+    private function generatePostSource(Cache $annotation): string
     {
         $source = '$this->'.self::PROPERTY_PREFIX.'cacheProvider->saveWithNamespace($proxy_id, $data';
         if (null !== $annotation->getNamespace()) {
@@ -148,15 +135,15 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
     /**
      * @return PropertyGenerator[]
      */
-    public function generateProperties()
+    public function generateProperties(): array
     {
-        return [new PropertyGenerator(self::PROPERTY_PREFIX.'cacheProvider', null, PropertyGenerator::FLAG_PRIVATE)];
+        return [new PropertyGenerator(self::PROPERTY_PREFIX.'cacheProvider', null, AbstractMemberGenerator::FLAG_PRIVATE)];
     }
 
     /**
      * @return MethodGenerator[]
      */
-    public function generateMethods()
+    public function generateMethods(): array
     {
         return [
             new MethodGenerator(
@@ -164,10 +151,10 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
                 [
                     [
                         'name' => 'cacheProvider',
-                        'type' => '\\OpenClassrooms\\DoctrineCacheExtension\\CacheProviderDecorator',
+                        'type' => CacheProviderDecorator::class,
                     ],
                 ],
-                MethodGenerator::FLAG_PUBLIC,
+                AbstractMemberGenerator::FLAG_PUBLIC,
                 '$this->'.self::PROPERTY_PREFIX.'cacheProvider = $cacheProvider;'
             ),
         ];
@@ -175,7 +162,7 @@ class ServiceProxyCacheStrategy implements ServiceProxyStrategyInterface
 
     public function setServiceProxyStrategyResponseBuilder(
         ServiceProxyStrategyResponseBuilderInterface $serviceProxyStrategyResponseBuilder
-    ) {
+    ): void {
         $this->serviceProxyStrategyResponseBuilder = $serviceProxyStrategyResponseBuilder;
     }
 }

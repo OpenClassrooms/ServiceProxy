@@ -1,26 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Helpers;
 
 use Doctrine\Common\Annotations\AnnotationReader;
 use OpenClassrooms\ServiceProxy\Proxy\Factory\ProxyFactory;
+use OpenClassrooms\ServiceProxy\Proxy\Factory\ProxyFactoryInterface;
 use OpenClassrooms\ServiceProxy\Proxy\ProxyGenerator\ServiceProxyGenerator;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\Request\ServiceProxyStrategyRequestBuilder;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\Response\ServiceProxyStrategyResponseBuilder;
 use OpenClassrooms\ServiceProxy\Proxy\Strategy\ServiceProxyCacheStrategy;
 use OpenClassrooms\ServiceProxy\ServiceProxyBuilder;
+use OpenClassrooms\ServiceProxy\ServiceProxyBuilderInterface;
 use OpenClassrooms\ServiceProxy\ServiceProxyFactory;
 use ProxyManager\Configuration;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 trait ServiceProxyHelper
 {
-    /**
-     * @return ServiceProxyFactory
-     */
-    protected function getServiceProxyFactory(string $cacheDir)
+    protected function getServiceProxyFactory(string $cacheDir): ServiceProxyFactory
     {
         $serviceProxyFactory = new ServiceProxyFactory();
         $configuration = new Configuration();
@@ -30,10 +28,7 @@ trait ServiceProxyHelper
         return $serviceProxyFactory;
     }
 
-    /**
-     * @return \OpenClassrooms\ServiceProxy\Proxy\Factory\ProxyFactoryInterface
-     */
-    protected function buildProxyFactory(Configuration $configuration = null)
+    protected function buildProxyFactory(Configuration $configuration = null): ProxyFactoryInterface
     {
         $proxyFactory = new ProxyFactory($configuration);
         $proxyFactory->setGenerator($this->buildGenerator());
@@ -41,10 +36,7 @@ trait ServiceProxyHelper
         return $proxyFactory;
     }
 
-    /**
-     * @return ServiceProxyGenerator
-     */
-    private function buildGenerator()
+    private function buildGenerator(): ServiceProxyGenerator
     {
         $generator = new ServiceProxyGenerator();
         $generator->setAnnotationReader(new AnnotationReader());
@@ -54,10 +46,7 @@ trait ServiceProxyHelper
         return $generator;
     }
 
-    /**
-     * @return ServiceProxyCacheStrategy
-     */
-    private function buildCacheStrategy()
+    private function buildCacheStrategy(): ServiceProxyCacheStrategy
     {
         $cacheStrategy = new ServiceProxyCacheStrategy();
         $cacheStrategy->setServiceProxyStrategyResponseBuilder(new ServiceProxyStrategyResponseBuilder());
@@ -65,10 +54,8 @@ trait ServiceProxyHelper
         return $cacheStrategy;
     }
 
-    /**
-     * @return \OpenClassrooms\ServiceProxy\ServiceProxyBuilderInterface
-     */
-    protected function getServiceProxyBuilder(string $cacheDir)
+
+    protected function getServiceProxyBuilder(string $cacheDir): ServiceProxyBuilderInterface
     {
         $serviceProxyBuilder = new ServiceProxyBuilder();
         $configuration = new Configuration();
