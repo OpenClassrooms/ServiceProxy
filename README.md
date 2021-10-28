@@ -151,7 +151,7 @@ Supports Symfony ExpressionLanguage, for example:
 ### Transaction
 
 `@Transaction` annotation will start a transaction (if not already started) at the beginning, commit at the end, and 
-rollback if an error is met.
+rollback if an error is thrown.
 
 ```php
 namespace MyProject\AClass;
