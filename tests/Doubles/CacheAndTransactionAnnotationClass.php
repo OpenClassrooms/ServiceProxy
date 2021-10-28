@@ -26,4 +26,40 @@ class CacheAndTransactionAnnotationClass
 
         $doSomething();
     }
+
+    /**
+     * @Cache
+     * @Transaction
+     */
+    public function cacheThenTransactionMethodWithStringReturn(): string
+    {
+        return 'stuff';
+    }
+
+    /**
+     * @Cache
+     * @Transaction
+     */
+    public function cacheThenTransactionMethodWithException(): string
+    {
+        throw new \Exception();
+    }
+
+    /**
+     * @Transaction
+     * @Cache
+     */
+    public function transactionThenCacheMethodWithStringReturn(): string
+    {
+        return 'stuff';
+    }
+
+    /**
+     * @Transaction
+     * @Cache
+     */
+    public function transactionThenCacheMethodWithException(): string
+    {
+        throw new \Exception();
+    }
 }
