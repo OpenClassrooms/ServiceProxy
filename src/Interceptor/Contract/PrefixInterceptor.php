@@ -9,7 +9,11 @@ use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
 
 interface PrefixInterceptor
 {
+    public const PREFIX_TYPE = 'prefix';
+
     public function prefix(Instance $instance): Response;
 
     public function supportsPrefix(Instance $instance): bool;
+
+    public function getPrefixPriority(): int;
 }

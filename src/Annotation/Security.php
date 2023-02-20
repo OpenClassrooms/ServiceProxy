@@ -10,11 +10,11 @@ use OpenClassrooms\ServiceProxy\Contract\SecurityHandler;
  */
 class Security extends Annotation
 {
-    public ?string $checkField = null;
+    private ?string $checkField = null;
 
-    public bool $checkRequest = false;
+    private bool $checkRequest = false;
 
-    public array $roles;
+    private array $roles;
 
     public function checkRequest(): bool
     {

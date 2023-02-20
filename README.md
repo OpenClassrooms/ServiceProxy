@@ -44,11 +44,15 @@ To be able to use built-in interceptors, you need to implement the built-in hand
 - If you have only one handler by annotation, it will be the default one.
 
 **example:**
+
 ```php
+use OpenClassrooms\ServiceProxy\Annotation\Cache;
+
 /**
  * @Cache(handler="in_memory")
  * to select the in_memory handler
  */
+
  ```
 
 ### Interceptors
@@ -62,6 +66,7 @@ Interceptors that are called before the method execution, they must implement `O
 Two methods are called:
 - `prefix` : called before the method execution. Should return instance of `OpenClassrooms\ServiceProxy\Interceptor\Response\Response`.
 - `supportsPrefix` : called to know if the interceptor should be called, for example in the case of the cache interceptor, it will check that the method has the `@Cache` annotation.
+- `getPrefixPriority` : called to know the priority of the interceptor, the higher the priority, the earlier the interceptor will be called.
 
 #### Suffix interceptors :
 Interceptors that are called after the method execution, even if an exception is thrown, they must implement `OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor`
@@ -69,6 +74,7 @@ Two methods are called:
 - `suffix` : called after the method execution even if an exception is thrown. should return instance of `OpenClassrooms\ServiceProxy\Interceptor\Response\Response`.
 - `supportsSuffix` : called to know if the interceptor should be called, for example in the case of the cache
   interceptor, it will check that the method has the `@Cache` annotation.
+- `getSuffixPriority` : called to know the priority of the interceptor, the higher the priority, the earlier the interceptor will be called.
 
 #### Handling exceptions
 If you want to react to an exception thrown by the method, you can check for the exception in the suffix interceptor.

@@ -8,7 +8,11 @@ use BadMethodCallException;
 
 abstract class Annotation
 {
-    private ?string $handler = null;
+    protected ?string $handler = null;
+
+    protected int $prefixPriority = 0;
+
+    protected int $suffixPriority = 0;
 
     /**
      * @param array<string, mixed> $data Key-value for properties to be defined in this class.
@@ -69,8 +73,28 @@ abstract class Annotation
      */
     abstract public function getHandlerClass(): string;
 
+    public function getPrefixPriority(): int
+    {
+        return $this->prefixPriority;
+    }
+
+    public function getSuffixPriority(): int
+    {
+        return $this->suffixPriority;
+    }
+
     public function setHandler(?string $handler): void
     {
         $this->handler = $handler;
+    }
+
+    public function setPrefixPriority(int $prefixPriority): void
+    {
+        $this->prefixPriority = $prefixPriority;
+    }
+
+    public function setSuffixPriority(int $suffixPriority): void
+    {
+        $this->suffixPriority = $suffixPriority;
     }
 }

@@ -12,6 +12,8 @@ use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
 
 class SecurityInterceptor extends AbstractInterceptor implements PrefixInterceptor
 {
+    protected int $prefixPriority = 30;
+
     /**
      * @throws \ReflectionException
      * @throws \Exception

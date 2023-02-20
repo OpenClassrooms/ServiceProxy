@@ -6,11 +6,11 @@ namespace OpenClassrooms\ServiceProxy;
 
 use Doctrine\Common\Annotations\AnnotationReader;
 use OpenClassrooms\ServiceProxy\Factory\AccessInterceptorValueHolderFactory;
+use OpenClassrooms\ServiceProxy\Interceptor\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Method;
-use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
 use ProxyManager\Configuration as ProxyManagerConfiguration;
 use ProxyManager\FileLocator\FileLocator;
 use ProxyManager\GeneratorStrategy\FileWriterGeneratorStrategy;
@@ -26,7 +26,7 @@ class ProxyFactory
     private Configuration $configuration;
 
     /**
-     * @var PrefixInterceptor[]|SuffixInterceptor[]
+     * @var array<string, PrefixInterceptor[]|SuffixInterceptor[]>
      */
     private array $interceptors;
 
@@ -38,9 +38,29 @@ class ProxyFactory
         $this->annotationReader = new AnnotationReader();
         $this->configuration = $configuration;
         $this->interceptors = [
-            'prefix' => $prefixInterceptors,
-            'suffix' => $suffixInterceptors,
+            PrefixInterceptor::PREFIX_TYPE => $this->orderByPriority($prefixInterceptors, PrefixInterceptor::PREFIX_TYPE),
+            SuffixInterceptor::SUFFIX_TYPE => $this->orderByPriority($suffixInterceptors, SuffixInterceptor::SUFFIX_TYPE),
         ];
+    }
+
+    /**
+     * @param PrefixInterceptor[]|SuffixInterceptor[]                       $interceptors
+     * @param PrefixInterceptor::PREFIX_TYPE|SuffixInterceptor::SUFFIX_TYPE $type
+     *
+     * @return PrefixInterceptor[]|SuffixInterceptor[]
+     */
+    private function orderByPriority(array $interceptors, string $type): array
+    {
+        usort(
+            $interceptors,
+            static function (AbstractInterceptor $a, AbstractInterceptor $b) use ($type) {
+                return $type === PrefixInterceptor::PREFIX_TYPE
+                    ? $b->getPrefixPriority() <=> $a->getPrefixPriority()
+                    : $b->getSuffixPriority() <=> $a->getSuffixPriority();
+            }
+        );
+
+        return $interceptors;
     }
 
     /**
@@ -65,7 +85,7 @@ class ProxyFactory
                     $methodAnnotations,
                 )
             );
-            foreach (['prefix', 'suffix'] as $type) {
+            foreach ([PrefixInterceptor::PREFIX_TYPE, SuffixInterceptor::SUFFIX_TYPE] as $type) {
                 $interceptors = $this->filterInterceptors($instance, $type);
                 if (count($interceptors) > 0) {
                     $interceptionClosures[$type][$methodRef->getName()] = $this->getInterceptionClosure(
@@ -83,13 +103,13 @@ class ProxyFactory
 
         return $this->getInterceptorFactory()->createProxy(
             $object,
-            $interceptionClosures['prefix'] ?? [],
-            $interceptionClosures['suffix'] ?? [],
+            $interceptionClosures[PrefixInterceptor::PREFIX_TYPE] ?? [],
+            $interceptionClosures[SuffixInterceptor::SUFFIX_TYPE] ?? [],
         );
     }
 
     /**
-     * @param 'prefix'|'suffix' $type
+     * @param PrefixInterceptor::PREFIX_TYPE|SuffixInterceptor::SUFFIX_TYPE $type
      *
      * @return PrefixInterceptor[]|SuffixInterceptor[]
      */
@@ -97,14 +117,14 @@ class ProxyFactory
     {
         $interceptors = [];
         foreach ($this->interceptors[$type] as $interceptor) {
-            if ($type === 'prefix'
+            if ($type === PrefixInterceptor::PREFIX_TYPE
                 && $interceptor instanceof PrefixInterceptor
                 && $interceptor->supportsPrefix($instance)
             ) {
                 $interceptors[] = $interceptor;
             }
             if (
-                $type === 'suffix'
+                $type === SuffixInterceptor::SUFFIX_TYPE
                 && $interceptor instanceof SuffixInterceptor
                 && $interceptor->supportsSuffix($instance)
             ) {
@@ -116,9 +136,9 @@ class ProxyFactory
     }
 
     /**
-     * @param 'prefix'|'suffix' $type
-     * @param SuffixInterceptor[]|PrefixInterceptor[] $interceptors
-     * @param object[]                                $annotations
+     * @param PrefixInterceptor::PREFIX_TYPE|SuffixInterceptor::SUFFIX_TYPE $type
+     * @param SuffixInterceptor[]|PrefixInterceptor[]                       $interceptors
+     * @param object[]                                                      $annotations
      *
      * @return \Closure
      */
@@ -128,7 +148,7 @@ class ProxyFactory
         Instance $instance
     ): \Closure {
 
-        if ($type === 'prefix') {
+        if ($type === PrefixInterceptor::PREFIX_TYPE) {
             return function ($proxy, $object, $methodName, $params, &$returnEarly) use (
                 $instance,
                 $type,
@@ -168,7 +188,7 @@ class ProxyFactory
     }
 
     /**
-     * @param 'prefix'|'suffix' $type
+     * @param PrefixInterceptor::PREFIX_TYPE|SuffixInterceptor::SUFFIX_TYPE $type
      *
      * @return mixed
      */
@@ -180,8 +200,11 @@ class ProxyFactory
         &$returnEarly
     ) {
         foreach ($interceptors as $interceptor) {
-            /** @var Response $interceptorResponse */
-            $interceptorResponse = $interceptor->{$type}($instance);
+            if ($type === PrefixInterceptor::PREFIX_TYPE) {
+                $interceptorResponse = $interceptor->prefix($instance);
+            } else {
+                $interceptorResponse = $interceptor->suffix($instance);
+            }
             if ($interceptorResponse->isEarlyReturn()) {
                 $returnEarly = true;
 
@@ -206,5 +229,13 @@ class ProxyFactory
         spl_autoload_register($conf->getProxyAutoloader());
 
         return new AccessInterceptorValueHolderFactory($conf);
+    }
+
+    /**
+     * @return array<string, PrefixInterceptor[]|SuffixInterceptor[]>
+     */
+    public function getInterceptors(): array
+    {
+        return $this->interceptors;
     }
 }

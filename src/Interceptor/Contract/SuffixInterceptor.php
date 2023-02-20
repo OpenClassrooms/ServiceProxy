@@ -9,7 +9,11 @@ use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
 
 interface SuffixInterceptor
 {
+    public const SUFFIX_TYPE = 'suffix';
+
     public function suffix(Instance $instance): Response;
 
     public function supportsSuffix(Instance $instance): bool;
+
+    public function getSuffixPriority(): int;
 }

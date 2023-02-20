@@ -14,6 +14,10 @@ use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
+    protected int $prefixPriority = 10;
+
+    protected int $suffixPriority = 20;
+
     private ?string $namespace = null;
 
     private string $proxyId;

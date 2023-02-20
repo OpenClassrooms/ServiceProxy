@@ -13,6 +13,10 @@ use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
 
 class EventInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
+    protected int $prefixPriority = 20;
+
+    protected int $suffixPriority = 10;
+
     /**
      * @throws \OpenClassrooms\ServiceProxy\Annotation\Exception\InvalidEventNameException
      */

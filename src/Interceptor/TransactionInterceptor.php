@@ -13,6 +13,8 @@ use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
 
 class TransactionInterceptor extends AbstractInterceptor implements PrefixInterceptor, SuffixInterceptor
 {
+    protected int $suffixPriority = 30;
+
     /**
      * @throws \Exception
      */

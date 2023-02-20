@@ -18,6 +18,10 @@ abstract class AbstractInterceptor
      */
     private array $handlers;
 
+    protected int $prefixPriority = 0;
+
+    protected int $suffixPriority = 0;
+
     /**
      * @param \OpenClassrooms\ServiceProxy\Contract\AnnotationHandler[] $handlers
      */
@@ -137,5 +141,15 @@ abstract class AbstractInterceptor
         throw new HandlerNotFound(
             "No handler found for annotation $annotationClass with name {$annotation->getHandler()}"
         );
+    }
+
+    public function getPrefixPriority(): int
+    {
+        return $this->prefixPriority;
+    }
+
+    public function getSuffixPriority(): int
+    {
+        return $this->suffixPriority;
     }
 }
