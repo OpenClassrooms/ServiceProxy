@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache;
 
 use OpenClassrooms\ServiceProxy\Annotation\Cache;
@@ -30,14 +32,16 @@ class CacheAnnotatedClass
      */
     public function annotatedMethodWithVoidReturn(): void
     {
-        $doSomething = static function () {};
+        $doSomething = static function () {
+        };
 
         $doSomething();
     }
 
     public function nonAnnotatedMethodWithVoidReturn(): void
     {
-        $doSomething = static function () {};
+        $doSomething = static function () {
+        };
 
         $doSomething();
     }

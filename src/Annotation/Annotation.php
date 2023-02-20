@@ -20,10 +20,10 @@ abstract class Annotation
     final public function __construct(array $data = [])
     {
         foreach ($data as $key => $value) {
-            if (method_exists($this, "set" . ucfirst($key))) {
-                $this->{"set" . ucfirst($key)}($value);
+            if (method_exists($this, 'set' . ucfirst($key))) {
+                $this->{'set' . ucfirst($key)}($value);
             } else {
-                $this->$key = $value;
+                $this->{$key} = $value;
             }
         }
     }

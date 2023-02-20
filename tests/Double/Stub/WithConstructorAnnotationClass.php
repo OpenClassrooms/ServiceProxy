@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Stub;
 
 use OpenClassrooms\ServiceProxy\Annotation\Cache;
@@ -13,7 +15,6 @@ class WithConstructorAnnotationClass
 
     public function __construct($argument)
     {
-
     }
 
     public function aMethodWithoutAnnotation(): bool

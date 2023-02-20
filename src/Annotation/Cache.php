@@ -45,8 +45,8 @@ class Cache extends Annotation
     {
         $this->id = $id;
         $maxLength = self::MEMCACHE_KEY_MAX_LENGTH + self::QUOTES_LENGTH;
-        if (null !== $this->id && mb_strlen($this->id) > $maxLength) {
-            throw new InvalidCacheIdException("id is too long, MUST be inferior to $maxLength");
+        if ($this->id !== null && mb_strlen($this->id) > $maxLength) {
+            throw new InvalidCacheIdException("id is too long, MUST be inferior to {$maxLength}");
         }
     }
 

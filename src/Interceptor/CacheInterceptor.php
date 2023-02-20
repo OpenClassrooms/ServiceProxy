@@ -24,58 +24,27 @@ class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor,
 
     public function prefix(Instance $instance): Response
     {
-        $annotation = $instance->getMethod()->getAnnotation(Cache::class);
+        $annotation = $instance->getMethod()
+            ->getAnnotation(Cache::class);
         $this->setNamespace($instance, $annotation);
         $this->setProxyId($instance, $annotation);
 
-        $returnType = $instance->getMethod()->getReflection()->getReturnType();
-        if ($returnType instanceof \ReflectionNamedType && 'void' === $returnType->getName()) {
+        $returnType = $instance->getMethod()
+            ->getReflection()
+            ->getReturnType();
+        if ($returnType instanceof \ReflectionNamedType && $returnType->getName() === 'void') {
             return new Response(null, false);
         }
 
         $data = $this->getHandler(CacheHandler::class, $annotation)
-                     ->fetchWithNamespace($this->proxyId, $this->namespace)
+            ->fetchWithNamespace($this->proxyId, $this->namespace)
         ;
 
-        if (false === $data) {
+        if ($data === false) {
             return new Response(null, false);
         }
 
         return new Response($data, true);
-    }
-
-    private function setNamespace(Instance $instance, Cache $annotation): void
-    {
-        $expressionLanguage = new ExpressionLanguage();
-        $parameters = $instance->getMethod()->getParameters();
-        if (null !== $annotation->getNamespace()) {
-            $this->namespace = md5(
-                $expressionLanguage->evaluate(
-                    $annotation->getNamespace(),
-                    $parameters
-                )
-            );
-        }
-    }
-
-    private function setProxyId(Instance $instance, Cache $annotation): void
-    {
-        $expressionLanguage = new ExpressionLanguage();
-        $parameters = $instance->getMethod()->getParameters();
-        if (null !== $annotation->getId()) {
-            $this->proxyId = $expressionLanguage->evaluate(
-                $annotation->getId(),
-                $parameters
-            );
-        } else {
-            $key = $instance->getReflection()->getName() . '::' . $instance->getMethod()->getName();
-            if (count($parameters) > 0) {
-                foreach ($parameters as $parameter) {
-                    $key .= '::' . serialize($parameter);
-                }
-            }
-            $this->proxyId = md5($key);
-        }
     }
 
     public function suffix(Instance $instance): Response
@@ -84,15 +53,17 @@ class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor,
             return new Response();
         }
 
-        $annotation = $instance->getMethod()->getAnnotation(Cache::class);
-        $data = $instance->getMethod()->getResponse();
+        $annotation = $instance->getMethod()
+            ->getAnnotation(Cache::class);
+        $data = $instance->getMethod()
+            ->getResponse();
         $this->getHandler(CacheHandler::class, $annotation)
-             ->saveWithNamespace(
-                 $this->proxyId,
-                 $data,
-                 $this->namespace,
-                 $annotation->getLifetime()
-             )
+            ->saveWithNamespace(
+                $this->proxyId,
+                $data,
+                $this->namespace,
+                $annotation->getLifetime()
+            )
         ;
 
         return new Response($data);
@@ -105,6 +76,44 @@ class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor,
 
     public function supportsPrefix(Instance $instance): bool
     {
-        return $instance->getMethod()->hasAnnotation(Cache::class);
+        return $instance->getMethod()
+            ->hasAnnotation(Cache::class);
+    }
+
+    private function setNamespace(Instance $instance, Cache $annotation): void
+    {
+        $expressionLanguage = new ExpressionLanguage();
+        $parameters = $instance->getMethod()
+            ->getParameters();
+        if ($annotation->getNamespace() !== null) {
+            $this->namespace = md5(
+                $expressionLanguage->evaluate(
+                    $annotation->getNamespace(),
+                    $parameters
+                )
+            );
+        }
+    }
+
+    private function setProxyId(Instance $instance, Cache $annotation): void
+    {
+        $expressionLanguage = new ExpressionLanguage();
+        $parameters = $instance->getMethod()
+            ->getParameters();
+        if ($annotation->getId() !== null) {
+            $this->proxyId = $expressionLanguage->evaluate(
+                $annotation->getId(),
+                $parameters
+            );
+        } else {
+            $key = $instance->getReflection()
+                ->getName() . '::' . $instance->getMethod()->getName();
+            if (count($parameters) > 0) {
+                foreach ($parameters as $parameter) {
+                    $key .= '::' . serialize($parameter);
+                }
+            }
+            $this->proxyId = md5($key);
+        }
     }
 }

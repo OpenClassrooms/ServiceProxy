@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
 use OpenClassrooms\ServiceProxy\Contract\SecurityHandler;
@@ -17,49 +19,47 @@ class SecurityInterceptorTest extends TestCase
 
     private SecurityAnnotatedClass $proxy;
 
-    /**
-     * @test
-     */
-    public function OnlyRoleNotAuthorized_ThrowException(): void
+    protected function setUp(): void
+    {
+        $this->handler = new SecurityHandlerMock();
+        $this->proxyFactory = $this->getProxyFactory(
+            [
+                new SecurityInterceptor(
+                    [$this->handler],
+                ),
+            ]
+        );
+        $this->proxy = $this->proxyFactory->createProxy(new SecurityAnnotatedClass());
+    }
+
+    public function testOnlyRoleNotAuthorizedThrowException(): void
     {
         $this->expectException(\RuntimeException::class);
         $this->proxy->nonAuthorizedRole(1);
     }
 
-    /**
-     * @test
-     */
-    public function OnlyAuthorizedRole_DonTThrowException(): void
+    public function testOnlyAuthorizedRoleDonTThrowException(): void
     {
         $this->proxy->oneRole(1);
         $this->assertSame(['ROLE_1'], $this->handler->attributes);
         $this->assertNull($this->handler->param);
     }
 
-    /**
-     * @test
-     */
-    public function ManyRoles_DonTThrowException(): void
+    public function testManyRolesDonTThrowException(): void
     {
         $this->proxy->manyRoles('whatever');
         $this->assertSame(['ROLE_1', 'ROLE_2'], $this->handler->attributes);
         $this->assertNull($this->handler->param);
     }
 
-    /**
-     * @test
-     */
-    public function Request_CheckAccessOnRequest(): void
+    public function testRequestCheckAccessOnRequest(): void
     {
         $this->proxy->checkRequestRoleSecurity(1);
         $this->assertSame(['ROLE_1'], $this->handler->attributes);
         $this->assertSame(1, $this->handler->param);
     }
 
-    /**
-     * @test
-     */
-    public function Field_CheckAccessOnField(): void
+    public function testFieldCheckAccessOnField(): void
     {
         $this->proxy->fieldRoleSecurity(
             (object) [
@@ -70,10 +70,7 @@ class SecurityInterceptorTest extends TestCase
         $this->assertSame(1, $this->handler->param);
     }
 
-    /**
-     * @test
-     */
-    public function FieldOnMultipleParams_CheckAccessOnField(): void
+    public function testFieldOnMultipleParamsCheckAccessOnField(): void
     {
         $this->proxy->fieldRoleSecurityWithMultipleParams(
             [
@@ -91,35 +88,16 @@ class SecurityInterceptorTest extends TestCase
         $this->assertSame('result2', $this->handler->param);
     }
 
-    /**
-     * @test
-     */
-    public function MultipleSecurityAnnotations_Deny(): void
+    public function testMultipleSecurityAnnotationsDeny(): void
     {
         $this->expectException(\RuntimeException::class);
         $this->proxy->multipleSecurityAnnotationNotAuthorized();
     }
 
-    /**
-     * @test
-     */
-    public function MultipleSecurityAnnotations_Authorize(): void
+    public function testMultipleSecurityAnnotationsAuthorize(): void
     {
         $this->proxy->multipleSecurityAnnotation();
         $this->assertSame(['ROLE_2'], $this->handler->attributes);
         $this->assertNull($this->handler->param);
-    }
-
-    protected function setUp(): void
-    {
-        $this->handler = new SecurityHandlerMock();
-        $this->proxyFactory = $this->getProxyFactory(
-            [
-                new SecurityInterceptor(
-                    [$this->handler],
-                ),
-            ]
-        );
-        $this->proxy = $this->proxyFactory->createProxy(new SecurityAnnotatedClass());
     }
 }

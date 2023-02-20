@@ -1,4 +1,8 @@
-<?php /** @noinspection PhpUnusedParameterInspection */
+<?php
+
+declare(strict_types=1);
+
+/** @noinspection PhpUnusedParameterInspection */
 
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event;
 

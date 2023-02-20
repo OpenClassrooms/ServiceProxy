@@ -52,7 +52,7 @@ final class Method
             return array_values($annotations)[0];
         }
 
-        throw new \LogicException("The annotation $annotationClass is not defined.");
+        throw new \LogicException("The annotation {$annotationClass} is not defined.");
     }
 
     /**
@@ -76,7 +76,7 @@ final class Method
             return array_values($annotations);
         }
 
-        throw new \LogicException("The annotation $annotationClass is not defined.");
+        throw new \LogicException("The annotation {$annotationClass} is not defined.");
     }
 
     public function getName(): string

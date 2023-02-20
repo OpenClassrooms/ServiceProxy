@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Generator\Method;
 
-use Laminas\Code\Generator\PropertyGenerator;
-use ProxyManager\Generator\MethodGenerator;
-use ProxyManager\Generator\Util\ProxiedMethodReturnExpression;
-use ReflectionMethod;
-
 use function array_keys;
 use function implode;
+use Laminas\Code\Generator\PropertyGenerator;
+use ProxyManager\Generator\MethodGenerator;
+
+use ProxyManager\Generator\Util\ProxiedMethodReturnExpression;
+use ReflectionMethod;
 use function str_replace;
 use function var_export;
 
@@ -67,15 +67,15 @@ PHP;
         PropertyGenerator $suffixInterceptors,
         ?ReflectionMethod $originalMethod
     ): string {
-        $name                   = var_export($method->getName(), true);
-        $valueHolderName        = $valueHolder->getName();
+        $name = var_export($method->getName(), true);
+        $valueHolderName = $valueHolder->getName();
         $prefixInterceptorsName = $prefixInterceptors->getName();
         $suffixInterceptorsName = $suffixInterceptors->getName();
-        $params                 = [];
+        $params = [];
 
         foreach ($method->getParameters() as $parameter) {
             $parameterName = $parameter->getName();
-            $params[]      = var_export($parameterName, true) . ' => $' . $parameter->getName();
+            $params[] = var_export($parameterName, true) . ' => $' . $parameter->getName();
         }
 
         $paramsString = 'array(' . implode(', ', $params) . ')';
@@ -85,10 +85,16 @@ PHP;
             '{{$name}}' => $name,
             '{{$valueHolderName}}' => $valueHolderName,
             '{{$paramsString}}' => $paramsString,
-            '{{$returnEarlyPrefixExpression}}' => ProxiedMethodReturnExpression::generate('$prefixReturnValue', $originalMethod),
+            '{{$returnEarlyPrefixExpression}}' => ProxiedMethodReturnExpression::generate(
+                '$prefixReturnValue',
+                $originalMethod
+            ),
             '{{$methodBody}}' => $methodBody,
             '{{$suffixInterceptorsName}}' => $suffixInterceptorsName,
-            '{{$returnEarlySuffixExpression}}' => ProxiedMethodReturnExpression::generate('$suffixReturnValue', $originalMethod),
+            '{{$returnEarlySuffixExpression}}' => ProxiedMethodReturnExpression::generate(
+                '$suffixReturnValue',
+                $originalMethod
+            ),
             '{{$returnExpression}}' => ProxiedMethodReturnExpression::generate('$returnValue', $originalMethod),
 
         ];

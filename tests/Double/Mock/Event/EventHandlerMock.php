@@ -16,7 +16,7 @@ final class EventHandlerMock implements EventHandler
         $events = $this->getEvents($name);
 
         if (!isset($events[$position])) {
-            throw new \RuntimeException("Event $name not found at position $position");
+            throw new \RuntimeException("Event {$name} not found at position {$position}");
         }
 
         return $events[$position];
@@ -27,7 +27,7 @@ final class EventHandlerMock implements EventHandler
      */
     public function getEvents(string $name = null): array
     {
-        if (null !== $name) {
+        if ($name !== null) {
             return array_values(
                 array_filter(
                     $this->events,

@@ -13,14 +13,14 @@ use OpenClassrooms\ServiceProxy\Contract\Exception\MissingDefaultHandler;
 
 abstract class AbstractInterceptor
 {
+    protected int $prefixPriority = 0;
+
+    protected int $suffixPriority = 0;
+
     /**
      * @var array<class-string<AnnotationHandler>, array<string, AnnotationHandler>>
      */
     private array $handlers;
-
-    protected int $prefixPriority = 0;
-
-    protected int $suffixPriority = 0;
 
     /**
      * @param \OpenClassrooms\ServiceProxy\Contract\AnnotationHandler[] $handlers
@@ -36,6 +36,50 @@ abstract class AbstractInterceptor
     }
 
     /**
+     * @template T of class-string<\OpenClassrooms\ServiceProxy\Contract\AnnotationHandler>
+     *
+     * @param class-string<T> $handlerInterface
+     *
+     * @return T
+     */
+    public function getHandler(string $handlerInterface, Annotation $annotation): AnnotationHandler
+    {
+        $handlers = $this->handlers[$handlerInterface];
+        if ($annotation->getHandler() === null) {
+            if (count($handlers) === 1) {
+                return array_values($handlers)[0];
+            }
+            if (count($handlers) > 1) {
+                foreach ($handlers as $handler) {
+                    if ($handler->isDefault()) {
+                        return $handler;
+                    }
+                }
+            }
+        }
+
+        $handlerName = $annotation->getHandler();
+        if (isset($handlers[$handlerName])) {
+            return $handlers[$handlerName];
+        }
+
+        $annotationClass = get_class($annotation);
+        throw new HandlerNotFound(
+            "No handler found for annotation {$annotationClass} with name {$annotation->getHandler()}"
+        );
+    }
+
+    public function getPrefixPriority(): int
+    {
+        return $this->prefixPriority;
+    }
+
+    public function getSuffixPriority(): int
+    {
+        return $this->suffixPriority;
+    }
+
+    /**
      * @return array<class-string<AnnotationHandler>, array<string, AnnotationHandler>>
      */
     private function indexHandlers(array $handlers): array
@@ -46,7 +90,7 @@ abstract class AbstractInterceptor
             $indexedHandlers[$handlerInterface] ??= [];
             if (isset($indexedHandlers[$handlerInterface][$handler->getName()])) {
                 throw new DuplicatedHandler(
-                    "Handlers must have a unique name. Duplicate found for {$handler->getName()}, type $handlerInterface."
+                    "Handlers must have a unique name. Duplicate found for {$handler->getName()}, type {$handlerInterface}."
                 );
             }
             $indexedHandlers[$handlerInterface][$handler->getName()] = $handler;
@@ -85,7 +129,7 @@ abstract class AbstractInterceptor
                 }
             }
             if ($defaultHandlers > 1) {
-                throw new DuplicatedDefaultHandler("Only one default handler is allowed for $handlerInterface.");
+                throw new DuplicatedDefaultHandler("Only one default handler is allowed for {$handlerInterface}.");
             }
         }
     }
@@ -102,54 +146,10 @@ abstract class AbstractInterceptor
                 }
                 if ($defaultHandlers === 0) {
                     throw new MissingDefaultHandler(
-                        "Multiple handlers found for $handlerInterface, but no default handler is defined."
+                        "Multiple handlers found for {$handlerInterface}, but no default handler is defined."
                     );
                 }
             }
         }
-    }
-
-    /**
-     * @template T of class-string<\OpenClassrooms\ServiceProxy\Contract\AnnotationHandler>
-     *
-     * @param class-string<T> $handlerInterface
-     *
-     * @return T
-     */
-    public function getHandler(string $handlerInterface, Annotation $annotation): AnnotationHandler
-    {
-        $handlers = $this->handlers[$handlerInterface];
-        if ($annotation->getHandler() === null) {
-            if (count($handlers) === 1) {
-                return array_values($handlers)[0];
-            }
-            if (count($handlers) > 1) {
-                foreach ($handlers as $handler) {
-                    if ($handler->isDefault()) {
-                        return $handler;
-                    }
-                }
-            }
-        }
-
-        $handlerName = $annotation->getHandler();
-        if (isset($handlers[$handlerName])) {
-            return $handlers[$handlerName];
-        }
-
-        $annotationClass = get_class($annotation);
-        throw new HandlerNotFound(
-            "No handler found for annotation $annotationClass with name {$annotation->getHandler()}"
-        );
-    }
-
-    public function getPrefixPriority(): int
-    {
-        return $this->prefixPriority;
-    }
-
-    public function getSuffixPriority(): int
-    {
-        return $this->suffixPriority;
     }
 }

@@ -20,7 +20,8 @@ class TransactionInterceptor extends AbstractInterceptor implements PrefixInterc
      */
     public function prefix(Instance $instance): Response
     {
-        $annotation = $instance->getMethod()->getAnnotation(Transaction::class);
+        $annotation = $instance->getMethod()
+            ->getAnnotation(Transaction::class);
         $handler = $this->getHandler(TransactionHandler::class, $annotation);
         $handler->beginTransaction();
 
@@ -29,7 +30,8 @@ class TransactionInterceptor extends AbstractInterceptor implements PrefixInterc
 
     public function suffix(Instance $instance): Response
     {
-        $annotation = $instance->getMethod()->getAnnotation(Transaction::class);
+        $annotation = $instance->getMethod()
+            ->getAnnotation(Transaction::class);
         $handler = $this->getHandler(TransactionHandler::class, $annotation);
         if ($instance->getMethod()->threwException()) {
             if ($handler->isTransactionActive()) {
@@ -49,6 +51,7 @@ class TransactionInterceptor extends AbstractInterceptor implements PrefixInterc
 
     public function supportsPrefix(Instance $instance): bool
     {
-        return $instance->getMethod()->hasAnnotation(Transaction::class);
+        return $instance->getMethod()
+            ->hasAnnotation(Transaction::class);
     }
 }

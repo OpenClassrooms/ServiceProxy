@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache;
 
 use Doctrine\Common\Cache\ArrayCache;
@@ -20,7 +22,7 @@ class CacheHandlerMock implements CacheHandler
     {
         $this->name = $name ?? 'array';
         $this->cacheProvider = new CacheProviderDecorator(new ArrayCache());
-        
+
         self::$lifeTime = null;
         $this->default = $default;
     }

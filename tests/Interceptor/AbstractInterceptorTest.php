@@ -20,76 +20,60 @@ final class AbstractInterceptorTest extends TestCase
 {
     use ProxyTestTrait;
 
-    /**
-     * @test
-     */
-    public function WithNotFoundHandler_ThrowException(): void
+    public function testWithNotFoundHandlerThrowException(): void
     {
         $this->expectException(HandlerNotFound::class);
         $this->getProxyFactory(
             [new CacheInterceptor([new CacheHandlerMock()])]
-        )->createProxy(new CacheAnnotatedClass())->invalidHandler();
+        )->createProxy(new CacheAnnotatedClass())
+            ->invalidHandler();
     }
 
-    /**
-     * @test
-     */
-    public function WithMultipleHandlers_WithTheSameName_ThrowException(): void
+    public function testWithMultipleHandlersWithTheSameNameThrowException(): void
     {
         $this->expectException(DuplicatedHandler::class);
         new CacheInterceptor([new CacheHandlerMock(), new CacheHandlerMock()]);
     }
 
-    /**
-     * @test
-     */
-    public function WithMultipleDefaultHandlers_ThrowException(): void
+    public function testWithMultipleDefaultHandlersThrowException(): void
     {
         $this->expectException(DuplicatedDefaultHandler::class);
         new CacheInterceptor([new CacheHandlerMock(), new CacheHandlerMock('other')]);
     }
 
-    /**
-     * @test
-     */
-    public function WithMultipleHandlers_NoDefault_ThrowException(): void
+    public function testWithMultipleHandlersNoDefaultThrowException(): void
     {
         $this->expectException(MissingDefaultHandler::class);
         new CacheInterceptor([
-                                 new CacheHandlerMock('other', false),
-                                 new CacheHandlerMock('other2', false),
-                             ]);
+            new CacheHandlerMock('other', false),
+            new CacheHandlerMock('other2', false),
+        ]);
     }
 
-    /**
-     * @test
-     */
-    public function WithMultipleHandlers_WithDifferentName_DoNotThrowException(): void
+    public function testWithMultipleHandlersWithDifferentNameDoNotThrowException(): void
     {
         $interceptor = new CacheInterceptor([
-                                                new CacheHandlerMock(),
-                                                new CacheHandlerMock('other', false),
-                                            ]);
+            new CacheHandlerMock(),
+            new CacheHandlerMock('other', false),
+        ]);
         $handler = $interceptor->getHandler(
             CacheHandler::class,
-            new Cache(['handler' => 'other'])
+            new Cache([
+                'handler' => 'other',
+            ])
         );
         $this->assertSame('other', $handler->getName());
     }
 
-    /**
-     * @test
-     */
-    public function WithOneHandler_NoDefault_ReturnFirst(): void
+    public function testWithOneHandlerNoDefaultReturnFirst(): void
     {
         $interceptor = new CacheInterceptor([
-                                                new CacheHandlerMock('other', false),
-                                            ]);
+            new CacheHandlerMock('other', false),
+        ]);
         $handler = $interceptor->getHandler(
             CacheHandler::class,
             new Cache()
         );
         $this->assertSame('other', $handler->getName());
     }
-
 }

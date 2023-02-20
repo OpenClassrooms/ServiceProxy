@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
 use Doctrine\Common\Annotations\AnnotationException;
@@ -24,19 +26,24 @@ class CacheInterceptorTest extends TestCase
 
     private CacheAnnotatedClass $proxy;
 
-    /**
-     * @test
-     */
-    public function TooLongId_WithId_ThrowException(): void
+    protected function setUp(): void
+    {
+        $this->cacheHandlerMock = new CacheHandlerMock();
+        $this->proxyFactory = $this->getProxyFactory(
+            [
+                new CacheInterceptor([$this->cacheHandlerMock]),
+            ]
+        );
+        $this->proxy = $this->proxyFactory->createProxy(new CacheAnnotatedClass());
+    }
+
+    public function testTooLongIdWithIdThrowException(): void
     {
         $this->expectException(AnnotationException::class);
         $this->proxyFactory->createProxy(new InvalidIdCacheAnnotatedClass());
     }
 
-    /**
-     * @test
-     */
-    public function OnException_DontSave(): void
+    public function testOnExceptionDontSave(): void
     {
         try {
             $this->proxy->annotatedMethodWithException();
@@ -51,10 +58,7 @@ class CacheInterceptorTest extends TestCase
         }
     }
 
-    /**
-     * @test
-     */
-    public function NotInCache_ReturnData(): void
+    public function testNotInCacheReturnData(): void
     {
         $data = $this->proxyCall([new CacheAnnotatedClass(), 'annotatedMethod']);
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
@@ -66,10 +70,7 @@ class CacheInterceptorTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
-    public function InCache_ReturnData(): void
+    public function testInCacheReturnData(): void
     {
         $inCacheData = 'InCacheData';
         $this->cacheHandlerMock->save(
@@ -80,40 +81,28 @@ class CacheInterceptorTest extends TestCase
         $this->assertEquals($inCacheData, $data);
     }
 
-    /**
-     * @test
-     */
-    public function WithLifeTime_ReturnData(): void
+    public function testWithLifeTimeReturnData(): void
     {
         $data = $this->proxy->cacheWithLifeTime();
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
         $this->assertEquals(60, CacheHandlerMock::$lifeTime);
     }
 
-    /**
-     * @test
-     */
-    public function WithId_ReturnData(): void
+    public function testWithIdReturnData(): void
     {
         $data = $this->proxy->cacheWithId();
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
         $this->assertEquals(CacheAnnotatedClass::DATA, $this->cacheHandlerMock->fetch('test'));
     }
 
-    /**
-     * @test
-     */
-    public function WithIdAndParameters_ReturnData(): void
+    public function testWithIdAndParametersReturnData(): void
     {
         $data = $this->proxy->cacheWithIdAndParameters(new ParameterClassStub(), 'param 2');
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
         $this->assertEquals(CacheAnnotatedClass::DATA, $this->cacheHandlerMock->fetch('test1'));
     }
 
-    /**
-     * @test
-     */
-    public function WithNamespace_ReturnData(): void
+    public function testWithNamespaceReturnData(): void
     {
         $data = $this->proxy->cacheWithNamespace();
 
@@ -127,10 +116,7 @@ class CacheInterceptorTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
-    public function WithNamespaceAndParameters_ReturnData(): void
+    public function testWithNamespaceAndParametersReturnData(): void
     {
         $data = $this->proxy->cacheWithNamespaceAndParameters(new ParameterClassStub(), 'param 2');
 
@@ -145,16 +131,5 @@ class CacheInterceptorTest extends TestCase
                 )
             )
         );
-    }
-
-    protected function setUp(): void
-    {
-        $this->cacheHandlerMock = new CacheHandlerMock();
-        $this->proxyFactory = $this->getProxyFactory(
-            [
-                new CacheInterceptor([$this->cacheHandlerMock]),
-            ]
-        );
-        $this->proxy = $this->proxyFactory->createProxy(new CacheAnnotatedClass());
     }
 }

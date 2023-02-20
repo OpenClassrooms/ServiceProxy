@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Tests;
 
 use OpenClassrooms\ServiceProxy\Interceptor\CacheInterceptor;
@@ -13,8 +15,8 @@ use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event\EventHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Security\SecurityHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Transaction\TransactionHandlerMock;
-use OpenClassrooms\ServiceProxy\Tests\Double\Stub\WithConstructorAnnotationClass;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\CacheAnnotatedClass;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\WithConstructorAnnotationClass;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\WithoutAnnotationClass;
 use PHPUnit\Framework\TestCase;
 
@@ -27,10 +29,19 @@ class ProxyFactoryTest extends TestCase
 
     private ProxyFactory $factory;
 
-    /**
-     * @test
-     */
-    public function WithoutAnnotation_ReturnServiceProxyInterface(): void
+    protected function setUp(): void
+    {
+        $this->factory = $this->getProxyFactory(
+            [
+                new CacheInterceptor([new CacheHandlerMock()]),
+                new EventInterceptor([new EventHandlerMock()]),
+                new TransactionInterceptor([new TransactionHandlerMock()]),
+                new SecurityInterceptor([new SecurityHandlerMock()]),
+            ]
+        );
+    }
+
+    public function testWithoutAnnotationReturnServiceProxyInterface(): void
     {
         $inputClass = new WithoutAnnotationClass();
         $inputClass->field = true;
@@ -41,10 +52,7 @@ class ProxyFactoryTest extends TestCase
         $this->assertNotProxy($inputClass, $proxy);
     }
 
-    /**
-     * @test
-     */
-    public function WithCacheAnnotation_ReturnServiceProxyCacheInterface(): void
+    public function testWithCacheAnnotationReturnServiceProxyCacheInterface(): void
     {
         $inputClass = new CacheAnnotatedClass();
         $proxy = $this->factory->createProxy($inputClass);
@@ -53,10 +61,7 @@ class ProxyFactoryTest extends TestCase
         $this->assertTrue($proxy->nonAnnotatedMethod());
     }
 
-    /**
-     * @test
-     */
-    public function WithCacheAnnotationWithConstructor_ReturnServiceProxyCacheInterface(): void
+    public function testWithCacheAnnotationWithConstructorReturnServiceProxyCacheInterface(): void
     {
         $inputClass = new WithConstructorAnnotationClass('test');
         $proxy = $this->factory->createProxy($inputClass);
@@ -65,10 +70,7 @@ class ProxyFactoryTest extends TestCase
         $this->assertTrue($proxy->aMethodWithoutAnnotation());
     }
 
-    /**
-     * @test
-     */
-    public function checkInterceptorsOrders(): void
+    public function testCheckInterceptorsOrders(): void
     {
         $interceptors = $this->factory->getInterceptors();
 
@@ -98,18 +100,6 @@ class ProxyFactoryTest extends TestCase
                 SecurityInterceptor::class,
             ],
             $suffixInterceptorsClasses
-        );
-    }
-
-    protected function setUp(): void
-    {
-        $this->factory = $this->getProxyFactory(
-            [
-                new CacheInterceptor([new CacheHandlerMock()]),
-                new EventInterceptor([new EventHandlerMock()]),
-                new TransactionInterceptor([new TransactionHandlerMock()]),
-                new SecurityInterceptor([new SecurityHandlerMock()]),
-            ]
         );
     }
 }

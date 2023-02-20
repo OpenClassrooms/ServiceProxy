@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Factory;
 
 use Closure;
+use function get_class;
 use OpenClassrooms\ServiceProxy\Generator\AccessInterceptorValueHolderGenerator;
 use OutOfBoundsException;
 use ProxyManager\Configuration;
@@ -14,9 +15,8 @@ use ProxyManager\Proxy\AccessInterceptorValueHolderInterface;
 use ProxyManager\Proxy\ValueHolderInterface;
 use ProxyManager\ProxyGenerator\ProxyGeneratorInterface;
 use ProxyManager\Signature\Exception\InvalidSignatureException;
-use ProxyManager\Signature\Exception\MissingSignatureException;
 
-use function get_class;
+use ProxyManager\Signature\Exception\MissingSignatureException;
 
 /**
  * Factory responsible of producing proxy objects

@@ -18,9 +18,6 @@ use Symfony\Component\Filesystem\Filesystem;
 
 class ProxyFactory
 {
-    /**
-     * @var null|\Doctrine\Common\Annotations\AnnotationReader
-     */
     private ?AnnotationReader $annotationReader;
 
     private Configuration $configuration;
@@ -38,29 +35,15 @@ class ProxyFactory
         $this->annotationReader = new AnnotationReader();
         $this->configuration = $configuration;
         $this->interceptors = [
-            PrefixInterceptor::PREFIX_TYPE => $this->orderByPriority($prefixInterceptors, PrefixInterceptor::PREFIX_TYPE),
-            SuffixInterceptor::SUFFIX_TYPE => $this->orderByPriority($suffixInterceptors, SuffixInterceptor::SUFFIX_TYPE),
+            PrefixInterceptor::PREFIX_TYPE => $this->orderByPriority(
+                $prefixInterceptors,
+                PrefixInterceptor::PREFIX_TYPE
+            ),
+            SuffixInterceptor::SUFFIX_TYPE => $this->orderByPriority(
+                $suffixInterceptors,
+                SuffixInterceptor::SUFFIX_TYPE
+            ),
         ];
-    }
-
-    /**
-     * @param PrefixInterceptor[]|SuffixInterceptor[]                       $interceptors
-     * @param PrefixInterceptor::PREFIX_TYPE|SuffixInterceptor::SUFFIX_TYPE $type
-     *
-     * @return PrefixInterceptor[]|SuffixInterceptor[]
-     */
-    private function orderByPriority(array $interceptors, string $type): array
-    {
-        usort(
-            $interceptors,
-            static function (AbstractInterceptor $a, AbstractInterceptor $b) use ($type) {
-                return $type === PrefixInterceptor::PREFIX_TYPE
-                    ? $b->getPrefixPriority() <=> $a->getPrefixPriority()
-                    : $b->getSuffixPriority() <=> $a->getSuffixPriority();
-            }
-        );
-
-        return $interceptors;
     }
 
     /**
@@ -101,11 +84,68 @@ class ProxyFactory
             return $object;
         }
 
-        return $this->getInterceptorFactory()->createProxy(
-            $object,
-            $interceptionClosures[PrefixInterceptor::PREFIX_TYPE] ?? [],
-            $interceptionClosures[SuffixInterceptor::SUFFIX_TYPE] ?? [],
+        return $this->getInterceptorFactory()
+            ->createProxy(
+                $object,
+                $interceptionClosures[PrefixInterceptor::PREFIX_TYPE] ?? [],
+                $interceptionClosures[SuffixInterceptor::SUFFIX_TYPE] ?? [],
+            );
+    }
+
+    /**
+     * @param PrefixInterceptor::PREFIX_TYPE|SuffixInterceptor::SUFFIX_TYPE $type
+     *
+     * @return mixed
+     */
+    public function intercept(
+        string $type,
+        array $interceptors,
+        Instance $instance,
+        $response,
+        &$returnEarly
+    ) {
+        foreach ($interceptors as $interceptor) {
+            if ($type === PrefixInterceptor::PREFIX_TYPE) {
+                $interceptorResponse = $interceptor->prefix($instance);
+            } else {
+                $interceptorResponse = $interceptor->suffix($instance);
+            }
+            if ($interceptorResponse->isEarlyReturn()) {
+                $returnEarly = true;
+
+                return $interceptorResponse->getValue();
+            }
+        }
+
+        return $response;
+    }
+
+    /**
+     * @return array<string, PrefixInterceptor[]|SuffixInterceptor[]>
+     */
+    public function getInterceptors(): array
+    {
+        return $this->interceptors;
+    }
+
+    /**
+     * @param PrefixInterceptor[]|SuffixInterceptor[]                       $interceptors
+     * @param PrefixInterceptor::PREFIX_TYPE|SuffixInterceptor::SUFFIX_TYPE $type
+     *
+     * @return PrefixInterceptor[]|SuffixInterceptor[]
+     */
+    private function orderByPriority(array $interceptors, string $type): array
+    {
+        usort(
+            $interceptors,
+            static function (AbstractInterceptor $a, AbstractInterceptor $b) use ($type) {
+                return $type === PrefixInterceptor::PREFIX_TYPE
+                    ? $b->getPrefixPriority() <=> $a->getPrefixPriority()
+                    : $b->getSuffixPriority() <=> $a->getSuffixPriority();
+            }
         );
+
+        return $interceptors;
     }
 
     /**
@@ -138,16 +178,12 @@ class ProxyFactory
     /**
      * @param PrefixInterceptor::PREFIX_TYPE|SuffixInterceptor::SUFFIX_TYPE $type
      * @param SuffixInterceptor[]|PrefixInterceptor[]                       $interceptors
-     * @param object[]                                                      $annotations
-     *
-     * @return \Closure
      */
     private function getInterceptionClosure(
         string $type,
         array $interceptors,
         Instance $instance
     ): \Closure {
-
         if ($type === PrefixInterceptor::PREFIX_TYPE) {
             return function ($proxy, $object, $methodName, $params, &$returnEarly) use (
                 $instance,
@@ -171,7 +207,6 @@ class ProxyFactory
             $type,
             $interceptors
         ) {
-
             $instance
                 ->setParameters($params)
                 ->setResponse($response)
@@ -185,34 +220,6 @@ class ProxyFactory
                 $returnEarly
             );
         };
-    }
-
-    /**
-     * @param PrefixInterceptor::PREFIX_TYPE|SuffixInterceptor::SUFFIX_TYPE $type
-     *
-     * @return mixed
-     */
-    public function intercept(
-        string $type,
-        array $interceptors,
-        Instance $instance,
-        $response,
-        &$returnEarly
-    ) {
-        foreach ($interceptors as $interceptor) {
-            if ($type === PrefixInterceptor::PREFIX_TYPE) {
-                $interceptorResponse = $interceptor->prefix($instance);
-            } else {
-                $interceptorResponse = $interceptor->suffix($instance);
-            }
-            if ($interceptorResponse->isEarlyReturn()) {
-                $returnEarly = true;
-
-                return $interceptorResponse->getValue();
-            }
-        }
-
-        return $response;
     }
 
     private function getInterceptorFactory(): AccessInterceptorValueHolderFactory
@@ -229,13 +236,5 @@ class ProxyFactory
         spl_autoload_register($conf->getProxyAutoloader());
 
         return new AccessInterceptorValueHolderFactory($conf);
-    }
-
-    /**
-     * @return array<string, PrefixInterceptor[]|SuffixInterceptor[]>
-     */
-    public function getInterceptors(): array
-    {
-        return $this->interceptors;
     }
 }

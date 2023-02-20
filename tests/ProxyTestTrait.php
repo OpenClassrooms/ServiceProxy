@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OpenClassrooms\ServiceProxy\Tests;
 
 use OpenClassrooms\ServiceProxy\Configuration;
@@ -17,6 +19,12 @@ use Symfony\Component\Filesystem\Filesystem;
 trait ProxyTestTrait
 {
     protected static string $cacheDir = __DIR__ . '/cache';
+
+    protected function tearDown(): void
+    {
+        $fs = new Filesystem();
+        $fs->remove(self::$cacheDir);
+    }
 
     protected function assertProxy(object $input, object $proxy): void
     {
@@ -53,12 +61,7 @@ trait ProxyTestTrait
     {
         [$object, $method] = $call;
 
-        return $this->proxyFactory->createProxy($object)->$method();
-    }
-
-    protected function tearDown(): void
-    {
-        $fs = new Filesystem();
-        $fs->remove(self::$cacheDir);
+        return $this->proxyFactory->createProxy($object)
+            ->{$method}();
     }
 }

@@ -20,7 +20,8 @@ class SecurityInterceptor extends AbstractInterceptor implements PrefixIntercept
      */
     public function prefix(Instance $instance): Response
     {
-        $annotations = $instance->getMethod()->getAnnotations(Security::class);
+        $annotations = $instance->getMethod()
+            ->getAnnotations(Security::class);
         foreach ($annotations as $annotation) {
             $handler = $this->getHandler(SecurityHandler::class, $annotation);
             $handler->checkAccess(
@@ -33,30 +34,7 @@ class SecurityInterceptor extends AbstractInterceptor implements PrefixIntercept
     }
 
     /**
-     * @throws \ReflectionException
-     */
-    private function getCheckParam($annotation, Instance $instance)
-    {
-        $param = null;
-        $field = $annotation->getCheckField();
-
-        $parameters = $instance->getMethod()->getParameters();
-        if (count($parameters) === 1) {
-            $parameters = reset($parameters);
-        }
-
-        if ($annotation->checkRequest()) {
-            $param = $parameters;
-        } elseif (null !== $field) {
-            $param = $this->getByPath($parameters, $field);
-        }
-
-        return $param;
-    }
-
-    /**
      * @param array|object $input
-     * @param string       $path
      *
      * @return mixed
      * @throws \ReflectionException
@@ -70,6 +48,35 @@ class SecurityInterceptor extends AbstractInterceptor implements PrefixIntercept
         }
 
         return $this->getByField($input, $field);
+    }
+
+    public function supportsPrefix(Instance $instance): bool
+    {
+        return $instance->getMethod()
+            ->hasAnnotation(Security::class);
+    }
+
+    /**
+     * @throws \ReflectionException
+     */
+    private function getCheckParam($annotation, Instance $instance)
+    {
+        $param = null;
+        $field = $annotation->getCheckField();
+
+        $parameters = $instance->getMethod()
+            ->getParameters();
+        if (count($parameters) === 1) {
+            $parameters = reset($parameters);
+        }
+
+        if ($annotation->checkRequest()) {
+            $param = $parameters;
+        } elseif ($field !== null) {
+            $param = $this->getByPath($parameters, $field);
+        }
+
+        return $param;
     }
 
     private function getFirstField(string &$path): string
@@ -95,7 +102,7 @@ class SecurityInterceptor extends AbstractInterceptor implements PrefixIntercept
 
         if (is_object($input)) {
             try {
-                return $input->$field;
+                return $input->{$field};
             } catch (\Exception $e) {
                 $ref = new \ReflectionClass($input);
                 $property = $ref->getProperty($field);
@@ -106,10 +113,5 @@ class SecurityInterceptor extends AbstractInterceptor implements PrefixIntercept
         }
 
         throw new \InvalidArgumentException('Input must be an array or an object');
-    }
-
-    public function supportsPrefix(Instance $instance): bool
-    {
-        return $instance->getMethod()->hasAnnotation(Security::class);
     }
 }

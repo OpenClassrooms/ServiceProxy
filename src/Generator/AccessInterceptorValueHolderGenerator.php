@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Generator;
 
+use function array_map;
+use function array_merge;
 use InvalidArgumentException;
 use Laminas\Code\Generator\ClassGenerator;
 use Laminas\Code\Generator\MethodGenerator;
@@ -32,11 +34,9 @@ use ProxyManager\ProxyGenerator\Util\ProxiedMethodsFilter;
 use ProxyManager\ProxyGenerator\ValueHolder\MethodGenerator\Constructor;
 use ProxyManager\ProxyGenerator\ValueHolder\MethodGenerator\GetWrappedValueHolderValue;
 use ProxyManager\ProxyGenerator\ValueHolder\MethodGenerator\MagicSleep;
+
 use ReflectionClass;
 use ReflectionMethod;
-
-use function array_map;
-use function array_merge;
 
 /**
  * Generator for proxies implementing {@see \ProxyManager\Proxy\ValueHolderInterface}
@@ -49,8 +49,6 @@ class AccessInterceptorValueHolderGenerator implements ProxyGeneratorInterface
     /**
      * {@inheritDoc}
      *
-     * @return void
-     *
      * @throws InvalidArgumentException
      * @throws InvalidProxiedClassException
      */
@@ -59,7 +57,7 @@ class AccessInterceptorValueHolderGenerator implements ProxyGeneratorInterface
         CanProxyAssertion::assertClassCanBeProxied($originalClass);
 
         $publicProperties = new PublicPropertiesMap(Properties::fromReflectionClass($originalClass));
-        $interfaces       = [AccessInterceptorValueHolderInterface::class];
+        $interfaces = [AccessInterceptorValueHolderInterface::class];
 
         if ($originalClass->isInterface()) {
             $interfaces[] = $originalClass->getName();
@@ -68,7 +66,7 @@ class AccessInterceptorValueHolderGenerator implements ProxyGeneratorInterface
         }
 
         $classGenerator->setImplementedInterfaces($interfaces);
-        $classGenerator->addPropertyFromGenerator($valueHolder        = new ValueHolderProperty($originalClass));
+        $classGenerator->addPropertyFromGenerator($valueHolder = new ValueHolderProperty($originalClass));
         $classGenerator->addPropertyFromGenerator($prefixInterceptors = new MethodPrefixInterceptors());
         $classGenerator->addPropertyFromGenerator($suffixInterceptors = new MethodSuffixInterceptors());
         $classGenerator->addPropertyFromGenerator($publicProperties);
@@ -128,7 +126,8 @@ class AccessInterceptorValueHolderGenerator implements ProxyGeneratorInterface
         MethodPrefixInterceptors $prefixes,
         MethodSuffixInterceptors $suffixes,
         ValueHolderProperty $valueHolder
-    ): callable {
+    ): callable
+    {
         return static function (ReflectionMethod $method) use ($prefixes, $suffixes, $valueHolder): InterceptedMethod {
             return InterceptedMethod::generateMethod(
                 new MethodReflection($method->getDeclaringClass()->getName(), $method->getName()),
