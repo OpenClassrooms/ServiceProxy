@@ -27,18 +27,23 @@
     "php": ">=7.4",
     "doctrine/annotations": "~1.2",
     "ocramius/proxy-manager": "~2.0",
-    "openclassrooms/doctrine-cache-extension": "1.0.*@dev",
     "symfony/expression-language": "~3.4 || ~4.0 || ^5.0 || ^6.0",
     "symfony/filesystem": "~3.4 || ~4.0 || ^5.0 || ^6.0",
     "laminas/laminas-code": "^4.5"
   },
   "require-dev": {
     "friendsofphp/php-cs-fixer": "~2.15",
-    "phpunit/phpunit": "~6.5 || ~7.5"
+    "phpunit/phpunit": "~6.5 || ~7.5",
+    "openclassrooms/doctrine-cache-extension": "1.0.*@dev"
   },
   "extra": {
     "branch-alias": {
       "dev-master": "2.0.x-dev"
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "ocramius/package-versions": true
     }
   }
 }
