@@ -23,7 +23,7 @@ abstract class AbstractInterceptor
     private array $handlers;
 
     /**
-     * @param \OpenClassrooms\ServiceProxy\Contract\AnnotationHandler[] $handlers
+     * @param AnnotationHandler[] $handlers
      */
     public function __construct(array $handlers = [])
     {
@@ -36,22 +36,24 @@ abstract class AbstractInterceptor
     }
 
     /**
-     * @template T of class-string<\OpenClassrooms\ServiceProxy\Contract\AnnotationHandler>
+     * @template T of AnnotationHandler
      *
      * @param class-string<T> $handlerInterface
      *
      * @return T
      */
-    public function getHandler(string $handlerInterface, Annotation $annotation): AnnotationHandler
+    final public function getHandler(string $handlerInterface, Annotation $annotation): AnnotationHandler
     {
         $handlers = $this->handlers[$handlerInterface];
         if ($annotation->getHandler() === null) {
             if (count($handlers) === 1) {
+                // @phpstan-ignore-next-line
                 return array_values($handlers)[0];
             }
             if (count($handlers) > 1) {
                 foreach ($handlers as $handler) {
                     if ($handler->isDefault()) {
+                        // @phpstan-ignore-next-line
                         return $handler;
                     }
                 }
@@ -60,26 +62,29 @@ abstract class AbstractInterceptor
 
         $handlerName = $annotation->getHandler();
         if (isset($handlers[$handlerName])) {
+            // @phpstan-ignore-next-line
             return $handlers[$handlerName];
         }
 
-        $annotationClass = get_class($annotation);
+        $annotationClass = \get_class($annotation);
         throw new HandlerNotFound(
             "No handler found for annotation {$annotationClass} with name {$annotation->getHandler()}"
         );
     }
 
-    public function getPrefixPriority(): int
+    final public function getPrefixPriority(): int
     {
         return $this->prefixPriority;
     }
 
-    public function getSuffixPriority(): int
+    final public function getSuffixPriority(): int
     {
         return $this->suffixPriority;
     }
 
     /**
+     * @param AnnotationHandler[] $handlers
+     *
      * @return array<class-string<AnnotationHandler>, array<string, AnnotationHandler>>
      */
     private function indexHandlers(array $handlers): array
@@ -100,7 +105,7 @@ abstract class AbstractInterceptor
     }
 
     /**
-     * @return class-string<\OpenClassrooms\ServiceProxy\Contract\AnnotationHandler>
+     * @return class-string<AnnotationHandler>
      */
     private function getHandlerInterface(AnnotationHandler $handler): string
     {
@@ -134,6 +139,9 @@ abstract class AbstractInterceptor
         }
     }
 
+    /**
+     * @param array<class-string<AnnotationHandler>, array<string, AnnotationHandler>> $handlers
+     */
     private function checkMultipleHandlersWithNoDefault(array $handlers): void
     {
         foreach ($handlers as $handlerInterface => $handlersByInterface) {

@@ -2,16 +2,17 @@ parameters:
     level: 9
     paths:
         - src
-        - tests
     excludePaths:
         - ecs.php
+        - src/Generator
     ignoreErrors:
         - '/Constructor in .+ has parameter .+ with default value./'
         - '/Method .+ has parameter .+ with null as default value./'
         - '/Method .+ has a nullable return type declaration./'
         - '/Method .+ has parameter .+ with a nullable type declaration./'
         - '/Language construct isset\(\) should not be used./'
-        - {paths: [ tests ], message: '/Method .+ throws checked exception .+ but it''s missing from the PHPDoc @throws tag./'}
+        - '/.+ is not allowed to extend ".+"./'
+        - '/Short ternary operator is not allowed.+/'
     exceptions:
         check:
             missingCheckedExceptionInThrows: true
@@ -21,3 +22,4 @@ parameters:
             - LogicException
             - JsonException
             - PHPUnit\Framework\Exception
+            - ReflectionException

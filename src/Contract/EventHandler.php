@@ -9,6 +9,9 @@ use OpenClassrooms\ServiceProxy\Annotation\Exception\InvalidEventNameException;
 interface EventHandler extends AnnotationHandler
 {
     /**
+     * @param array<string, mixed> $parameters
+     * @param mixed $response
+     *
      * @return mixed
      * @throws InvalidEventNameException
      */
@@ -19,5 +22,8 @@ interface EventHandler extends AnnotationHandler
         \Exception $exception = null
     );
 
-    public function send($event);
+    /**
+     * @param mixed $event
+     */
+    public function send($event): void;
 }

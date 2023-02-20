@@ -10,12 +10,15 @@ use OpenClassrooms\ServiceProxy\Contract\SecurityHandler;
  * @Annotation
  * @Target({"METHOD"})
  */
-class Security extends Annotation
+final class Security extends Annotation
 {
     private ?string $checkField = null;
 
     private bool $checkRequest = false;
 
+    /**
+     * @var string[]
+     */
     private array $roles;
 
     public function checkRequest(): bool
@@ -28,6 +31,9 @@ class Security extends Annotation
         return $this->checkField;
     }
 
+    /**
+     * @return string[]
+     */
     public function getRoles(): array
     {
         return $this->roles;
@@ -38,17 +44,17 @@ class Security extends Annotation
         $this->checkField = $checkField;
     }
 
-    public function setCheckRequest($checkRequest): void
+    public function setCheckRequest(bool $checkRequest): void
     {
         $this->checkRequest = $checkRequest;
     }
 
     /**
-     * @param string|array $roles
+     * @param string|string[] $roles
      */
     public function setRoles($roles): void
     {
-        $this->roles = is_array($roles)
+        $this->roles = \is_array($roles)
             ? $roles
             : array_map('trim', explode(',', $roles));
     }

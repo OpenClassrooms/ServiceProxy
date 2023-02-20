@@ -10,7 +10,7 @@ use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
 
-class SecurityInterceptor extends AbstractInterceptor implements PrefixInterceptor
+final class SecurityInterceptor extends AbstractInterceptor implements PrefixInterceptor
 {
     protected int $prefixPriority = 30;
 
@@ -34,7 +34,7 @@ class SecurityInterceptor extends AbstractInterceptor implements PrefixIntercept
     }
 
     /**
-     * @param array|object $input
+     * @param mixed $input
      *
      * @return mixed
      * @throws \ReflectionException
@@ -44,7 +44,13 @@ class SecurityInterceptor extends AbstractInterceptor implements PrefixIntercept
         $field = $this->getFirstField($path);
 
         if ($path) {
-            return $this->getByPath($this->getByField($input, $field), $path);
+            $value = $this->getByField($input, $field);
+
+            if (!\is_array($value) && !\is_object($value)) {
+                throw new \InvalidArgumentException('The path is not valid.');
+            }
+
+            return $this->getByPath($value, $path);
         }
 
         return $this->getByField($input, $field);
@@ -57,9 +63,11 @@ class SecurityInterceptor extends AbstractInterceptor implements PrefixIntercept
     }
 
     /**
+     * @return mixed
+     *
      * @throws \ReflectionException
      */
-    private function getCheckParam($annotation, Instance $instance)
+    private function getCheckParam(Security $annotation, Instance $instance)
     {
         $param = null;
         $field = $annotation->getCheckField();
@@ -89,21 +97,22 @@ class SecurityInterceptor extends AbstractInterceptor implements PrefixIntercept
     }
 
     /**
-     * @param array|object $input
+     * @param mixed $input
      *
      * @return mixed
-     * @throws \ReflectionException
      */
     private function getByField($input, string $field)
     {
-        if (is_array($input) || $input instanceof \ArrayAccess) {
+        if (\is_array($input) || $input instanceof \ArrayAccess) {
             return $input[$field];
         }
 
-        if (is_object($input)) {
+        if (\is_object($input)) {
             try {
+                // @phpstan-ignore-next-line
                 return $input->{$field};
-            } catch (\Exception $e) {
+                // @phpstan-ignore-next-line
+            } catch (\Throwable $_) {
                 $ref = new \ReflectionClass($input);
                 $property = $ref->getProperty($field);
                 $property->setAccessible(true);

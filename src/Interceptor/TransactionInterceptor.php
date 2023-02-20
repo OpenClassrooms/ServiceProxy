@@ -11,13 +11,10 @@ use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
 
-class TransactionInterceptor extends AbstractInterceptor implements PrefixInterceptor, SuffixInterceptor
+final class TransactionInterceptor extends AbstractInterceptor implements PrefixInterceptor, SuffixInterceptor
 {
     protected int $suffixPriority = 30;
 
-    /**
-     * @throws \Exception
-     */
     public function prefix(Instance $instance): Response
     {
         $annotation = $instance->getMethod()
@@ -35,7 +32,7 @@ class TransactionInterceptor extends AbstractInterceptor implements PrefixInterc
         $handler = $this->getHandler(TransactionHandler::class, $annotation);
         if ($instance->getMethod()->threwException()) {
             if ($handler->isTransactionActive()) {
-                $handler->rollBack();
+                $handler->rollback();
             }
         } else {
             $handler->commit();

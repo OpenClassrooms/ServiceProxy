@@ -12,7 +12,7 @@ use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
-class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
+final class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
     protected int $prefixPriority = 10;
 
@@ -82,26 +82,24 @@ class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor,
 
     private function setNamespace(Instance $instance, Cache $annotation): void
     {
-        $expressionLanguage = new ExpressionLanguage();
         $parameters = $instance->getMethod()
-            ->getParameters();
+            ->getParameters()
+        ;
         if ($annotation->getNamespace() !== null) {
-            $this->namespace = md5(
-                $expressionLanguage->evaluate(
-                    $annotation->getNamespace(),
-                    $parameters
-                )
+            $resolvedExpression = $this->resolveExpression(
+                $annotation->getNamespace(),
+                $parameters
             );
+            $this->namespace = md5($resolvedExpression);
         }
     }
 
     private function setProxyId(Instance $instance, Cache $annotation): void
     {
-        $expressionLanguage = new ExpressionLanguage();
         $parameters = $instance->getMethod()
             ->getParameters();
         if ($annotation->getId() !== null) {
-            $this->proxyId = $expressionLanguage->evaluate(
+            $this->proxyId = $this->resolveExpression(
                 $annotation->getId(),
                 $parameters
             );
@@ -115,5 +113,25 @@ class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor,
             }
             $this->proxyId = md5($key);
         }
+    }
+
+    /**
+     * @param mixed[] $parameters
+     */
+    private function resolveExpression(string $expression, array $parameters): string
+    {
+        $expressionLanguage = new ExpressionLanguage();
+        $resolvedExpression = $expressionLanguage->evaluate(
+            $expression,
+            $parameters
+        );
+
+        if (!\is_string($resolvedExpression)) {
+            throw new \InvalidArgumentException(
+                "Provided expression `{$expression}` did not resolve to a string."
+            );
+        }
+
+        return $resolvedExpression;
     }
 }

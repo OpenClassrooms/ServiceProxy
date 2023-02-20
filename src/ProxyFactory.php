@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy;
 
+use Doctrine\Common\Annotations\AnnotationException;
 use Doctrine\Common\Annotations\AnnotationReader;
-use OpenClassrooms\ServiceProxy\Factory\AccessInterceptorValueHolderFactory;
-use OpenClassrooms\ServiceProxy\Interceptor\AbstractInterceptor;
+use OpenClassrooms\ServiceProxy\Generator\Factory\AccessInterceptorValueHolderFactory;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
@@ -16,9 +16,9 @@ use ProxyManager\FileLocator\FileLocator;
 use ProxyManager\GeneratorStrategy\FileWriterGeneratorStrategy;
 use Symfony\Component\Filesystem\Filesystem;
 
-class ProxyFactory
+final class ProxyFactory
 {
-    private ?AnnotationReader $annotationReader;
+    private AnnotationReader $annotationReader;
 
     private Configuration $configuration;
 
@@ -27,6 +27,12 @@ class ProxyFactory
      */
     private array $interceptors;
 
+    /**
+     * @param PrefixInterceptor[] $prefixInterceptors
+     * @param SuffixInterceptor[] $suffixInterceptors
+     *
+     * @throws AnnotationException
+     */
     public function __construct(
         Configuration $configuration,
         array $prefixInterceptors,
@@ -89,11 +95,14 @@ class ProxyFactory
                 $object,
                 $interceptionClosures[PrefixInterceptor::PREFIX_TYPE] ?? [],
                 $interceptionClosures[SuffixInterceptor::SUFFIX_TYPE] ?? [],
-            );
+            )
+        ;
     }
 
     /**
      * @param PrefixInterceptor::PREFIX_TYPE|SuffixInterceptor::SUFFIX_TYPE $type
+     * @param PrefixInterceptor[]|SuffixInterceptor[]                       $interceptors
+     * @param mixed                                                         $response
      *
      * @return mixed
      */
@@ -102,13 +111,15 @@ class ProxyFactory
         array $interceptors,
         Instance $instance,
         $response,
-        &$returnEarly
+        bool &$returnEarly
     ) {
         foreach ($interceptors as $interceptor) {
-            if ($type === PrefixInterceptor::PREFIX_TYPE) {
+            if ($type === PrefixInterceptor::PREFIX_TYPE && $interceptor instanceof PrefixInterceptor) {
                 $interceptorResponse = $interceptor->prefix($instance);
-            } else {
+            } elseif ($type === SuffixInterceptor::SUFFIX_TYPE && $interceptor instanceof SuffixInterceptor) {
                 $interceptorResponse = $interceptor->suffix($instance);
+            } else {
+                continue;
             }
             if ($interceptorResponse->isEarlyReturn()) {
                 $returnEarly = true;
@@ -129,7 +140,7 @@ class ProxyFactory
     }
 
     /**
-     * @param PrefixInterceptor[]|SuffixInterceptor[]                       $interceptors
+     * @param PrefixInterceptor[]|SuffixInterceptor[] $interceptors
      * @param PrefixInterceptor::PREFIX_TYPE|SuffixInterceptor::SUFFIX_TYPE $type
      *
      * @return PrefixInterceptor[]|SuffixInterceptor[]
@@ -138,10 +149,26 @@ class ProxyFactory
     {
         usort(
             $interceptors,
-            static function (AbstractInterceptor $a, AbstractInterceptor $b) use ($type) {
-                return $type === PrefixInterceptor::PREFIX_TYPE
-                    ? $b->getPrefixPriority() <=> $a->getPrefixPriority()
-                    : $b->getSuffixPriority() <=> $a->getSuffixPriority();
+            /**
+             * @param PrefixInterceptor|SuffixInterceptor $a
+             * @param PrefixInterceptor|SuffixInterceptor $b
+             */
+            static function (object $a, object $b) use ($type) {
+                if ($type === PrefixInterceptor::PREFIX_TYPE
+                    && $a instanceof PrefixInterceptor
+                    && $b instanceof PrefixInterceptor
+                ) {
+                    return $b->getPrefixPriority() <=> $a->getPrefixPriority();
+                }
+
+                if ($type === SuffixInterceptor::SUFFIX_TYPE
+                    && $a instanceof SuffixInterceptor
+                    && $b instanceof SuffixInterceptor
+                ) {
+                    return $b->getSuffixPriority() <=> $a->getSuffixPriority();
+                }
+
+                return 0;
             }
         );
 
@@ -233,6 +260,7 @@ class ProxyFactory
         $conf->setProxiesTargetDir($proxiesDir);
         $fileLocator = new FileLocator($proxiesDir);
         $conf->setGeneratorStrategy(new FileWriterGeneratorStrategy($fileLocator));
+        // @phpstan-ignore-next-line
         spl_autoload_register($conf->getProxyAutoloader());
 
         return new AccessInterceptorValueHolderFactory($conf);

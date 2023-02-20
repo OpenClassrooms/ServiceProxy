@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Factory;
+namespace OpenClassrooms\ServiceProxy\Generator\Factory;
 
 use Closure;
 use function get_class;
@@ -15,7 +15,6 @@ use ProxyManager\Proxy\AccessInterceptorValueHolderInterface;
 use ProxyManager\Proxy\ValueHolderInterface;
 use ProxyManager\ProxyGenerator\ProxyGeneratorInterface;
 use ProxyManager\Signature\Exception\InvalidSignatureException;
-
 use ProxyManager\Signature\Exception\MissingSignatureException;
 
 /**

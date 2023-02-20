@@ -10,7 +10,7 @@ use OpenClassrooms\ServiceProxy\Contract\TransactionHandler;
  * @Annotation
  * @Target({"METHOD"})
  */
-class Transaction extends Annotation
+final class Transaction extends Annotation
 {
     public function getHandlerClass(): string
     {

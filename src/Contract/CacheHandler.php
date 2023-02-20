@@ -11,11 +11,20 @@ interface CacheHandler extends AnnotationHandler
      */
     public function fetchWithNamespace(string $id, ?string $namespaceId = null);
 
-    public function saveWithNamespace(string $id, $data, ?string $namespaceId = null, $lifeTime = null): bool;
+    /**
+     * @param mixed $data
+     */
+    public function saveWithNamespace(string $id, $data, ?string $namespaceId = null, ?int $lifeTime = null): bool;
 
     public function contains(string $id): bool;
 
+    /**
+     * @return mixed
+     */
     public function fetch(string $id);
 
+    /**
+     * @param mixed $data
+     */
     public function save(string $id, $data, ?int $lifeTime = null): bool;
 }

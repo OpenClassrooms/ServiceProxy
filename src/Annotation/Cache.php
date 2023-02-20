@@ -11,7 +11,7 @@ use OpenClassrooms\ServiceProxy\Contract\CacheHandler;
  * @Annotation
  * @Target({"METHOD"})
  */
-class Cache extends Annotation
+final class Cache extends Annotation
 {
     private const MEMCACHE_KEY_MAX_LENGTH = 240;
 

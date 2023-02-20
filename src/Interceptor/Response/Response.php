@@ -13,12 +13,18 @@ final class Response
      */
     private $value;
 
-    public function __construct($value = null, $earlyReturn = false)
+    /**
+     * @param mixed $value
+     */
+    public function __construct($value = null, bool $earlyReturn = false)
     {
         $this->value = $value;
         $this->earlyReturn = $earlyReturn;
     }
 
+    /**
+     * @return mixed
+     */
     public function getValue()
     {
         return $this->value;

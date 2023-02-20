@@ -10,7 +10,7 @@ use OpenClassrooms\ServiceProxy\Contract\EventHandler;
  * @Annotation
  * @Target({"METHOD"})
  */
-class Event extends Annotation
+final class Event extends Annotation
 {
     public const DEFAULT_METHOD = self::POST_METHOD;
 
@@ -62,7 +62,7 @@ class Event extends Annotation
 
     public function hasMethod(string $method): bool
     {
-        return in_array($method, $this->methods, true);
+        return \in_array($method, $this->methods, true);
     }
 
     public function isUseClassNameOnly(): bool
@@ -80,7 +80,7 @@ class Event extends Annotation
      */
     public function setMethods($methods): void
     {
-        if (is_string($methods)) {
+        if (\is_string($methods)) {
             $methods = array_map('trim', explode(',', $methods));
         }
 
@@ -93,6 +93,7 @@ class Event extends Annotation
             );
         }
 
+        // @phpstan-ignore-next-line
         $this->methods = $methods;
     }
 

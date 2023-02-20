@@ -7,7 +7,10 @@ namespace OpenClassrooms\ServiceProxy\Contract;
 interface SecurityHandler extends AnnotationHandler
 {
     /**
+     * @param string[] $attributes
+     * @param mixed $param
+     *
      * @throws \Exception
      */
-    public function checkAccess(array $attributes, $param = null);
+    public function checkAccess(array $attributes, $param = null): void;
 }

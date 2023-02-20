@@ -4,12 +4,23 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Interceptor\Request;
 
+use OpenClassrooms\ServiceProxy\Annotation\Annotation;
+
 final class Method
 {
+    /**
+     * @var array<int, object>
+     */
     private array $annotations = [];
 
+    /**
+     * @var array<string, mixed>
+     */
     private array $definedValues = [];
 
+    /**
+     * @var array<string, mixed>
+     */
     private array $parameters;
 
     private \ReflectionMethod $reflection;
@@ -23,6 +34,9 @@ final class Method
     {
     }
 
+    /**
+     * @param array<int, object> $annotations
+     */
     public static function create(\ReflectionMethod $reflection, array $annotations): self
     {
         $self = new self();
@@ -33,18 +47,19 @@ final class Method
     }
 
     /**
-     * @template T of class-string
+     * @template T of Annotation
      *
-     * @param T $annotationClass
+     * @param class-string<T> $annotationClass
      *
      * @return T
      */
-    public function getAnnotation(?string $annotationClass): object
+    public function getAnnotation(string $annotationClass): object
     {
+        /** @var array<int, T> $annotations */
         $annotations = array_filter(
             $this->annotations,
             static function ($annotation) use ($annotationClass) {
-                return $annotation instanceof $annotationClass;
+                return is_a($annotation, $annotationClass, true);
             }
         );
 
@@ -56,17 +71,22 @@ final class Method
     }
 
     /**
-     * @template T of class-string
-     * @param T $annotationClass
+     * @template T
+     *
+     * @param class-string<T>|null $annotationClass
      *
      * @return array<int, T>
      */
     public function getAnnotations(?string $annotationClass = null): array
     {
+        /** @var array<int, T> $annotations */
         $annotations = array_filter(
             $this->annotations,
             static function ($annotation) use ($annotationClass) {
-                return $annotation instanceof $annotationClass;
+                if ($annotationClass === null) {
+                    return true;
+                }
+                return is_a($annotation, $annotationClass, true);
             }
         );
 
@@ -84,6 +104,9 @@ final class Method
         return $this->reflection->getName();
     }
 
+    /**
+     * @return mixed[]
+     */
     public function getParameters(): array
     {
         if (!isset($this->definedValues['parameters'])) {
@@ -98,6 +121,9 @@ final class Method
         return $this->reflection;
     }
 
+    /**
+     * @return mixed|\Exception
+     */
     public function getResponse()
     {
         if (!isset($this->definedValues['response'])) {
@@ -114,7 +140,9 @@ final class Method
 
     public function getException(): ?\Exception
     {
-        return $this->threwException() ? $this->getResponse() : null;
+        $response = $this->getResponse();
+
+        return $response instanceof \Exception ? $response : null;
     }
 
     /**
@@ -125,30 +153,36 @@ final class Method
         return !$this->threwException() ? $this->getResponse() : null;
     }
 
+    /**
+     * @param class-string<Annotation> $annotationClass
+     */
     public function hasAnnotation(string $annotationClass): bool
     {
         try {
             $this->getAnnotations($annotationClass);
 
             return true;
-        } catch (\LogicException $e) {
+        } /** @noinspection BadExceptionsProcessingInspection */
+        catch (\LogicException $_) {
             return false;
         }
     }
 
-    public function setParameters(array $parameters): self
+    /**
+     * @param array<string, mixed> $parameters
+     */
+    public function setParameters(array $parameters): void
     {
         $this->parameters = $parameters;
         $this->definedValues['parameters'] = true;
-
-        return $this;
     }
 
-    public function setResponse($response): self
+    /**
+     * @param mixed $response
+     */
+    public function setResponse($response): void
     {
         $this->response = $response;
         $this->definedValues['response'] = true;
-
-        return $this;
     }
 }

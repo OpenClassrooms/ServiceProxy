@@ -8,8 +8,14 @@ use OpenClassrooms\ServiceProxy\Contract\SecurityHandler;
 
 final class SecurityHandlerMock implements SecurityHandler
 {
+    /**
+     * @var string[]
+     */
     public array $authorized = ['ROLE_1', 'ROLE_2'];
 
+    /**
+     * @var string[]
+     */
     public array $attributes;
 
     /**
@@ -22,15 +28,13 @@ final class SecurityHandlerMock implements SecurityHandler
         return 'array';
     }
 
-    public function checkAccess(array $attributes, $param = null): bool
+    public function checkAccess(array $attributes, $param = null): void
     {
         $this->attributes = $attributes;
         $this->param = $param;
         if (array_intersect($attributes, $this->authorized) === []) {
             throw new \RuntimeException('Not authorized');
         }
-
-        return true;
     }
 
     public function isDefault(): bool

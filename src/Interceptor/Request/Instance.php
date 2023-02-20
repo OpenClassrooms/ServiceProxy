@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Interceptor\Request;
 
+use Doctrine\Common\Annotations\AnnotationException;
 use Doctrine\Common\Annotations\AnnotationReader;
 
 final class Instance
@@ -19,7 +20,11 @@ final class Instance
     }
 
     /**
+     * @param array<string, mixed>|null $parameters
+     * @param mixed $response
+     *
      * @throws \ReflectionException
+     * @throws AnnotationException
      */
     public static function createFromMethod(
         object $object,
@@ -60,6 +65,9 @@ final class Instance
         return $self;
     }
 
+    /**
+     * @param array<string, mixed> $parameters
+     */
     public function setParameters(array $parameters): self
     {
         $this->method->setParameters($parameters);
@@ -67,6 +75,9 @@ final class Instance
         return $this;
     }
 
+    /**
+     * @param mixed $response
+     */
     public function setResponse($response): self
     {
         $this->method->setResponse($response);
