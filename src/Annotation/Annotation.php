@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Annotations;
+namespace OpenClassrooms\ServiceProxy\Annotation;
 
 use BadMethodCallException;
 
@@ -13,7 +13,7 @@ abstract class Annotation
     /**
      * @param array<string, mixed> $data Key-value for properties to be defined in this class.
      */
-    final public function __construct(array $data)
+    final public function __construct(array $data = [])
     {
         foreach ($data as $key => $value) {
             if (method_exists($this, "set" . ucfirst($key))) {

@@ -2,7 +2,7 @@
 
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event;
 
-use OpenClassrooms\ServiceProxy\Annotations\Event;
+use OpenClassrooms\ServiceProxy\Annotation\Event;
 
 class InvalidMethodEventAnnotatedClass
 {

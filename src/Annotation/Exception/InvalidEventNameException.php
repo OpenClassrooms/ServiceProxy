@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenClassrooms\ServiceProxy\Annotations\Exceptions;
+namespace OpenClassrooms\ServiceProxy\Annotation\Exception;
 
 class InvalidEventNameException extends \Exception
 {

@@ -40,4 +40,9 @@ final class TransactionHandlerMock implements TransactionHandler
     {
         return true;
     }
+
+    public function isDefault(): bool
+    {
+        return true;
+    }
 }

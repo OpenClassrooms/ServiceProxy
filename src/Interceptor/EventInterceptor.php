@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Interceptor;
 
-use OpenClassrooms\ServiceProxy\Annotations\Event;
+use OpenClassrooms\ServiceProxy\Annotation\Event;
 use OpenClassrooms\ServiceProxy\Contract\EventHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
@@ -14,7 +14,7 @@ use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
 class EventInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
     /**
-     * @throws \OpenClassrooms\ServiceProxy\Annotations\Exceptions\InvalidEventNameException
+     * @throws \OpenClassrooms\ServiceProxy\Annotation\Exception\InvalidEventNameException
      */
     public function prefix(Instance $instance): Response
     {
@@ -54,7 +54,7 @@ class EventInterceptor extends AbstractInterceptor implements SuffixInterceptor,
     }
 
     /**
-     * @throws \OpenClassrooms\ServiceProxy\Annotations\Exceptions\InvalidEventNameException
+     * @throws \OpenClassrooms\ServiceProxy\Annotation\Exception\InvalidEventNameException
      */
     public function suffix(Instance $instance): Response
     {

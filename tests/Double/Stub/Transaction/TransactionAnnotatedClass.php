@@ -2,7 +2,7 @@
 
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Stub\Transaction;
 
-use OpenClassrooms\ServiceProxy\Annotations\Transaction;
+use OpenClassrooms\ServiceProxy\Annotation\Transaction;
 
 class TransactionAnnotatedClass
 {

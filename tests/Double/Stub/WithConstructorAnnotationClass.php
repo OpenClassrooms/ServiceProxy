@@ -2,7 +2,7 @@
 
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Stub;
 
-use OpenClassrooms\ServiceProxy\Annotations\Cache;
+use OpenClassrooms\ServiceProxy\Annotation\Cache;
 
 /**
  * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>

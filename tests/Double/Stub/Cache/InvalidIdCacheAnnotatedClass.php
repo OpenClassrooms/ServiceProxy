@@ -2,7 +2,7 @@
 
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache;
 
-use OpenClassrooms\ServiceProxy\Annotations\Cache;
+use OpenClassrooms\ServiceProxy\Annotation\Cache;
 
 class InvalidIdCacheAnnotatedClass
 {

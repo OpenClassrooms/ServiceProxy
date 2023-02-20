@@ -2,7 +2,7 @@
 
 namespace OpenClassrooms\ServiceProxy\Contract;
 
-use OpenClassrooms\ServiceProxy\Annotations\Exceptions\InvalidEventNameException;
+use OpenClassrooms\ServiceProxy\Annotation\Exception\InvalidEventNameException;
 
 interface EventHandler extends AnnotationHandler
 {

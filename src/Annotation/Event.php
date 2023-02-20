@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenClassrooms\ServiceProxy\Annotations;
+namespace OpenClassrooms\ServiceProxy\Annotation;
 
 use OpenClassrooms\ServiceProxy\Contract\EventHandler;
 

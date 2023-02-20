@@ -62,4 +62,9 @@ final class EventHandlerMock implements EventHandler
     {
         $this->events[] = $event;
     }
+
+    public function isDefault(): bool
+    {
+        return true;
+    }
 }

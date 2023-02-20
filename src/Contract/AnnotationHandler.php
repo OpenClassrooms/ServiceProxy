@@ -7,4 +7,6 @@ namespace OpenClassrooms\ServiceProxy\Contract;
 interface AnnotationHandler
 {
     public function getName(): string;
+
+    public function isDefault(): bool;
 }

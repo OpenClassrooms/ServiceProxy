@@ -32,4 +32,9 @@ final class SecurityHandlerMock implements SecurityHandler
 
         return true;
     }
+
+    public function isDefault(): bool
+    {
+        return true;
+    }
 }

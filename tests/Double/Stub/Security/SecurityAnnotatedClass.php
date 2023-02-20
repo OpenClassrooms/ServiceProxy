@@ -2,8 +2,8 @@
 
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Stub\Security;
 
-use OpenClassrooms\ServiceProxy\Annotations\Event;
-use OpenClassrooms\ServiceProxy\Annotations\Security;
+use OpenClassrooms\ServiceProxy\Annotation\Event;
+use OpenClassrooms\ServiceProxy\Annotation\Security;
 
 class SecurityAnnotatedClass
 {

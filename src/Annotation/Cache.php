@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Annotations;
+namespace OpenClassrooms\ServiceProxy\Annotation;
 
-use OpenClassrooms\ServiceProxy\Annotations\Exceptions\InvalidCacheIdException;
+use OpenClassrooms\ServiceProxy\Annotation\Exception\InvalidCacheIdException;
 use OpenClassrooms\ServiceProxy\Contract\CacheHandler;
 
 /**
@@ -39,7 +39,7 @@ class Cache extends Annotation
     }
 
     /**
-     * @throws \OpenClassrooms\ServiceProxy\Annotations\Exceptions\InvalidCacheIdException
+     * @throws \OpenClassrooms\ServiceProxy\Annotation\Exception\InvalidCacheIdException
      */
     public function setId(?string $id): void
     {

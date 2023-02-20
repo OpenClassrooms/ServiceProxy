@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Interceptor;
 
-use OpenClassrooms\ServiceProxy\Annotations\Transaction;
+use OpenClassrooms\ServiceProxy\Annotation\Transaction;
 use OpenClassrooms\ServiceProxy\Contract\TransactionHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;

@@ -2,7 +2,7 @@
 
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache;
 
-use OpenClassrooms\ServiceProxy\Annotations\Cache;
+use OpenClassrooms\ServiceProxy\Annotation\Cache;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\ParameterClassStub;
 
 /**
@@ -88,6 +88,14 @@ class CacheAnnotatedClass
      * @noinspection PhpUnusedParameterInspection
      */
     public function cacheWithNamespaceAndParameters(ParameterClassStub $param1, $param2): string
+    {
+        return self::DATA;
+    }
+
+    /**
+     * @Cache(handler="toto")
+     */
+    public function invalidHandler(): string
     {
         return self::DATA;
     }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Annotations\Exceptions;
+namespace OpenClassrooms\ServiceProxy\Annotation\Exception;
 
 class InvalidCacheIdException extends \Exception
 {

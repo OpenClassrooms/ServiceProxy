@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Interceptor;
 
-use OpenClassrooms\ServiceProxy\Annotations\Cache;
+use OpenClassrooms\ServiceProxy\Annotation\Cache;
 use OpenClassrooms\ServiceProxy\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;

@@ -12,16 +12,22 @@ class CacheHandlerMock implements CacheHandler
 
     private CacheProviderDecorator $cacheProvider;
 
-    public function __construct()
+    private bool $default;
+
+    private string $name;
+
+    public function __construct(?string $name = null, bool $default = true)
     {
+        $this->name = $name ?? 'array';
         $this->cacheProvider = new CacheProviderDecorator(new ArrayCache());
         
         self::$lifeTime = null;
+        $this->default = $default;
     }
 
     public function getName(): string
     {
-        return 'array';
+        return $this->name;
     }
 
     public function fetchWithNamespace(string $id, ?string $namespaceId = null)
@@ -49,5 +55,10 @@ class CacheHandlerMock implements CacheHandler
     public function save(string $id, $data, ?int $lifeTime = null): bool
     {
         return $this->cacheProvider->save($id, $data, $lifeTime);
+    }
+
+    public function isDefault(): bool
+    {
+        return $this->default;
     }
 }
