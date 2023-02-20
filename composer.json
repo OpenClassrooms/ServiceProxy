@@ -73,8 +73,7 @@
       "@parallel test"
     ],
     "check-cs": [
-      "vendor/bin/ecs check --ansi -c ecs.php",
-      "vendor/bin/ecs check-markdown README.md --ansi -c ecs.php"
+      "vendor/bin/ecs check --ansi -c ecs.php"
     ],
     "fix-cs": [
       "vendor/bin/ecs check --fix --ansi -c ecs.php "
