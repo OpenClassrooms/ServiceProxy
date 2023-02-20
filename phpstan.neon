@@ -1,0 +1,23 @@
+parameters:
+    level: 9
+    paths:
+        - src
+        - tests
+    excludePaths:
+        - ecs.php
+    ignoreErrors:
+        - '/Constructor in .+ has parameter .+ with default value./'
+        - '/Method .+ has parameter .+ with null as default value./'
+        - '/Method .+ has a nullable return type declaration./'
+        - '/Method .+ has parameter .+ with a nullable type declaration./'
+        - '/Language construct isset\(\) should not be used./'
+        - {paths: [ tests ], message: '/Method .+ throws checked exception .+ but it''s missing from the PHPDoc @throws tag./'}
+    exceptions:
+        check:
+            missingCheckedExceptionInThrows: true
+            tooWideThrowType: true
+        uncheckedExceptionClasses:
+            - RuntimeException
+            - LogicException
+            - JsonException
+            - PHPUnit\Framework\Exception
