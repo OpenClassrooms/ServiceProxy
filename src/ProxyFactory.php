@@ -97,7 +97,17 @@ class ProxyFactory
     {
         $interceptors = [];
         foreach ($this->interceptors[$type] as $interceptor) {
-            if ($interceptor->{'supports' . ucfirst($type)}($instance)) {
+            if ($type === 'prefix'
+                && $interceptor instanceof PrefixInterceptor
+                && $interceptor->supportsPrefix($instance)
+            ) {
+                $interceptors[] = $interceptor;
+            }
+            if (
+                $type === 'suffix'
+                && $interceptor instanceof SuffixInterceptor
+                && $interceptor->supportsSuffix($instance)
+            ) {
                 $interceptors[] = $interceptor;
             }
         }

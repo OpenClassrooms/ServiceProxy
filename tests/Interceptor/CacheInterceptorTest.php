@@ -2,7 +2,7 @@
 
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
-use OpenClassrooms\ServiceProxy\Annotations\Exceptions\InvalidCacheIdException;
+use Doctrine\Common\Annotations\AnnotationException;
 use OpenClassrooms\ServiceProxy\Interceptor\CacheInterceptor;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\CacheAnnotatedClass;
@@ -29,7 +29,7 @@ class CacheInterceptorTest extends TestCase
      */
     public function TooLongId_WithId_ThrowException(): void
     {
-        $this->expectException(InvalidCacheIdException::class);
+        $this->expectException(AnnotationException::class);
         $this->proxyFactory->createProxy(new InvalidIdCacheAnnotatedClass());
     }
 
