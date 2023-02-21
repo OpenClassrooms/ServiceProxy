@@ -251,6 +251,10 @@ final class ProxyFactory
 
     private function getInterceptorFactory(): AccessInterceptorValueHolderFactory
     {
+        if ($this->configuration->isEval()) {
+            return new AccessInterceptorValueHolderFactory();
+        }
+
         $proxiesDir = $this->configuration->getProxiesDir();
         if (sys_get_temp_dir() !== $proxiesDir) {
             $fs = new Filesystem();
