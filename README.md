@@ -32,28 +32,6 @@ use OpenClassrooms\ServiceProxy\ServiceProxy;
 ```
 
 ## Concepts
-### Handlers
-Handlers are used by interceptors to manage the infrastructure code.
-To be able to use built-in interceptors, you need to implement the built-in handlers contracts.
-
-- All handles need to implement `OpenClassrooms\ServiceProxy\Contract\AnnotationHandler`.
-- Each handler must have a unique name, you can use the `getName` method to return it.
-- Each handler must return if it's the default handler, you can use the `isDefault` method to return it.
-- You can't have two handlers with the same name by annotation.
-- You can have only one default handler, by annotation.
-- If you have only one handler by annotation, it will be the default one.
-
-**example:**
-
-```php
-use OpenClassrooms\ServiceProxy\Annotation\Cache;
-
-/**
- * @Cache(handler="in_memory")
- * to select the in_memory handler
- */
-
- ```
 
 ### Interceptors
 
@@ -87,6 +65,30 @@ If you want to react to an exception thrown by the method, you can check for the
 - If a suffix interceptor returns a response with early return parameter set to `true`, the exception won't be thrown, in the case of a method that throws an exception.
 
 You can create your own interceptors, or use the built-in ones:
+
+### Handlers
+
+Handlers are used by interceptors to manage the infrastructure code.
+To be able to use built-in interceptors, you need to implement the built-in handlers contracts.
+
+- All handles need to implement `OpenClassrooms\ServiceProxy\Contract\AnnotationHandler`.
+- Each handler must have a unique name, you can use the `getName` method to return it.
+- Each handler must return if it's the default handler, you can use the `isDefault` method to return it.
+- You can't have two handlers with the same name by annotation.
+- You can have only one default handler, by annotation.
+- If you have only one handler by annotation, it will be the default one.
+
+**example:**
+
+```php
+use OpenClassrooms\ServiceProxy\Annotation\Cache;
+
+/**
+ * @Cache(handler="in_memory")
+ * to select the in_memory handler
+ */
+
+ ```
 
 ## Usage
 ### Instantiation
