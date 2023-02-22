@@ -35,8 +35,8 @@ final class ProxyFactory
      */
     public function __construct(
         Configuration $configuration,
-        array $prefixInterceptors,
-        array $suffixInterceptors
+        iterable $prefixInterceptors,
+        iterable $suffixInterceptors
     ) {
         $this->annotationReader = new AnnotationReader();
         $this->configuration = $configuration;
@@ -145,8 +145,12 @@ final class ProxyFactory
      *
      * @return PrefixInterceptor[]|SuffixInterceptor[]
      */
-    private function orderByPriority(array $interceptors, string $type): array
+    private function orderByPriority(iterable $interceptors, string $type): array
     {
+        if (!\is_array($interceptors)) {
+            /** @noinspection PhpParamsInspection */
+            $interceptors = iterator_to_array($interceptors);
+        }
         usort(
             $interceptors,
             /**

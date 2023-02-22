@@ -25,7 +25,7 @@ abstract class AbstractInterceptor
     /**
      * @param AnnotationHandler[] $handlers
      */
-    public function __construct(array $handlers = [])
+    public function __construct(iterable $handlers = [])
     {
         $handlers = $this->indexHandlers($handlers);
 
@@ -87,7 +87,7 @@ abstract class AbstractInterceptor
      *
      * @return array<class-string<AnnotationHandler>, array<string, AnnotationHandler>>
      */
-    private function indexHandlers(array $handlers): array
+    private function indexHandlers(iterable $handlers): array
     {
         $indexedHandlers = [];
         foreach ($handlers as $handler) {
