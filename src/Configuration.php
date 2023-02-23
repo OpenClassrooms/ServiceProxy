@@ -8,11 +8,12 @@ final class Configuration
 {
     private string $proxiesDir;
 
-    private bool $eval = false;
+    private bool $eval;
 
-    public function __construct(?string $proxiesDir = null)
+    public function __construct(?string $proxiesDir = null, bool $eval = false)
     {
         $this->proxiesDir = $proxiesDir ?? sys_get_temp_dir() . '/proxies';
+        $this->eval = $eval;
     }
 
     public function getProxiesDir(): string
