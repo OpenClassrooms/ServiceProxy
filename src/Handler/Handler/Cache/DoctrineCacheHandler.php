@@ -40,6 +40,6 @@ final class DoctrineCacheHandler implements CacheHandler
 
     public function getName(): string
     {
-        return $this->name ?? 'request_scope';
+        return $this->name ?? 'array';
     }
 }

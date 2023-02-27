@@ -28,7 +28,7 @@ final class Configuration implements ConfigurationInterface
             ->prototype('scalar')
             ->end()
             ->defaultValue([
-                'cache' => 'request_scope',
+                'cache' => 'array',
                 'transaction' => 'doctrine_orm',
                 'event' => 'symfony_event_dispatcher',
                 'security' => 'symfony_authorization_checker',
