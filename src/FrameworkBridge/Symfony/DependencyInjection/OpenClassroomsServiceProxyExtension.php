@@ -64,6 +64,9 @@ final class OpenClassroomsServiceProxyExtension extends Extension
         return 'openclassrooms_service_proxy';
     }
 
+    /**
+     * @param array<string, mixed> $config
+     */
     private function setParameters(array $config, ContainerBuilder $container): void
     {
         $container->setParameter(
@@ -75,13 +78,13 @@ final class OpenClassroomsServiceProxyExtension extends Extension
             'openclassrooms.service_proxy.eval',
             !\in_array(
                 $container->getParameter('kernel.environment'),
-                $config['production_environments'],
+                (array) $config['production_environments'],
                 true
             )
         );
         $container->setParameter(
             'openclassrooms.service_proxy.handler.defaults',
-            $config['default_handlers']
+            (array) $config['default_handlers']
         );
     }
 }

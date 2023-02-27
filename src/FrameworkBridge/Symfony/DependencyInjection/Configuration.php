@@ -11,18 +11,20 @@ final class Configuration implements ConfigurationInterface
 {
     /**
      * {@inheritdoc}
+     * @noinspection NullPointerExceptionInspection
      */
     public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder('openclassrooms_service_proxy');
-        $rootNode = $treeBuilder->getRootNode();
-        $children = $rootNode->children();
-        $children->scalarNode('cache_dir')
+
+        $treeBuilder
+            ->getRootNode()
+            ->children()
+            ->scalarNode('cache_dir')
             ->cannotBeEmpty()
             ->defaultValue('%kernel.cache_dir%/openclassrooms_service_proxy')
             ->end()
-        ;
-        $children->arrayNode('default_handlers')
+            ->arrayNode('default_handlers')
             ->prototype('scalar')
             ->end()
             ->defaultValue([
@@ -32,13 +34,12 @@ final class Configuration implements ConfigurationInterface
                 'security' => 'symfony_authorization_checker',
             ])
             ->end()
-        ;
-        $children->arrayNode('production_environments')
+            ->arrayNode('production_environments')
             ->prototype('scalar')
             ->end()
-            ->defaultValue(['prod'])->end()
-        ;
-        $children->end();
+            ->defaultValue(['prod'])
+            ->end()
+            ->end();
 
         return $treeBuilder;
     }

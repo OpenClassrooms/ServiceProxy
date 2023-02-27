@@ -5,6 +5,8 @@ parameters:
     excludePaths:
         - ecs.php
         - src/Generator
+        - src/FrameworkBridge/Symfony/DependencyInjection/OpenClassroomsServiceProxyExtension.php
+        - src/FrameworkBridge/Symfony/DependencyInjection/Configuration.php
     ignoreErrors:
         - '/Constructor in .+ has parameter .+ with default value./'
         - '/Method .+ has parameter .+ with null as default value./'
@@ -13,6 +15,10 @@ parameters:
         - '/Language construct isset\(\) should not be used./'
         - '/.+ is not allowed to extend ".+"./'
         - '/Short ternary operator is not allowed.+/'
+        - '/Instantiation of deprecated class Doctrine\\Common\\Cache\\ArrayCache.+/'
+        - '/Method .+OpenClassroomsServiceProxyBundle.+ has a parameter \$container/'
+        - '/Method .+ServiceProxyPass.+ has a parameter \$container/'
+
     exceptions:
         check:
             missingCheckedExceptionInThrows: true
