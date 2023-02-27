@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests;
 
-use OpenClassrooms\ServiceProxy\Interceptor\CacheInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
-use OpenClassrooms\ServiceProxy\Interceptor\EventInterceptor;
-use OpenClassrooms\ServiceProxy\Interceptor\SecurityInterceptor;
-use OpenClassrooms\ServiceProxy\Interceptor\TransactionInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\CacheInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\EventInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\SecurityInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\TransactionInterceptor;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event\EventHandlerMock;
@@ -20,10 +20,7 @@ use OpenClassrooms\ServiceProxy\Tests\Double\Stub\WithConstructorAnnotationClass
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\WithoutAnnotationClass;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
-class ProxyFactoryTest extends TestCase
+final class ProxyFactoryTest extends TestCase
 {
     use ProxyTestTrait;
 
@@ -75,11 +72,11 @@ class ProxyFactoryTest extends TestCase
         $interceptors = $this->factory->getInterceptors();
 
         $prefixInterceptorsClasses = array_map(
-            static fn ($interceptor) => get_class($interceptor),
+            static fn ($interceptor) => \get_class($interceptor),
             $interceptors[PrefixInterceptor::PREFIX_TYPE]
         );
         $suffixInterceptorsClasses = array_map(
-            static fn ($interceptor) => get_class($interceptor),
+            static fn ($interceptor) => \get_class($interceptor),
             $interceptors[SuffixInterceptor::SUFFIX_TYPE]
         );
 

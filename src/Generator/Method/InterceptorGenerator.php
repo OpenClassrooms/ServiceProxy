@@ -4,22 +4,17 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Generator\Method;
 
-use function array_keys;
-use function implode;
 use Laminas\Code\Generator\PropertyGenerator;
 use ProxyManager\Generator\MethodGenerator;
 
 use ProxyManager\Generator\Util\ProxiedMethodReturnExpression;
-use ReflectionMethod;
-use function str_replace;
-use function var_export;
 
 /**
  * Utility to create pre- and post- method interceptors around a given method body
  *
  * @private - this class is just here as a small utility for this component, don't use it in your own code
  */
-class InterceptorGenerator
+final class InterceptorGenerator
 {
     private const TEMPLATE = <<<'PHP'
 if (isset($this->{{$prefixInterceptorsName}}[{{$name}}])) {
@@ -65,7 +60,7 @@ PHP;
         PropertyGenerator $valueHolder,
         PropertyGenerator $prefixInterceptors,
         PropertyGenerator $suffixInterceptors,
-        ?ReflectionMethod $originalMethod
+        ?\ReflectionMethod $originalMethod
     ): string {
         $name = var_export($method->getName(), true);
         $valueHolderName = $valueHolder->getName();

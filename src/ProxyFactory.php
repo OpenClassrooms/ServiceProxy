@@ -76,7 +76,7 @@ final class ProxyFactory
             );
             foreach ([PrefixInterceptor::PREFIX_TYPE, SuffixInterceptor::SUFFIX_TYPE] as $type) {
                 $interceptors = $this->filterInterceptors($instance, $type);
-                if (count($interceptors) > 0) {
+                if (\count($interceptors) > 0) {
                     $interceptionClosures[$type][$methodRef->getName()] = $this->getInterceptionClosure(
                         $type,
                         $interceptors,
@@ -86,7 +86,7 @@ final class ProxyFactory
             }
         }
 
-        if (count($interceptionClosures) === 0) {
+        if (\count($interceptionClosures) === 0) {
             return $object;
         }
 

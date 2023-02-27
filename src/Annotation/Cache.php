@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Annotation;
 
 use OpenClassrooms\ServiceProxy\Annotation\Exception\InvalidCacheIdException;
-use OpenClassrooms\ServiceProxy\Contract\CacheHandler;
+use OpenClassrooms\ServiceProxy\Handler\Contract\AnnotationHandler;
+use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 
 /**
  * @Annotation
@@ -23,6 +24,11 @@ final class Cache extends Annotation
 
     private ?string $namespace = null;
 
+    /**
+     * @var array<int, string>
+     */
+    private array $tags = [];
+
     public function getId(): ?string
     {
         return $this->id;
@@ -39,7 +45,15 @@ final class Cache extends Annotation
     }
 
     /**
-     * @throws \OpenClassrooms\ServiceProxy\Annotation\Exception\InvalidCacheIdException
+     * @return array<int, string>
+     */
+    public function getTags(): array
+    {
+        return $this->tags;
+    }
+
+    /**
+     * @throws InvalidCacheIdException
      */
     public function setId(?string $id): void
     {
@@ -61,10 +75,18 @@ final class Cache extends Annotation
     }
 
     /**
-     * @return class-string<\OpenClassrooms\ServiceProxy\Contract\AnnotationHandler>
+     * @return class-string<AnnotationHandler>
      */
     public function getHandlerClass(): string
     {
         return CacheHandler::class;
+    }
+
+    /**
+     * @param array<int, string> $tags
+     */
+    public function setTags(array $tags): void
+    {
+        $this->tags = $tags;
     }
 }

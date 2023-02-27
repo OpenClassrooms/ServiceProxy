@@ -13,9 +13,6 @@ use ProxyManager\Proxy\AccessInterceptorInterface;
 use ProxyManager\Proxy\ValueHolderInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 trait ProxyTestTrait
 {
     protected static string $cacheDir = __DIR__ . '/cache';
@@ -28,14 +25,14 @@ trait ProxyTestTrait
 
     protected function assertProxy(object $input, object $proxy): void
     {
-        Assert::assertInstanceOf(get_class($input), $proxy);
+        Assert::assertInstanceOf(\get_class($input), $proxy);
         Assert::assertInstanceOf(ValueHolderInterface::class, $proxy);
         Assert::assertInstanceOf(AccessInterceptorInterface::class, $proxy);
     }
 
     protected function assertNotProxy(object $input, object $proxy): void
     {
-        Assert::assertInstanceOf(get_class($input), $proxy);
+        Assert::assertInstanceOf(\get_class($input), $proxy);
         Assert::assertNotInstanceOf(ValueHolderInterface::class, $proxy);
         Assert::assertNotInstanceOf(AccessInterceptorInterface::class, $proxy);
     }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Contract;
+namespace OpenClassrooms\ServiceProxy\Handler\Contract;
 
 interface SecurityHandler extends AnnotationHandler
 {

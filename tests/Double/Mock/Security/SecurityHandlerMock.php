@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Security;
 
-use OpenClassrooms\ServiceProxy\Contract\SecurityHandler;
+use OpenClassrooms\ServiceProxy\Handler\Contract\SecurityHandler;
 
 final class SecurityHandlerMock implements SecurityHandler
 {

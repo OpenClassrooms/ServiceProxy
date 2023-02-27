@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Generator\Method;
 
-use function implode;
 use Laminas\Code\Generator\Exception\InvalidArgumentException;
 use Laminas\Code\Generator\PropertyGenerator;
 use Laminas\Code\Reflection\MethodReflection;
@@ -14,7 +13,7 @@ use ProxyManager\Generator\MethodGenerator;
 /**
  * Method with additional pre- and post- interceptor logic in the body
  */
-class InterceptedMethod extends MethodGenerator
+final class InterceptedMethod extends MethodGenerator
 {
     /**
      * @throws InvalidArgumentException

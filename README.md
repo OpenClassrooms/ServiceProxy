@@ -1,7 +1,9 @@
 # Service Proxy
 [![Build Status](https://travis-ci.org/OpenClassrooms/ServiceProxy.svg?branch=master)](https://travis-ci.org/OpenClassrooms/ServiceProxy)
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/e0840e44-8f14-4620-96cf-76300727e808/mini.png)](https://insight.sensiolabs.com/projects/e0840e44-8f14-4620-96cf-76300727e808)
-[![Coverage Status](https://codecov.io/gh/OpenClassrooms/ServiceProxy/branch/master/graph/badge.svg)](https://codecov.io/gh/OpenClassrooms/ServiceProxy)
+![PHPStan](https://img.shields.io/badge/PHPStan-level%207-brightgreen.svg?style=flat)
+![PHP](https://img.shields.io/badge/PHP-%3E=%207.4-brightgreen.svg?style=flat)
+![Coverage](../coverage/coverage.svg?raw=true)
 
 Service Proxy is a library that provides functionality to manage technical code over a class:
 - Transactional context
@@ -41,14 +43,14 @@ for example using `@Cache` annotation, is a condition to enable the cache interc
 There is two types of interceptors:
 #### Prefix interceptors :
 Interceptors that are called before the method execution, they must implement `OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor`
-Two methods are called:
+Three methods are called:
 - `prefix` : called before the method execution. Should return instance of `OpenClassrooms\ServiceProxy\Interceptor\Response\Response`.
 - `supportsPrefix` : called to know if the interceptor should be called, for example in the case of the cache interceptor, it will check that the method has the `@Cache` annotation.
 - `getPrefixPriority` : called to know the priority of the interceptor, the higher the priority, the earlier the interceptor will be called.
 
 #### Suffix interceptors :
 Interceptors that are called after the method execution, even if an exception is thrown, they must implement `OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor`
-Two methods are called:
+Three methods are called:
 - `suffix` : called after the method execution even if an exception is thrown. should return instance of `OpenClassrooms\ServiceProxy\Interceptor\Response\Response`.
 - `supportsSuffix` : called to know if the interceptor should be called, for example in the case of the cache
   interceptor, it will check that the method has the `@Cache` annotation.
@@ -71,9 +73,9 @@ You can create your own interceptors, or use the built-in ones:
 Handlers are used by interceptors to manage the infrastructure code.
 To be able to use built-in interceptors, you need to implement the built-in handlers contracts.
 
-- All handles need to implement `OpenClassrooms\ServiceProxy\Contract\AnnotationHandler`.
+- All handles need to implement `OpenClassrooms\ServiceProxy\Handler\Contract\AnnotationHandler`.
 - Each handler must have a unique name, you can use the `getName` method to return it.
-- Each handler must return if it's the default handler, you can use the `isDefault` method to return it.
+- Each handler must return true if it's the default handler or false if not, you can use the `isDefault` method to return it.
 - You can't have two handlers with the same name by annotation.
 - You can have only one default handler, by annotation.
 - If you have only one handler by annotation, it will be the default one.
@@ -102,7 +104,7 @@ The bundle provides an easy configuration option for this library.
 First implement the handlers
 
 ```php
-use OpenClassrooms\ServiceProxy\Contract\CacheHandler;
+use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 
 class InMemoryCacheHandler implements CacheHandler
 {

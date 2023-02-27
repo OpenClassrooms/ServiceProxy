@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
-use OpenClassrooms\ServiceProxy\Contract\SecurityHandler;
-use OpenClassrooms\ServiceProxy\Interceptor\SecurityInterceptor;
+use OpenClassrooms\ServiceProxy\Handler\Contract\SecurityHandler;
+use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\SecurityInterceptor;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Security\SecurityHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Security\SecurityAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
 use PHPUnit\Framework\TestCase;
 
-class SecurityInterceptorTest extends TestCase
+final class SecurityInterceptorTest extends TestCase
 {
     use ProxyTestTrait;
 

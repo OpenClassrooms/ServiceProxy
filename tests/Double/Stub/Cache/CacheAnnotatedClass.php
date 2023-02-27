@@ -7,9 +7,6 @@ namespace OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache;
 use OpenClassrooms\ServiceProxy\Annotation\Cache;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\ParameterClassStub;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 class CacheAnnotatedClass
 {
     public const DATA = 'data';

@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
 use OpenClassrooms\ServiceProxy\Annotation\Cache;
-use OpenClassrooms\ServiceProxy\Contract\CacheHandler;
-use OpenClassrooms\ServiceProxy\Contract\Exception\DuplicatedDefaultHandler;
-use OpenClassrooms\ServiceProxy\Contract\Exception\DuplicatedHandler;
-use OpenClassrooms\ServiceProxy\Contract\Exception\HandlerNotFound;
-use OpenClassrooms\ServiceProxy\Contract\Exception\MissingDefaultHandler;
-use OpenClassrooms\ServiceProxy\Interceptor\CacheInterceptor;
+use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
+use OpenClassrooms\ServiceProxy\Handler\Exception\DuplicatedDefaultHandler;
+use OpenClassrooms\ServiceProxy\Handler\Exception\DuplicatedHandler;
+use OpenClassrooms\ServiceProxy\Handler\Exception\HandlerNotFound;
+use OpenClassrooms\ServiceProxy\Handler\Exception\MissingDefaultHandler;
+use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\CacheInterceptor;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\CacheAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;

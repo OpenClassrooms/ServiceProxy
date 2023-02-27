@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Interceptor;
+namespace OpenClassrooms\ServiceProxy\Interceptor\Interceptor;
 
 use OpenClassrooms\ServiceProxy\Annotation\Event;
 use OpenClassrooms\ServiceProxy\Annotation\Exception\InvalidEventNameException;
-use OpenClassrooms\ServiceProxy\Contract\EventHandler;
+use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
+use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
@@ -14,10 +15,6 @@ use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
 
 final class EventInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
-    protected int $prefixPriority = 20;
-
-    protected int $suffixPriority = 10;
-
     /**
      * @throws InvalidEventNameException
      */
@@ -87,8 +84,17 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
 
     public function supportsSuffix(Instance $instance): bool
     {
-        return $instance->getMethod()
-            ->hasAnnotation(Event::class);
+        return $this->supportsPrefix($instance);
+    }
+
+    public function getPrefixPriority(): int
+    {
+        return 20;
+    }
+
+    public function getSuffixPriority(): int
+    {
+        return 10;
     }
 
     private function getEventName(Instance $instance, Event $annotation, string $type): string
@@ -104,7 +110,7 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
             $name = $instance->getMethod()
                 ->getName() . '.' . $name;
         }
-        $name = \mb_strtolower((string) preg_replace('/(?<=\\w)(?=[A-Z])/', '_$1', $name));
+        $name = mb_strtolower((string) preg_replace('/(?<=\\w)(?=[A-Z])/', '_$1', $name));
 
         $prefix = $annotation->getDefaultPrefix();
         $type = $type === Event::ON_EXCEPTION_METHOD ? 'exception' : $type;

@@ -17,13 +17,13 @@ jobs:
                     -   name: Composer validate
                         run: composer validate --ansi --strict
 
-                    -   name: PHPStan
+                    -   name: Static analysis
                         run: composer phpstan
 
-                    -   name: PHPCsFixer
+                    -   name: Style check
                         run: composer check-cs
 
-                    -   name: PHPUnit
+                    -   name: Unit tests
                         run: composer coverage
         steps:
             -   uses: actions/checkout@v2

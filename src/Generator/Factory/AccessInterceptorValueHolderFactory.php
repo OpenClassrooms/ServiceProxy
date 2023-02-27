@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Generator\Factory;
 
-use Closure;
-use function get_class;
 use OpenClassrooms\ServiceProxy\Generator\AccessInterceptorValueHolderGenerator;
-use OutOfBoundsException;
 use ProxyManager\Configuration;
 use ProxyManager\Factory\AbstractBaseFactory;
 use ProxyManager\Proxy\AccessInterceptorInterface;
@@ -20,7 +17,7 @@ use ProxyManager\Signature\Exception\MissingSignatureException;
 /**
  * Factory responsible of producing proxy objects
  */
-class AccessInterceptorValueHolderFactory extends AbstractBaseFactory
+final class AccessInterceptorValueHolderFactory extends AbstractBaseFactory
 {
     private AccessInterceptorValueHolderGenerator $generator;
 
@@ -33,14 +30,14 @@ class AccessInterceptorValueHolderFactory extends AbstractBaseFactory
 
     /**
      * @param object                 $instance           the object to be wrapped within the value holder
-     * @param array<string, Closure> $prefixInterceptors an array (indexed by method name) of interceptor closures to be called
+     * @param array<string, \Closure> $prefixInterceptors an array (indexed by method name) of interceptor closures to be called
      *                                       before method logic is executed
-     * @param array<string, Closure> $suffixInterceptors an array (indexed by method name) of interceptor closures to be called
+     * @param array<string, \Closure> $suffixInterceptors an array (indexed by method name) of interceptor closures to be called
      *                                       after method logic is executed
      *
      * @throws InvalidSignatureException
      * @throws MissingSignatureException
-     * @throws OutOfBoundsException
+     * @throws \OutOfBoundsException
      *
      * @psalm-template RealObjectType of object
      *
@@ -71,7 +68,7 @@ class AccessInterceptorValueHolderFactory extends AbstractBaseFactory
         array $prefixInterceptors = [],
         array $suffixInterceptors = []
     ): AccessInterceptorValueHolderInterface {
-        $proxyClassName = $this->generateProxy(get_class($instance));
+        $proxyClassName = $this->generateProxy(\get_class($instance));
 
         /**
          * We ignore type checks here, since `staticProxyConstructor` is not interfaced (by design)

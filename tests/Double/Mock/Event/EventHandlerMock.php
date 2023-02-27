@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event;
 
-use OpenClassrooms\ServiceProxy\Contract\EventHandler;
+use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\EventStub;
 
 final class EventHandlerMock implements EventHandler
@@ -31,9 +31,7 @@ final class EventHandlerMock implements EventHandler
             return array_values(
                 array_filter(
                     $this->events,
-                    static function (EventStub $event) use ($name) {
-                        return $event->getName() === $name;
-                    }
+                    static fn (EventStub $event) => $event->getName() === $name
                 )
             );
         }
@@ -58,7 +56,7 @@ final class EventHandlerMock implements EventHandler
     /**
      * @param EventStub $event
      */
-    public function send($event): void
+    public function send(object $event): void
     {
         $this->events[] = $event;
     }

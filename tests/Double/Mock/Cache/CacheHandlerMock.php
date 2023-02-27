@@ -6,9 +6,9 @@ namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache;
 
 use Doctrine\Common\Cache\ArrayCache;
 use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
-use OpenClassrooms\ServiceProxy\Contract\CacheHandler;
+use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 
-class CacheHandlerMock implements CacheHandler
+final class CacheHandlerMock implements CacheHandler
 {
     public static ?int $lifeTime;
 
@@ -32,31 +32,22 @@ class CacheHandlerMock implements CacheHandler
         return $this->name;
     }
 
-    public function fetchWithNamespace(string $id, ?string $namespaceId = null)
+    public function fetch(string $id, array $tags = [])
     {
+        $namespaceId = $tags[0] ?? null;
         return $this->cacheProvider->fetchWithNamespace($id, $namespaceId);
     }
 
-    public function saveWithNamespace(string $id, $data, ?string $namespaceId = null, $lifeTime = null): bool
+    public function save(string $id, $data, array $tags = [], $lifeTime = null): bool
     {
         self::$lifeTime = $lifeTime;
-
+        $namespaceId = $tags[0] ?? null;
         return $this->cacheProvider->saveWithNamespace($id, $data, $namespaceId, $lifeTime);
     }
 
-    public function contains(string $id): bool
+    public function contains(string $id, array $tags = []): bool
     {
         return $this->cacheProvider->contains($id);
-    }
-
-    public function fetch(string $id)
-    {
-        return $this->cacheProvider->fetch($id);
-    }
-
-    public function save(string $id, $data, ?int $lifeTime = null): bool
-    {
-        return $this->cacheProvider->save($id, $data, $lifeTime);
     }
 
     public function isDefault(): bool

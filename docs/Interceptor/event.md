@@ -32,7 +32,7 @@ The message can be send:
 - pre execute
 - post execute
 - on exception
-  or all of them.
+- or all of them.
 
 Post is default.
 

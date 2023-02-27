@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Annotation;
 
-use BadMethodCallException;
-use OpenClassrooms\ServiceProxy\Contract\AnnotationHandler;
+use OpenClassrooms\ServiceProxy\Handler\Contract\AnnotationHandler;
 
 abstract class Annotation
 {
@@ -33,11 +32,11 @@ abstract class Annotation
     }
 
     /**
-     * @throws BadMethodCallException
+     * @throws \BadMethodCallException
      */
     final public function __get(string $name): void
     {
-        throw new BadMethodCallException(
+        throw new \BadMethodCallException(
             sprintf("Unknown property '%s' on annotation '%s'.", $name, static::class)
         );
     }
@@ -45,11 +44,11 @@ abstract class Annotation
     /**
      * @param string $name Unknown property name.
      *
-     * @throws BadMethodCallException
+     * @throws \BadMethodCallException
      */
     final public function __isset(string $name): void
     {
-        throw new BadMethodCallException(
+        throw new \BadMethodCallException(
             sprintf("Unknown property '%s' on annotation '%s'.", $name, static::class)
         );
     }
@@ -58,11 +57,11 @@ abstract class Annotation
      * @param string $name  Unknown property name.
      * @param mixed  $value Property value.
      *
-     * @throws BadMethodCallException
+     * @throws \BadMethodCallException
      */
     final public function __set(string $name, $value): void
     {
-        throw new BadMethodCallException(
+        throw new \BadMethodCallException(
             sprintf("Unknown property '%s' on annotation '%s'.", $name, static::class)
         );
     }

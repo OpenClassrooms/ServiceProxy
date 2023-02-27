@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Interceptor;
+namespace OpenClassrooms\ServiceProxy\Interceptor\Interceptor;
 
 use OpenClassrooms\ServiceProxy\Annotation\Transaction;
-use OpenClassrooms\ServiceProxy\Contract\TransactionHandler;
+use OpenClassrooms\ServiceProxy\Handler\Contract\TransactionHandler;
+use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
@@ -13,14 +14,12 @@ use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
 
 final class TransactionInterceptor extends AbstractInterceptor implements PrefixInterceptor, SuffixInterceptor
 {
-    protected int $suffixPriority = 30;
-
     public function prefix(Instance $instance): Response
     {
         $annotation = $instance->getMethod()
             ->getAnnotation(Transaction::class);
         $handler = $this->getHandler(TransactionHandler::class, $annotation);
-        $handler->beginTransaction();
+        $handler->begin();
 
         return new Response();
     }
@@ -31,9 +30,7 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
             ->getAnnotation(Transaction::class);
         $handler = $this->getHandler(TransactionHandler::class, $annotation);
         if ($instance->getMethod()->threwException()) {
-            if ($handler->isTransactionActive()) {
-                $handler->rollback();
-            }
+            $handler->rollback();
         } else {
             $handler->commit();
         }
@@ -50,5 +47,15 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
     {
         return $instance->getMethod()
             ->hasAnnotation(Transaction::class);
+    }
+
+    public function getPrefixPriority(): int
+    {
+        return 0;
+    }
+
+    public function getSuffixPriority(): int
+    {
+        return 30;
     }
 }

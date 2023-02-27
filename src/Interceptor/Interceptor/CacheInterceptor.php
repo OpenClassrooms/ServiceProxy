@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Interceptor;
+namespace OpenClassrooms\ServiceProxy\Interceptor\Interceptor;
 
 use OpenClassrooms\ServiceProxy\Annotation\Cache;
-use OpenClassrooms\ServiceProxy\Contract\CacheHandler;
+use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
+use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
@@ -14,31 +15,31 @@ use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 final class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
-    protected int $prefixPriority = 10;
-
-    protected int $suffixPriority = 20;
-
-    private ?string $namespace = null;
-
-    private string $proxyId;
-
     public function prefix(Instance $instance): Response
     {
         $annotation = $instance->getMethod()
-            ->getAnnotation(Cache::class);
-        $this->setNamespace($instance, $annotation);
-        $this->setProxyId($instance, $annotation);
+            ->getAnnotation(Cache::class)
+        ;
+        $proxyId = $this->getProxyId($instance, $annotation);
+        $tags = $this->getTags($instance, $annotation);
 
         $returnType = $instance->getMethod()
             ->getReflection()
-            ->getReturnType();
+            ->getReturnType()
+        ;
         if ($returnType instanceof \ReflectionNamedType && $returnType->getName() === 'void') {
             return new Response(null, false);
         }
 
-        $data = $this->getHandler(CacheHandler::class, $annotation)
-            ->fetchWithNamespace($this->proxyId, $this->namespace)
-        ;
+        $handler = $this->getHandler(CacheHandler::class, $annotation);
+
+        // this is needed to solve a bug (when the false is stored in the cache)
+        // to be enabled when symfony cache is used
+        // if ($handler->contains($proxyId, $namespace) === false) {
+        //     return new Response(null, false);
+        // }
+
+        $data = $handler->fetch($proxyId, $tags);
 
         if ($data === false) {
             return new Response(null, false);
@@ -54,17 +55,23 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         }
 
         $annotation = $instance->getMethod()
-            ->getAnnotation(Cache::class);
-        $data = $instance->getMethod()
-            ->getResponse();
-        $this->getHandler(CacheHandler::class, $annotation)
-            ->saveWithNamespace(
-                $this->proxyId,
-                $data,
-                $this->namespace,
-                $annotation->getLifetime()
-            )
+            ->getAnnotation(Cache::class)
         ;
+        $proxyId = $this->getProxyId($instance, $annotation);
+        $tags = $this->getTags($instance, $annotation);
+
+        $data = $instance->getMethod()
+            ->getResponse()
+        ;
+
+        $handler = $this->getHandler(CacheHandler::class, $annotation);
+
+        $handler->save(
+            $proxyId,
+            $data,
+            $tags,
+            $annotation->getLifetime()
+        );
 
         return new Response($data);
     }
@@ -77,10 +84,21 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     public function supportsPrefix(Instance $instance): bool
     {
         return $instance->getMethod()
-            ->hasAnnotation(Cache::class);
+            ->hasAnnotation(Cache::class)
+        ;
     }
 
-    private function setNamespace(Instance $instance, Cache $annotation): void
+    public function getPrefixPriority(): int
+    {
+        return 10;
+    }
+
+    public function getSuffixPriority(): int
+    {
+        return 20;
+    }
+
+    private function getNamespace(Instance $instance, Cache $annotation): ?string
     {
         $parameters = $instance->getMethod()
             ->getParameters()
@@ -90,29 +108,34 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
                 $annotation->getNamespace(),
                 $parameters
             );
-            $this->namespace = md5($resolvedExpression);
+
+            return md5($resolvedExpression);
         }
+
+        return null;
     }
 
-    private function setProxyId(Instance $instance, Cache $annotation): void
+    private function getProxyId(Instance $instance, Cache $annotation): string
     {
         $parameters = $instance->getMethod()
-            ->getParameters();
+            ->getParameters()
+        ;
         if ($annotation->getId() !== null) {
-            $this->proxyId = $this->resolveExpression(
+            return $this->resolveExpression(
                 $annotation->getId(),
                 $parameters
             );
-        } else {
-            $key = $instance->getReflection()
-                ->getName() . '::' . $instance->getMethod()->getName();
-            if (count($parameters) > 0) {
-                foreach ($parameters as $parameter) {
-                    $key .= '::' . serialize($parameter);
-                }
-            }
-            $this->proxyId = md5($key);
         }
+
+        $key = $instance->getReflection()
+            ->getName() . '::' . $instance->getMethod()->getName();
+        if (\count($parameters) > 0) {
+            foreach ($parameters as $parameter) {
+                $key .= '::' . serialize($parameter);
+            }
+        }
+
+        return md5($key);
     }
 
     /**
@@ -133,5 +156,28 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         }
 
         return $resolvedExpression;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function getTags(Instance $instance, Cache $annotation): array
+    {
+        $namespace = $this->getNamespace($instance, $annotation);
+        $parameters = $instance->getMethod()
+            ->getParameters();
+        $tags = [];
+        foreach ($annotation->getTags() as $tag) {
+            $tags[] = $this->resolveExpression(
+                $tag,
+                $parameters
+            );
+        }
+
+        if ($namespace !== null) {
+            array_unshift($tags, $namespace);
+        }
+
+        return array_filter($tags);
     }
 }

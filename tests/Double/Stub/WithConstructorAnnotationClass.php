@@ -6,9 +6,6 @@ namespace OpenClassrooms\ServiceProxy\Tests\Double\Stub;
 
 use OpenClassrooms\ServiceProxy\Annotation\Cache;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
 class WithConstructorAnnotationClass
 {
     public const DATA = 'data';

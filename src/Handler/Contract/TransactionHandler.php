@@ -2,15 +2,13 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Contract;
+namespace OpenClassrooms\ServiceProxy\Handler\Contract;
 
 interface TransactionHandler extends AnnotationHandler
 {
-    public function beginTransaction(): bool;
+    public function begin(): bool;
 
     public function commit(): bool;
 
     public function rollback(): bool;
-
-    public function isTransactionActive(): bool;
 }

@@ -2,18 +2,17 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Interceptor;
+namespace OpenClassrooms\ServiceProxy\Interceptor\Interceptor;
 
 use OpenClassrooms\ServiceProxy\Annotation\Security;
-use OpenClassrooms\ServiceProxy\Contract\SecurityHandler;
+use OpenClassrooms\ServiceProxy\Handler\Contract\SecurityHandler;
+use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
 
 final class SecurityInterceptor extends AbstractInterceptor implements PrefixInterceptor
 {
-    protected int $prefixPriority = 30;
-
     /**
      * @throws \ReflectionException
      * @throws \Exception
@@ -62,6 +61,11 @@ final class SecurityInterceptor extends AbstractInterceptor implements PrefixInt
             ->hasAnnotation(Security::class);
     }
 
+    public function getPrefixPriority(): int
+    {
+        return 30;
+    }
+
     /**
      * @return mixed
      *
@@ -74,7 +78,7 @@ final class SecurityInterceptor extends AbstractInterceptor implements PrefixInt
 
         $parameters = $instance->getMethod()
             ->getParameters();
-        if (count($parameters) === 1) {
+        if (\count($parameters) === 1) {
             $parameters = reset($parameters);
         }
 

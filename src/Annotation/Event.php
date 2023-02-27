@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Annotation;
 
-use OpenClassrooms\ServiceProxy\Contract\EventHandler;
+use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
 
 /**
  * @Annotation
@@ -85,7 +85,7 @@ final class Event extends Annotation
         }
 
         $diff = array_diff($methods, self::$allowedMethods);
-        if (count($diff) > 0) {
+        if (\count($diff) > 0) {
             throw new \InvalidArgumentException(
                 'Method "'
                 . implode(',', $diff) . '" is not allowed. Allowed: '

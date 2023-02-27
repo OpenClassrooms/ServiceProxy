@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
-use OpenClassrooms\ServiceProxy\Interceptor\TransactionInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\TransactionInterceptor;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Transaction\TransactionHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Transaction\TransactionAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
 use PHPUnit\Framework\TestCase;
 
-class TransactionInterceptorTest extends TestCase
+final class TransactionInterceptorTest extends TestCase
 {
     use ProxyTestTrait;
 

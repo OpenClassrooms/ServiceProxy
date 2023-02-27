@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
 use Doctrine\Common\Annotations\AnnotationException;
-use OpenClassrooms\ServiceProxy\Interceptor\EventInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\EventInterceptor;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event\EventHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\EventAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\InvalidMethodEventAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
 use PHPUnit\Framework\TestCase;
 
-class EventInterceptorTest extends TestCase
+final class EventInterceptorTest extends TestCase
 {
     use ProxyTestTrait;
 

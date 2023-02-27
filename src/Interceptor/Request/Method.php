@@ -58,12 +58,10 @@ final class Method
         /** @var array<int, T> $annotations */
         $annotations = array_filter(
             $this->annotations,
-            static function ($annotation) use ($annotationClass) {
-                return is_a($annotation, $annotationClass, true);
-            }
+            static fn ($annotation) => is_a($annotation, $annotationClass, true)
         );
 
-        if (count($annotations) > 0) {
+        if (\count($annotations) > 0) {
             return array_values($annotations)[0];
         }
 
@@ -90,9 +88,9 @@ final class Method
             }
         );
 
-        $annotations = array_unique($annotations, SORT_REGULAR);
+        $annotations = array_unique($annotations, \SORT_REGULAR);
 
-        if (count($annotations) > 0) {
+        if (\count($annotations) > 0) {
             return array_values($annotations);
         }
 

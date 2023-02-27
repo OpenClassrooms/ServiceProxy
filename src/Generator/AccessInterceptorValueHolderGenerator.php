@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Generator;
 
-use function array_map;
-use function array_merge;
-use InvalidArgumentException;
 use Laminas\Code\Generator\ClassGenerator;
 use Laminas\Code\Generator\MethodGenerator;
 use Laminas\Code\Reflection\MethodReflection;
@@ -35,24 +32,21 @@ use ProxyManager\ProxyGenerator\ValueHolder\MethodGenerator\Constructor;
 use ProxyManager\ProxyGenerator\ValueHolder\MethodGenerator\GetWrappedValueHolderValue;
 use ProxyManager\ProxyGenerator\ValueHolder\MethodGenerator\MagicSleep;
 
-use ReflectionClass;
-use ReflectionMethod;
-
 /**
  * Generator for proxies implementing {@see \ProxyManager\Proxy\ValueHolderInterface}
  * and {@see \ProxyManager\Proxy\AccessInterceptorInterface}
  *
  * {@inheritDoc}
  */
-class AccessInterceptorValueHolderGenerator implements ProxyGeneratorInterface
+final class AccessInterceptorValueHolderGenerator implements ProxyGeneratorInterface
 {
     /**
      * {@inheritDoc}
      *
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      * @throws InvalidProxiedClassException
      */
-    public function generate(ReflectionClass $originalClass, ClassGenerator $classGenerator)
+    public function generate(\ReflectionClass $originalClass, ClassGenerator $classGenerator)
     {
         CanProxyAssertion::assertClassCanBeProxied($originalClass);
 
@@ -128,7 +122,7 @@ class AccessInterceptorValueHolderGenerator implements ProxyGeneratorInterface
         ValueHolderProperty $valueHolder
     ): callable
     {
-        return static function (ReflectionMethod $method) use ($prefixes, $suffixes, $valueHolder): InterceptedMethod {
+        return static function (\ReflectionMethod $method) use ($prefixes, $suffixes, $valueHolder): InterceptedMethod {
             return InterceptedMethod::generateMethod(
                 new MethodReflection($method->getDeclaringClass()->getName(), $method->getName()),
                 $valueHolder,

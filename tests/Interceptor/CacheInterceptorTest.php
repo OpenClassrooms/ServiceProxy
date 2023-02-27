@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
 use Doctrine\Common\Annotations\AnnotationException;
-use OpenClassrooms\ServiceProxy\Interceptor\CacheInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\CacheInterceptor;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\CacheAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\InvalidIdCacheAnnotatedClass;
@@ -13,10 +13,7 @@ use OpenClassrooms\ServiceProxy\Tests\Double\Stub\ParameterClassStub;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @author Romain Kuzniak <romain.kuzniak@openclassrooms.com>
- */
-class CacheInterceptorTest extends TestCase
+final class CacheInterceptorTest extends TestCase
 {
     use ProxyTestTrait;
 

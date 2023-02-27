@@ -2,17 +2,20 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Contract;
+namespace OpenClassrooms\ServiceProxy\Handler\Contract;
 
 use OpenClassrooms\ServiceProxy\Annotation\Exception\InvalidEventNameException;
 
+/**
+ * @template T of object
+ */
 interface EventHandler extends AnnotationHandler
 {
     /**
      * @param array<string, mixed> $parameters
      * @param mixed $response
      *
-     * @return mixed
+     * @return T
      * @throws InvalidEventNameException
      */
     public function make(
@@ -23,7 +26,7 @@ interface EventHandler extends AnnotationHandler
     );
 
     /**
-     * @param mixed $event
+     * @param T $event
      */
-    public function send($event): void;
+    public function send(object $event): void;
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Transaction;
 
-use OpenClassrooms\ServiceProxy\Contract\TransactionHandler;
+use OpenClassrooms\ServiceProxy\Handler\Contract\TransactionHandler;
 
 final class TransactionHandlerMock implements TransactionHandler
 {
@@ -17,7 +17,7 @@ final class TransactionHandlerMock implements TransactionHandler
         return 'array';
     }
 
-    public function beginTransaction(): bool
+    public function begin(): bool
     {
         return true;
     }
