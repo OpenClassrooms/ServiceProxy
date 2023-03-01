@@ -1,0 +1,58 @@
+name: Code Analysis
+
+on:
+    pull_request: ~
+    push:
+        branches:
+            - main
+
+jobs:
+    code-validation:
+        name: ${{ matrix.actions.name }}
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                actions:
+                    -   name: Composer validate
+                        run: composer validate --ansi --strict
+
+                    -   name: Static analysis
+                        run: composer phpstan
+
+                    -   name: Style check
+                        run: composer check-cs
+
+                    -   name: Unit tests
+                        run: composer coverage
+        steps:
+            -   uses: actions/checkout@v2
+
+            -   uses: shivammathur/setup-php@v2
+                with:
+                    php-version: 7.4
+                    coverage: pcov
+                    tools: composer:v2
+                env:
+                    COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            -   name: Install dependencies
+                uses: "ramsey/composer-install@v2"
+
+            -   run: ${{ matrix.actions.run }}
+
+            -   name: Coverage diff
+                uses: OpenClassrooms/coverage-checker@v1.7.0
+                if: ${{ hashFiles('build/coverage/coverage.xml') != '' && github.event_name == 'pull_request' }}
+                with:
+                    action: check
+                    files: '[{"coverage": "build/coverage/coverage.xml", "summary": "coverage-summary.json", "label": "Coverage", "badge": "coverage.svg"}]'
+                    token: ${{ secrets.GITHUB_TOKEN }}
+
+            -   name: Coverage update
+                uses: OpenClassrooms/coverage-checker@v1.7.0
+                if: ${{ hashFiles('build/coverage/coverage.xml') != '' && github.event_name == 'push' && github.ref_name == 'main' }}
+                with:
+                    action: update
+                    files: '[{"coverage": "build/coverage/coverage.xml", "summary": "coverage-summary.json", "label": "Coverage", "badge": "coverage.svg"}]'
+                    token: ${{ secrets.GITHUB_TOKEN }}

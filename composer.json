@@ -3,6 +3,8 @@
   "description": "Library",
   "type": "library",
   "license": "MIT",
+  "minimum-stability": "dev",
+  "prefer-stable": true,
   "authors": [
     {
       "name": "Romain Kuzniak",
@@ -27,18 +29,84 @@
     "php": ">=7.4",
     "doctrine/annotations": "~1.2",
     "ocramius/proxy-manager": "~2.0",
-    "openclassrooms/doctrine-cache-extension": "1.0.*@dev",
     "symfony/expression-language": "~3.4 || ~4.0 || ^5.0 || ^6.0",
     "symfony/filesystem": "~3.4 || ~4.0 || ^5.0 || ^6.0",
     "laminas/laminas-code": "^4.5"
   },
   "require-dev": {
-    "friendsofphp/php-cs-fixer": "~2.15",
-    "phpunit/phpunit": "~6.5 || ~7.5"
+    "phpunit/phpunit": "^9.5",
+    "openclassrooms/doctrine-cache-extension": "1.0.*@dev",
+    "phpstan/phpstan": "^1.9",
+    "phpstan/phpstan-strict-rules": "^1.4",
+    "phpstan/phpstan-deprecation-rules": "^1.1",
+    "phpstan/phpstan-phpunit": "^1.3",
+    "roave/security-advisories": "dev-latest",
+    "phpstan/extension-installer": "^1.2",
+    "ergebnis/composer-normalize": "^2.28",
+    "thecodingmachine/phpstan-strict-rules": "^1.0",
+    "korbeil/phpstan-generic-rules": "^1.0",
+    "ergebnis/phpstan-rules": "^1.0",
+    "symplify/easy-coding-standard": "^11.2",
+    "symfony/dependency-injection": "~3.4 || ~4.0 || ^5.0 || ^6.0",
+    "symfony/config": "~3.4 || ~4.0 || ^5.0 || ^6.0",
+    "symfony/http-kernel": "~3.4 || ~4.0 || ^5.0 || ^6.0",
+    "symfony/event-dispatcher": "~3.4 || ~4.0 || ^5.0 || ^6.0",
+    "symfony/security": "~3.4 || ~4.0 || ^5.0 || ^6.0",
+    "symfony/messenger": "~3.4 || ~4.0 || ^5.0 || ^6.0",
+    "doctrine/dbal": "~2.5 || ^3.0",
+    "doctrine/orm": "~2.5 || ^3.0",
+    "doctrine/doctrine-bundle": "~1.6 || ^2.0"
+  },
+  "suggest": {
+    "symfony/dependency-injection": "For Symfony integration",
+    "symfony/config": "For Symfony integration",
+    "symfony/http-kernel": "For Symfony integration",
+    "symfony/event-dispatcher": "For Symfony integration with @Event annotation",
+    "symfony/security": "For Symfony integration with @Security annotation",
+    "symfony/messenger": "For Symfony integration with @Event annotation",
+    "doctrine/dbal": "For Doctrine integration with @Cache annotation",
+    "doctrine/orm": "For Doctrine integration with @Cache annotation",
+    "doctrine/doctrine-bundle": "For Doctrine & Symfony integration with @Cache"
   },
   "extra": {
     "branch-alias": {
       "dev-master": "2.0.x-dev"
     }
+  },
+  "config": {
+    "allow-plugins": {
+      "ocramius/package-versions": true,
+      "phpstan/extension-installer": true,
+      "ergebnis/composer-normalize": true
+    }
+  },
+  "scripts": {
+    "check": [
+      "@composer validate --ansi --strict",
+      "@fix-cs",
+      "@check-static",
+      "@test"
+    ],
+    "parallel-check": [
+      "@parallel fix-cs",
+      "@parallel check-static",
+      "@parallel test"
+    ],
+    "check-cs": [
+      "vendor/bin/ecs check --ansi -c ecs.php"
+    ],
+    "fix-cs": [
+      "vendor/bin/ecs check --fix --ansi -c ecs.php "
+    ],
+    "check-static": [
+      "@phpstan"
+    ],
+    "test": [
+      "@unit"
+    ],
+    "unit": "vendor/bin/phpunit -c phpunit.xml.dist --testdox",
+    "coverage": "vendor/bin/phpunit -c phpunit.xml.dist --testdox --coverage-clover build/coverage/coverage.xml",
+    "phpstan": "vendor/bin/phpstan analyse -c phpstan.neon --ansi",
+    "ecs": "@check-cs"
   }
 }
