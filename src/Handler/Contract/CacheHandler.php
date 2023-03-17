@@ -7,20 +7,20 @@ namespace OpenClassrooms\ServiceProxy\Handler\Contract;
 interface CacheHandler extends AnnotationHandler
 {
     /**
-     * @param array<int, string> $tags
-     *
-     * @return mixed|false
+     * @return mixed
      */
-    public function fetch(string $id, array $tags = []);
+    public function fetch(string $id);
 
     /**
      * @param array<int, string> $tags
      * @param mixed              $data
      */
-    public function save(string $id, $data, array $tags = [], ?int $lifeTime = null): bool;
+    public function save(string $id, $data, ?int $lifeTime = null, array $tags = []): void;
+
+    public function contains(string $id): bool;
 
     /**
      * @param array<int, string> $tags
      */
-    public function contains(string $id, array $tags = []): bool;
+    public function invalidateTags(array $tags): bool;
 }

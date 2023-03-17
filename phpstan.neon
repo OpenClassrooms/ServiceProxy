@@ -15,7 +15,6 @@ parameters:
         - '/Language construct isset\(\) should not be used./'
         - '/.+ is not allowed to extend ".+"./'
         - '/Short ternary operator is not allowed.+/'
-        - '/Instantiation of deprecated class Doctrine\\Common\\Cache\\ArrayCache.+/'
         - '/Method .+OpenClassroomsServiceProxyBundle.+ has a parameter \$container/'
         - '/Method .+ServiceProxyPass.+ has a parameter \$container/'
 
@@ -29,3 +28,4 @@ parameters:
             - JsonException
             - PHPUnit\Framework\Exception
             - ReflectionException
+            - Psr\Cache\InvalidArgumentException

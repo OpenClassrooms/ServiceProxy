@@ -35,7 +35,6 @@
   },
   "require-dev": {
     "phpunit/phpunit": "^9.5",
-    "openclassrooms/doctrine-cache-extension": "1.0.*@dev",
     "phpstan/phpstan": "^1.9",
     "phpstan/phpstan-strict-rules": "^1.4",
     "phpstan/phpstan-deprecation-rules": "^1.1",
@@ -49,24 +48,22 @@
     "symplify/easy-coding-standard": "^11.2",
     "symfony/dependency-injection": "~3.4 || ~4.0 || ^5.0 || ^6.0",
     "symfony/config": "~3.4 || ~4.0 || ^5.0 || ^6.0",
+    "symfony/cache": "~3.4 || ~4.0 || ^5.0 || ^6.0",
     "symfony/http-kernel": "~3.4 || ~4.0 || ^5.0 || ^6.0",
     "symfony/event-dispatcher": "~3.4 || ~4.0 || ^5.0 || ^6.0",
     "symfony/security": "~3.4 || ~4.0 || ^5.0 || ^6.0",
     "symfony/messenger": "~3.4 || ~4.0 || ^5.0 || ^6.0",
-    "doctrine/dbal": "~2.5 || ^3.0",
-    "doctrine/orm": "~2.5 || ^3.0",
-    "doctrine/doctrine-bundle": "~1.6 || ^2.0"
+    "doctrine/orm": "~2.5 || ^3.0"
   },
   "suggest": {
     "symfony/dependency-injection": "For Symfony integration",
     "symfony/config": "For Symfony integration",
+    "symfony/cache": "For Symfony integration with @Cache annotation",
     "symfony/http-kernel": "For Symfony integration",
     "symfony/event-dispatcher": "For Symfony integration with @Event annotation",
     "symfony/security": "For Symfony integration with @Security annotation",
     "symfony/messenger": "For Symfony integration with @Event annotation",
-    "doctrine/dbal": "For Doctrine integration with @Cache annotation",
-    "doctrine/orm": "For Doctrine integration with @Cache annotation",
-    "doctrine/doctrine-bundle": "For Doctrine & Symfony integration with @Cache"
+    "doctrine/orm": "For Doctrine integration with @Transaction annotation"
   },
   "extra": {
     "branch-alias": {

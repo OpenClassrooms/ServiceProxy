@@ -4,54 +4,59 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache;
 
-use Doctrine\Common\Cache\ArrayCache;
-use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
+use OpenClassrooms\ServiceProxy\Handler\Handler\Cache\SymfonyCacheHandler;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
+use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 
 final class CacheHandlerMock implements CacheHandler
 {
-    public static ?int $lifeTime;
-
-    private CacheProviderDecorator $cacheProvider;
-
-    private bool $default;
+    public static ?int $lifeTime = null;
 
     private string $name;
 
+    private bool $default;
+
+    private CacheHandler $wrappedHandler;
+
     public function __construct(?string $name = null, bool $default = true)
     {
-        $this->name = $name ?? 'array';
-        $this->cacheProvider = new CacheProviderDecorator(new ArrayCache());
-
-        self::$lifeTime = null;
+        $this->name = $name ?? 'array_mock';
         $this->default = $default;
+
+        $adapter = new TagAwareAdapter(new ArrayAdapter());
+        $this->wrappedHandler = new SymfonyCacheHandler($adapter, $name);
     }
 
-    public function getName(): string
+    public function fetch(string $id)
     {
-        return $this->name;
+        return $this->wrappedHandler->fetch($id);
     }
 
-    public function fetch(string $id, array $tags = [])
-    {
-        $namespaceId = $tags[0] ?? null;
-        return $this->cacheProvider->fetchWithNamespace($id, $namespaceId);
-    }
-
-    public function save(string $id, $data, array $tags = [], $lifeTime = null): bool
+    public function save(string $id, $data, ?int $lifeTime = null, array $tags = []): void
     {
         self::$lifeTime = $lifeTime;
-        $namespaceId = $tags[0] ?? null;
-        return $this->cacheProvider->saveWithNamespace($id, $data, $namespaceId, $lifeTime);
+
+        $this->wrappedHandler->save($id, $data, $lifeTime, $tags);
     }
 
-    public function contains(string $id, array $tags = []): bool
+    public function contains(string $id): bool
     {
-        return $this->cacheProvider->contains($id);
+        return $this->wrappedHandler->contains($id);
     }
 
     public function isDefault(): bool
     {
         return $this->default;
+    }
+
+    public function invalidateTags(array $tags): bool
+    {
+        return $this->wrappedHandler->invalidateTags($tags);
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
     }
 }

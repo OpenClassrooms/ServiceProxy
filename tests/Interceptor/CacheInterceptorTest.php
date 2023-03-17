@@ -49,7 +49,7 @@ final class CacheInterceptorTest extends TestCase
         } catch (\Exception $e) {
             $this->assertFalse(
                 $this->cacheHandlerMock->contains(
-                    CacheAnnotatedClass::class . '::cacheMethodWithException'
+                    md5(CacheAnnotatedClass::class . '::cacheMethodWithException')
                 )
             );
         }
@@ -89,14 +89,27 @@ final class CacheInterceptorTest extends TestCase
     {
         $data = $this->proxy->cacheWithId();
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
-        $this->assertEquals(CacheAnnotatedClass::DATA, $this->cacheHandlerMock->fetch('test'));
+        $this->assertEquals(
+            CacheAnnotatedClass::DATA,
+            $this->cacheHandlerMock->fetch(
+                md5(CacheAnnotatedClass::class . '::cacheWithId') .
+                'test'
+            )
+        );
     }
 
     public function testWithIdAndParametersReturnData(): void
     {
         $data = $this->proxy->cacheWithIdAndParameters(new ParameterClassStub(), 'param 2');
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
-        $this->assertEquals(CacheAnnotatedClass::DATA, $this->cacheHandlerMock->fetch('test1'));
+        $this->assertEquals(
+            CacheAnnotatedClass::DATA,
+            $this->cacheHandlerMock->fetch(
+                md5(CacheAnnotatedClass::class . '::cacheWithIdAndParameters'
+                    . '::' . serialize(new ParameterClassStub()) . '::' . serialize('param 2')) .
+                'test1'
+            )
+        );
     }
 
     public function testWithNamespaceReturnData(): void
@@ -106,10 +119,7 @@ final class CacheInterceptorTest extends TestCase
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
         $this->assertEquals(
             CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch(
-                $this->cacheHandlerMock->fetch(md5('test-namespace')) .
-                md5(CacheAnnotatedClass::class . '::cacheWithNamespace')
-            )
+            $this->cacheHandlerMock->fetch('test-namespace')
         );
     }
 
@@ -120,13 +130,69 @@ final class CacheInterceptorTest extends TestCase
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
         $this->assertEquals(
             CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch(
-                $this->cacheHandlerMock->fetch(md5('test-namespace1')) .
-                md5(
-                    CacheAnnotatedClass::class . '::cacheWithNamespaceAndParameters'
-                    . '::' . serialize(new ParameterClassStub()) . '::' . serialize('param 2')
-                )
-            )
+            $this->cacheHandlerMock->fetch('test-namespace1')
         );
+    }
+
+    public function testWithNamespaceAndIdReturnData(): void
+    {
+        $data = $this->proxy->cacheWithNamespaceAndId();
+
+        $this->assertEquals(CacheAnnotatedClass::DATA, $data);
+        $this->assertEquals(
+            CacheAnnotatedClass::DATA,
+            $this->cacheHandlerMock->fetch('test_namespacetest_id')
+        );
+    }
+
+    public function testWithNamespaceIdAndParametersReturnData(): void
+    {
+        $data = $this->proxy->cacheWithNamespaceIdAndParameters(new ParameterClassStub(), 'foo');
+
+        $this->assertEquals(CacheAnnotatedClass::DATA, $data);
+        $this->assertEquals(
+            CacheAnnotatedClass::DATA,
+            $this->cacheHandlerMock->fetch('test_namespace2test_idfoo')
+        );
+    }
+
+    public function testWithTagsReturnDataAndCanBeInvalidated(): void
+    {
+        $data = $this->proxy->cacheWithIdAndTags();
+        $cacheKey = md5(CacheAnnotatedClass::class . '::cacheWithIdAndTags') . 'test_id';
+
+        $this->assertEquals(CacheAnnotatedClass::DATA, $data);
+        $this->assertEquals(
+            CacheAnnotatedClass::DATA,
+            $this->cacheHandlerMock->fetch($cacheKey)
+        );
+
+        $this->cacheHandlerMock->invalidateTags(['wrong_tag']);
+
+        $this->assertEquals(
+            CacheAnnotatedClass::DATA,
+            $this->cacheHandlerMock->fetch($cacheKey)
+        );
+
+        $this->cacheHandlerMock->invalidateTags(['custom_tag', 'another_tag']);
+
+        $this->assertNull($this->cacheHandlerMock->fetch($cacheKey));
+    }
+
+    public function testWithTagsAndParameterReturnDataAndCanBeInvalidated(): void
+    {
+        $data = $this->proxy->cacheWithTagsAndParameters(new ParameterClassStub(), 'param 2');
+        $cacheKey = md5(CacheAnnotatedClass::class . '::cacheWithTagsAndParameters'
+                    . '::' . serialize(new ParameterClassStub()) . '::' . serialize('param 2'));
+
+        $this->assertEquals(CacheAnnotatedClass::DATA, $data);
+        $this->assertEquals(
+            CacheAnnotatedClass::DATA,
+            $this->cacheHandlerMock->fetch($cacheKey)
+        );
+
+        $this->cacheHandlerMock->invalidateTags(['custom_tag1']);
+
+        $this->assertNull($this->cacheHandlerMock->fetch($cacheKey));
     }
 }

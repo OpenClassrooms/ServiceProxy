@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use OpenClassrooms\ServiceProxy\Configuration;
+use OpenClassrooms\ServiceProxy\Handler\Handler\Cache\SymfonyCacheHandler;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\inline_service;
@@ -21,6 +22,11 @@ return static function (ContainerConfigurator $containerConfigurator) {
         'OpenClassrooms\\ServiceProxy\\Handler\\Handler\\',
         \dirname(__DIR__, 4) . '/src/Handler/Handler/*'
     );
+
+    $services->set(SymfonyCacheHandler::class)
+        ->autowire(false)
+        ->autoconfigure(false)
+    ;
 
     $services->load(
         'OpenClassrooms\\ServiceProxy\\Interceptor\\Interceptor\\',
