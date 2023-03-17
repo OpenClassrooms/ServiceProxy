@@ -94,6 +94,24 @@ class CacheAnnotatedClass
     }
 
     /**
+     * @Cache(namespace="'test_namespace'", id="'test_id'")
+     * @noinspection PhpUnusedParameterInspection
+     */
+    public function cacheWithNamespaceAndId(): string
+    {
+        return self::DATA;
+    }
+
+    /**
+     * @Cache(namespace="'test_namespace' ~ param1.getPrivateField()", id="'test_id' ~ param2")
+     * @noinspection PhpUnusedParameterInspection
+     */
+    public function cacheWithNamespaceIdAndParameters(ParameterClassStub $param1, $param2): string
+    {
+        return self::DATA;
+    }
+
+    /**
      * @Cache(handler="toto")
      */
     public function invalidHandler(): string

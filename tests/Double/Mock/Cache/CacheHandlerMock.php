@@ -5,14 +5,15 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache;
 
 use Doctrine\Common\Cache\ArrayCache;
-use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
+use Symfony\Contracts\Cache\ItemInterface;
 
 final class CacheHandlerMock implements CacheHandler
 {
     public static ?int $lifeTime;
 
-    private CacheProviderDecorator $cacheProvider;
+    private ArrayAdapter $cacheAdapter;
 
     private bool $default;
 
@@ -21,7 +22,7 @@ final class CacheHandlerMock implements CacheHandler
     public function __construct(?string $name = null, bool $default = true)
     {
         $this->name = $name ?? 'array';
-        $this->cacheProvider = new CacheProviderDecorator(new ArrayCache());
+        $this->cacheAdapter = new ArrayAdapter();
 
         self::$lifeTime = null;
         $this->default = $default;
@@ -32,22 +33,25 @@ final class CacheHandlerMock implements CacheHandler
         return $this->name;
     }
 
-    public function fetch(string $id, array $tags = [])
+    public function fetch(string $id)
     {
-        $namespaceId = $tags[0] ?? null;
-        return $this->cacheProvider->fetchWithNamespace($id, $namespaceId);
+        return $this->cacheAdapter->getItem($id)->get();
     }
 
-    public function save(string $id, $data, array $tags = [], $lifeTime = null): bool
+    public function save(string $id, $data, ?int $lifeTime = null, array $tags = []): void
     {
         self::$lifeTime = $lifeTime;
-        $namespaceId = $tags[0] ?? null;
-        return $this->cacheProvider->saveWithNamespace($id, $data, $namespaceId, $lifeTime);
+
+        $this->cacheAdapter->get($id, function (ItemInterface $item) use ($tags, $data, $lifeTime) {
+            $item->expiresAfter($lifeTime);
+
+            return $data;
+        });
     }
 
-    public function contains(string $id, array $tags = []): bool
+    public function contains(string $id): bool
     {
-        return $this->cacheProvider->contains($id);
+        return $this->cacheAdapter->hasItem($id);
     }
 
     public function isDefault(): bool

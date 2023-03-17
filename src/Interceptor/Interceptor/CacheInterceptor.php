@@ -20,32 +20,25 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $annotation = $instance->getMethod()
             ->getAnnotation(Cache::class)
         ;
-        $proxyId = $this->getProxyId($instance, $annotation);
-        $tags = $this->getTags($instance, $annotation);
+
+        $cacheKey = $this->buildCacheKey($instance, $annotation);
 
         $returnType = $instance->getMethod()
             ->getReflection()
             ->getReturnType()
         ;
+
         if ($returnType instanceof \ReflectionNamedType && $returnType->getName() === 'void') {
             return new Response(null, false);
         }
 
         $handler = $this->getHandler(CacheHandler::class, $annotation);
 
-        // this is needed to solve a bug (when the false is stored in the cache)
-        // to be enabled when symfony cache is used
-        // if ($handler->contains($proxyId, $namespace) === false) {
-        //     return new Response(null, false);
-        // }
-
-        $data = $handler->fetch($proxyId, $tags);
-
-        if ($data === false) {
+        if ($handler->contains($cacheKey) === false) {
             return new Response(null, false);
         }
 
-        return new Response($data, true);
+        return new Response($handler->fetch($cacheKey), true);
     }
 
     public function suffix(Instance $instance): Response
@@ -57,7 +50,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $annotation = $instance->getMethod()
             ->getAnnotation(Cache::class)
         ;
-        $proxyId = $this->getProxyId($instance, $annotation);
+        $cacheKey = $this->buildCacheKey($instance, $annotation);
         $tags = $this->getTags($instance, $annotation);
 
         $data = $instance->getMethod()
@@ -67,10 +60,10 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $handler = $this->getHandler(CacheHandler::class, $annotation);
 
         $handler->save(
-            $proxyId,
+            $cacheKey,
             $data,
-            $tags,
-            $annotation->getLifetime()
+            $annotation->getLifetime(),
+            $tags
         );
 
         return new Response($data);
@@ -98,44 +91,47 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         return 20;
     }
 
-    private function getNamespace(Instance $instance, Cache $annotation): ?string
+    private function getNamespace(Instance $instance, Cache $annotation): string
     {
         $parameters = $instance->getMethod()
             ->getParameters()
         ;
+
         if ($annotation->getNamespace() !== null) {
-            $resolvedExpression = $this->resolveExpression(
+            return $this->resolveExpression(
                 $annotation->getNamespace(),
                 $parameters
             );
-
-            return md5($resolvedExpression);
         }
 
-        return null;
+        $namespace = $instance->getReflection()
+            ->getName() . '::' . $instance->getMethod()->getName();
+
+        if (\count($parameters) > 0) {
+            foreach ($parameters as $parameter) {
+                $namespace .= '::' . serialize($parameter);
+            }
+        }
+
+        return md5($namespace);
     }
 
-    private function getProxyId(Instance $instance, Cache $annotation): string
+    private function buildCacheKey(Instance $instance, Cache $annotation): string
     {
+        $id = '';
+
         $parameters = $instance->getMethod()
             ->getParameters()
         ;
+
         if ($annotation->getId() !== null) {
-            return $this->resolveExpression(
+            $id = $this->resolveExpression(
                 $annotation->getId(),
                 $parameters
             );
         }
 
-        $key = $instance->getReflection()
-            ->getName() . '::' . $instance->getMethod()->getName();
-        if (\count($parameters) > 0) {
-            foreach ($parameters as $parameter) {
-                $key .= '::' . serialize($parameter);
-            }
-        }
-
-        return md5($key);
+        return $this->getNamespace($instance, $annotation).$id;
     }
 
     /**
@@ -163,7 +159,6 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
      */
     private function getTags(Instance $instance, Cache $annotation): array
     {
-        $namespace = $this->getNamespace($instance, $annotation);
         $parameters = $instance->getMethod()
             ->getParameters();
         $tags = [];
@@ -172,10 +167,6 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
                 $tag,
                 $parameters
             );
-        }
-
-        if ($namespace !== null) {
-            array_unshift($tags, $namespace);
         }
 
         return array_filter($tags);
