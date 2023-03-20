@@ -98,10 +98,10 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         ;
 
         if ($annotation->getNamespace() !== null) {
-            return $this->resolveExpression(
+            return md5($this->resolveExpression(
                 $annotation->getNamespace(),
                 $parameters
-            );
+            ));
         }
 
         $namespace = $instance->getReflection()

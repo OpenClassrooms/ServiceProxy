@@ -119,7 +119,7 @@ final class CacheInterceptorTest extends TestCase
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
         $this->assertEquals(
             CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch('test-namespace')
+            $this->cacheHandlerMock->fetch(md5('test-namespace'))
         );
     }
 
@@ -130,7 +130,7 @@ final class CacheInterceptorTest extends TestCase
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
         $this->assertEquals(
             CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch('test-namespace1')
+            $this->cacheHandlerMock->fetch(md5('test-namespace1'))
         );
     }
 
@@ -141,7 +141,7 @@ final class CacheInterceptorTest extends TestCase
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
         $this->assertEquals(
             CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch('test_namespacetest_id')
+            $this->cacheHandlerMock->fetch(md5('test_namespace') . 'test_id')
         );
     }
 
@@ -152,7 +152,7 @@ final class CacheInterceptorTest extends TestCase
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
         $this->assertEquals(
             CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch('test_namespace2test_idfoo')
+            $this->cacheHandlerMock->fetch(md5('test_namespace2') . 'test_idfoo')
         );
     }
 
