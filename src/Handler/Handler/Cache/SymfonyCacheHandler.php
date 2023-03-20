@@ -7,8 +7,6 @@ namespace OpenClassrooms\ServiceProxy\Handler\Handler\Cache;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Handler\Handler\ConfigurableHandler;
 use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
-use Symfony\Contracts\Cache\CacheInterface;
-use Symfony\Contracts\Cache\ItemInterface;
 
 final class SymfonyCacheHandler implements CacheHandler
 {
@@ -26,26 +24,21 @@ final class SymfonyCacheHandler implements CacheHandler
 
     public function fetch(string $id)
     {
-        return $this->cacheAdapter->getItem($id)
-            ->get();
+        return $this->cacheAdapter
+            ->getItem($id)
+            ->get()
+        ;
     }
 
     public function save(string $id, $data, ?int $lifeTime = null, array $tags = []): void
     {
-        if (!$this->cacheAdapter instanceof CacheInterface) {
-            throw new \BadMethodCallException(sprintf(
-                'Cannot call "%s::get()": this class doesn\'t implement "%s".',
-                \get_class($this->cacheAdapter),
-                CacheInterface::class
-            ));
-        }
+        $item = $this->cacheAdapter->getItem($id)
+            ->set($data)
+            ->expiresAfter($lifeTime)
+            ->tag($tags)
+        ;
 
-        $this->cacheAdapter->get($id, static function (ItemInterface $item) use ($tags, $data, $lifeTime) {
-            $item->expiresAfter($lifeTime);
-            $item->tag($tags);
-
-            return $data;
-        });
+        $this->cacheAdapter->save($item);
     }
 
     public function contains(string $id): bool

@@ -28,4 +28,4 @@ parameters:
             - JsonException
             - PHPUnit\Framework\Exception
             - ReflectionException
-            - Psr\Cache\InvalidArgumentException
+            - Psr\Cache\CacheException
