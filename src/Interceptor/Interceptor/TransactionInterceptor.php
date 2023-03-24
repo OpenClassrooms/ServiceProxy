@@ -24,6 +24,9 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
         return new Response();
     }
 
+    /**
+     * @throws \Exception
+     */
     public function suffix(Instance $instance): Response
     {
         $annotation = $instance->getMethod()
@@ -31,6 +34,10 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
         $handler = $this->getHandler(TransactionHandler::class, $annotation);
         if ($instance->getMethod()->threwException()) {
             $handler->rollback();
+
+            if ($annotation->hasMappedExceptions()) {
+                $this->handleMappedException($instance, $annotation);
+            }
         } else {
             $handler->commit();
         }
@@ -57,5 +64,26 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
     public function getSuffixPriority(): int
     {
         return 30;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    private function handleMappedException(Instance $instance, Transaction $annotation): void
+    {
+        $thrownException = $instance->getMethod()
+            ->getException();
+
+        if ($thrownException instanceof \Exception) {
+            foreach ($annotation->getExceptions() as $fromException => $toException) {
+                if (is_a($thrownException, $fromException)) {
+                    $toThrow = new $toException();
+
+                    if ($toThrow instanceof \Exception) {
+                        throw $toThrow;
+                    }
+                }
+            }
+        }
     }
 }

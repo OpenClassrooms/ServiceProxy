@@ -18,7 +18,7 @@ class TransactionAnnotatedClass
     /**
      * @Transaction
      */
-    public function annotatedMethodWithException(): void
+    public function annotatedMethodThatThrowsException(): void
     {
         throw new \RuntimeException();
     }
@@ -28,6 +28,16 @@ class TransactionAnnotatedClass
      */
     public function annotatedMethod(): void
     {
+    }
+
+    /**
+     * @Transaction(exceptions={
+     *     "\RuntimeException"="\InvalidArgumentException"
+     * })
+     */
+    public function annotatedMethodWithExceptionMappingThatThrowsException(): void
+    {
+        throw new \RuntimeException();
     }
 
     /**
@@ -42,10 +52,10 @@ class TransactionAnnotatedClass
     /**
      * @Transaction
      */
-    public function nestedAnnotatedMethodWithException(): void
+    public function nestedAnnotatedMethodThatThrowsException(): void
     {
         $self = new self();
-        $self->annotatedMethodWithException();
+        $self->annotatedMethodThatThrowsException();
     }
 
     /**
