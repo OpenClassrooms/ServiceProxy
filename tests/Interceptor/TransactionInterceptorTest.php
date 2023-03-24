@@ -34,10 +34,23 @@ final class TransactionInterceptorTest extends TestCase
     public function testExceptionTransactionRollBack(): void
     {
         try {
-            $this->proxy->annotatedMethodWithException();
+            $this->proxy->annotatedMethodThatThrowsException();
             /** @noinspection PhpUnreachableStatementInspection */
             $this->fail();
         } catch (\Exception $e) {
+            $this->assertFalse($this->handler->committed);
+            $this->assertTrue($this->handler->rollBacked);
+        }
+    }
+
+    public function testExceptionTransactionRollBackWithExceptionMapping(): void
+    {
+        try {
+            $this->proxy->annotatedMethodWithExceptionMappingThatThrowsException();
+            /** @noinspection PhpUnreachableStatementInspection */
+            $this->fail();
+        } catch (\Exception $e) {
+            $this->assertInstanceOf(\InvalidArgumentException::class, $e);
             $this->assertFalse($this->handler->committed);
             $this->assertTrue($this->handler->rollBacked);
         }
@@ -53,7 +66,7 @@ final class TransactionInterceptorTest extends TestCase
     public function testExceptionNestedTransactionRollBack(): void
     {
         try {
-            $this->proxy->nestedAnnotatedMethodWithException();
+            $this->proxy->nestedAnnotatedMethodThatThrowsException();
             $this->fail();
         } catch (\Exception $e) {
             $this->assertFalse($this->handler->committed);
