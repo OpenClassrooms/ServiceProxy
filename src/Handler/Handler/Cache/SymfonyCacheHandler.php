@@ -46,9 +46,9 @@ final class SymfonyCacheHandler implements CacheHandler
         return $this->cacheAdapter->hasItem($id);
     }
 
-    public function invalidateTags(array $tags): bool
+    public function invalidateTags(array $tags): void
     {
-        return $this->cacheAdapter->invalidateTags($tags);
+        $this->cacheAdapter->invalidateTags($tags);
     }
 
     public function getName(): string

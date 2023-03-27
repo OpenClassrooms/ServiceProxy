@@ -22,5 +22,5 @@ interface CacheHandler extends AnnotationHandler
     /**
      * @param array<int, string> $tags
      */
-    public function invalidateTags(array $tags): bool;
+    public function invalidateTags(array $tags): void;
 }
