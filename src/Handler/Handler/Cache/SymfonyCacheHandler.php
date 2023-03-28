@@ -6,6 +6,8 @@ namespace OpenClassrooms\ServiceProxy\Handler\Handler\Cache;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Handler\Handler\ConfigurableHandler;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
+use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
 
 final class SymfonyCacheHandler implements CacheHandler
@@ -16,9 +18,9 @@ final class SymfonyCacheHandler implements CacheHandler
 
     private TagAwareAdapterInterface $cacheAdapter;
 
-    public function __construct(TagAwareAdapterInterface $cacheAdapter, ?string $name = null)
+    public function __construct(?TagAwareAdapterInterface $cacheAdapter = null, ?string $name = null)
     {
-        $this->cacheAdapter = $cacheAdapter;
+        $this->cacheAdapter = $cacheAdapter ?? new TagAwareAdapter(new ArrayAdapter());
         $this->name = $name;
     }
 

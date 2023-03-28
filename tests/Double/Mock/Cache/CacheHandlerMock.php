@@ -6,8 +6,6 @@ namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Handler\Handler\Cache\SymfonyCacheHandler;
-use Symfony\Component\Cache\Adapter\ArrayAdapter;
-use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 
 final class CacheHandlerMock implements CacheHandler
 {
@@ -24,8 +22,7 @@ final class CacheHandlerMock implements CacheHandler
         $this->name = $name ?? 'array';
         $this->default = $default;
 
-        $adapter = new TagAwareAdapter(new ArrayAdapter());
-        $this->wrappedHandler = new SymfonyCacheHandler($adapter, $name);
+        $this->wrappedHandler = new SymfonyCacheHandler(null, $name);
     }
 
     public function fetch(string $id)

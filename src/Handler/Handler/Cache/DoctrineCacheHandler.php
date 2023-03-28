@@ -51,6 +51,6 @@ final class DoctrineCacheHandler implements CacheHandler
 
     public function getName(): string
     {
-        return $this->name ?? 'array';
+        return $this->name ?? 'doctrine_array';
     }
 }
