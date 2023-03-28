@@ -50,6 +50,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $annotation = $instance->getMethod()
             ->getAnnotation(Cache::class)
         ;
+
         $cacheKey = $this->buildCacheKey($instance, $annotation);
         $tags = $this->getTags($instance, $annotation);
 
@@ -100,47 +101,36 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         return 20;
     }
 
-    private function getNamespace(Instance $instance, Cache $annotation): string
+    private function buildCacheKey(Instance $instance, Cache $annotation): string
+    {
+        $version = $annotation->getVersion() !== null ? '.v' . $annotation->getVersion() : null;
+
+        if ($annotation->getId() !== null) {
+            $parameters = $instance->getMethod()
+                ->getParameters();
+
+            return $this->resolveExpression($annotation->getId(), $parameters) . $version;
+        }
+
+        return $this->buildDefaultIdentifier($instance, $annotation) . $version;
+    }
+
+    private function buildDefaultIdentifier(Instance $instance, Cache $annotation): string
     {
         $parameters = $instance->getMethod()
             ->getParameters()
         ;
 
-        if ($annotation->getNamespace() !== null) {
-            return md5($this->resolveExpression(
-                $annotation->getNamespace(),
-                $parameters
-            ));
-        }
-
-        $namespace = $instance->getReflection()
-            ->getName() . '::' . $instance->getMethod()->getName();
+        $identifier = str_replace('\\', '.', $instance->getReflection()
+            ->getName()) . '.' . $instance->getMethod()->getName();
 
         if (\count($parameters) > 0) {
-            foreach ($parameters as $parameter) {
-                $namespace .= '::' . serialize($parameter);
+            foreach ($parameters as $parameterName => $parameterValue) {
+                $identifier .= '.' . $parameterName . '.' . md5(serialize($parameterValue));
             }
         }
 
-        return md5($namespace);
-    }
-
-    private function buildCacheKey(Instance $instance, Cache $annotation): string
-    {
-        $id = '';
-
-        $parameters = $instance->getMethod()
-            ->getParameters()
-        ;
-
-        if ($annotation->getId() !== null) {
-            $id = $this->resolveExpression(
-                $annotation->getId(),
-                $parameters
-            );
-        }
-
-        return $this->getNamespace($instance, $annotation) . $id;
+        return $identifier;
     }
 
     /**

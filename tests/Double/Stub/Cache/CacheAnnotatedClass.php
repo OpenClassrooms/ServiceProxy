@@ -127,6 +127,22 @@ class CacheAnnotatedClass
     }
 
     /**
+     * @Cache(version=2)
+     */
+    public function cacheWithVersion(): string
+    {
+        return self::DATA;
+    }
+
+    /**
+     * @Cache(id="'test_id' ~ param1.getPrivateField()", version=2)
+     */
+    public function cacheWithIdAndVersion(ParameterClassStub $param1): string
+    {
+        return self::DATA;
+    }
+
+    /**
      * @Cache(handler="toto")
      */
     public function invalidHandler(): string

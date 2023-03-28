@@ -13,6 +13,9 @@ use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
+/**
+ * @deprecated use CacheHandler instead
+ */
 final class LegacyCacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
     public function prefix(Instance $instance): Response
