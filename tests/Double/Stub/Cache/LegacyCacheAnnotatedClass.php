@@ -17,7 +17,7 @@ class LegacyCacheAnnotatedClass
     }
 
     /**
-     * @Cache(handler="legacy_redis")
+     * @Cache(handler="legacy_array")
      */
     public function annotatedMethodWithException(): array
     {
@@ -25,7 +25,7 @@ class LegacyCacheAnnotatedClass
     }
 
     /**
-     * @Cache(handler="legacy_redis")
+     * @Cache(handler="legacy_array")
      */
     public function annotatedMethodWithVoidReturn(): void
     {
@@ -44,7 +44,7 @@ class LegacyCacheAnnotatedClass
     }
 
     /**
-     * @Cache(handler="legacy_redis")
+     * @Cache(handler="legacy_array")
      */
     public function annotatedMethod(): string
     {
@@ -52,7 +52,7 @@ class LegacyCacheAnnotatedClass
     }
 
     /**
-     * @Cache(handler="legacy_redis", lifetime=60)
+     * @Cache(handler="legacy_array", lifetime=60)
      */
     public function cacheWithLifeTime(): string
     {
@@ -60,7 +60,7 @@ class LegacyCacheAnnotatedClass
     }
 
     /**
-     * @Cache(handler="legacy_redis", id="'test'")
+     * @Cache(handler="legacy_array", id="'test'")
      */
     public function cacheWithId(): string
     {
@@ -68,7 +68,7 @@ class LegacyCacheAnnotatedClass
     }
 
     /**
-     * @Cache(handler="legacy_redis", id="'test' ~ param1.publicField")
+     * @Cache(handler="legacy_array", id="'test' ~ param1.publicField")
      * @noinspection PhpUnusedParameterInspection
      */
     public function cacheWithIdAndParameters(ParameterClassStub $param1, $param2): string
@@ -77,7 +77,7 @@ class LegacyCacheAnnotatedClass
     }
 
     /**
-     * @Cache(handler="legacy_redis", namespace="'test-namespace'")
+     * @Cache(handler="legacy_array", namespace="'test-namespace'")
      */
     public function cacheWithNamespace(): string
     {
@@ -85,7 +85,7 @@ class LegacyCacheAnnotatedClass
     }
 
     /**
-     * @Cache(handler="legacy_redis", namespace="'test-namespace'", id="'toto'")
+     * @Cache(handler="legacy_array", namespace="'test-namespace'", id="'toto'")
      */
     public function cacheWithNamespaceAndId(): string
     {
@@ -93,7 +93,7 @@ class LegacyCacheAnnotatedClass
     }
 
     /**
-     * @Cache(handler="legacy_redis", namespace="'test-namespace' ~ param1.publicField")
+     * @Cache(handler="legacy_array", namespace="'test-namespace' ~ param1.publicField")
      * @noinspection PhpUnusedParameterInspection
      */
     public function cacheWithNamespaceAndParameters(ParameterClassStub $param1, $param2): string

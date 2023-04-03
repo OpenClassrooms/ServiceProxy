@@ -84,7 +84,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $method = $instance->getMethod();
         $annotation = $method->getAnnotation(Cache::class);
 
-        if ($annotation->getHandler() === 'legacy_redis') {
+        if (mb_substr($annotation->getHandler() ?? '', 0, 7) === 'legacy_') {
             return false;
         }
 

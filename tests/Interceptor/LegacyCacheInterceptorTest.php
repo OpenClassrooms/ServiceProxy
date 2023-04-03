@@ -25,7 +25,7 @@ final class LegacyCacheInterceptorTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->cacheHandlerMock = new CacheHandlerMock('legacy_redis');
+        $this->cacheHandlerMock = new CacheHandlerMock('legacy_array');
         $this->proxyFactory = $this->getProxyFactory(
             [
                 new CacheInterceptor([$this->cacheHandlerMock]),
