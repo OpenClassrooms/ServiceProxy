@@ -123,4 +123,12 @@ class CacheAnnotatedClass
     {
         return self::DATA;
     }
+
+    /**
+     * @Cache(handler="legacy_handler")
+     */
+    public function annotatedWithLegacyHandlerAttribute(): string
+    {
+        return self::DATA;
+    }
 }

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
 use Doctrine\Common\Annotations\AnnotationException;
+use OpenClassrooms\ServiceProxy\Handler\Exception\HandlerNotFound;
 use OpenClassrooms\ServiceProxy\Interceptor\Exception\DeprecatedAttributeException;
 use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\CacheInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\CacheAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\InvalidIdCacheAnnotatedClass;
@@ -27,11 +29,10 @@ final class CacheInterceptorTest extends TestCase
     protected function setUp(): void
     {
         $this->cacheHandlerMock = new CacheHandlerMock();
-        $this->proxyFactory = $this->getProxyFactory(
-            [
-                new CacheInterceptor([$this->cacheHandlerMock]),
-            ]
-        );
+        $this->cacheInterceptor = new CacheInterceptor([$this->cacheHandlerMock]);
+        $this->proxyFactory = $this->getProxyFactory([
+            $this->cacheInterceptor,
+        ]);
         $this->proxy = $this->proxyFactory->createProxy(new CacheAnnotatedClass());
     }
 
@@ -174,5 +175,22 @@ final class CacheInterceptorTest extends TestCase
             CacheAnnotatedClass::DATA,
             $this->cacheHandlerMock->fetch('test_id2.v2')
         );
+    }
+
+    public function testInvalidHandlerThrowsException(): void
+    {
+        $this->expectException(HandlerNotFound::class);
+        $this->proxy->invalidHandler();
+    }
+
+    public function testDoesNotSupportLegacyHandlerAttribute(): void
+    {
+        $method = Instance::createFromMethod(
+            new CacheAnnotatedClass(),
+            'annotatedWithLegacyHandlerAttribute'
+        );
+
+        $this->assertFalse($this->cacheInterceptor->supportsPrefix($method));
+        $this->assertFalse($this->cacheInterceptor->supportsSuffix($method));
     }
 }
