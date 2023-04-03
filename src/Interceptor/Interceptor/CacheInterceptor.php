@@ -9,6 +9,7 @@ use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Exception\DeprecatedAttributeException;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
@@ -22,6 +23,13 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         ;
 
         $cacheKey = $this->buildCacheKey($instance, $annotation);
+
+        // @phpstan-ignore-next-line
+        if ($annotation->getNamespace() !== null) {
+            throw new DeprecatedAttributeException(
+                'Attribute "namespace" is deprecated. Use "id" instead'
+            );
+        }
 
         $returnType = $instance->getMethod()
             ->getReflection()

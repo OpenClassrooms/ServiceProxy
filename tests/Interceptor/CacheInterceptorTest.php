@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
 use Doctrine\Common\Annotations\AnnotationException;
+use OpenClassrooms\ServiceProxy\Interceptor\Exception\DeprecatedAttributeException;
 use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\CacheInterceptor;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\CacheAnnotatedClass;
@@ -105,53 +106,10 @@ final class CacheInterceptorTest extends TestCase
         );
     }
 
-    public function testWithNamespaceReturnData(): void
+    public function testWithNamespaceThrowsDeprecationException(): void
     {
-        $data = $this->proxy->cacheWithNamespace();
-
-        $this->assertEquals(CacheAnnotatedClass::DATA, $data);
-        $this->assertEquals(
-            CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch(
-                str_replace('\\', '.', CacheAnnotatedClass::class) . '.cacheWithNamespace',
-            )
-        );
-    }
-
-    public function testWithNamespaceAndParametersReturnData(): void
-    {
-        $data = $this->proxy->cacheWithNamespaceAndParameters(new ParameterClassStub(), 'param 2');
-
-        $this->assertEquals(CacheAnnotatedClass::DATA, $data);
-        $this->assertEquals(
-            CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch(
-                str_replace('\\', '.', CacheAnnotatedClass::class) . '.cacheWithNamespaceAndParameters'
-                . '.param1.' . md5(serialize(new ParameterClassStub())) . '.param2.' . md5(serialize('param 2'))
-            )
-        );
-    }
-
-    public function testWithNamespaceAndIdReturnData(): void
-    {
-        $data = $this->proxy->cacheWithNamespaceAndId();
-
-        $this->assertEquals(CacheAnnotatedClass::DATA, $data);
-        $this->assertEquals(
-            CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch('test_id')
-        );
-    }
-
-    public function testWithNamespaceIdAndParametersReturnData(): void
-    {
-        $data = $this->proxy->cacheWithNamespaceIdAndParameters(new ParameterClassStub(), 'foo');
-
-        $this->assertEquals(CacheAnnotatedClass::DATA, $data);
-        $this->assertEquals(
-            CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch('test_idfoo')
-        );
+        $this->expectException(DeprecatedAttributeException::class);
+        $this->proxy->cacheWithNamespace();
     }
 
     public function testWithTagsReturnDataAndCanBeInvalidated(): void
