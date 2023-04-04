@@ -22,7 +22,12 @@ final class Cache extends Annotation
 
     private ?int $lifetime = null;
 
+    /**
+     * @deprecated use $version property instead *
+     */
     private ?string $namespace = null;
+
+    private ?int $version = null;
 
     /**
      * @var array<int, string>
@@ -39,9 +44,17 @@ final class Cache extends Annotation
         return $this->lifetime;
     }
 
+    /**
+     * @deprecated
+     */
     public function getNamespace(): ?string
     {
         return $this->namespace;
+    }
+
+    public function getVersion(): ?int
+    {
+        return $this->version;
     }
 
     /**
@@ -69,9 +82,17 @@ final class Cache extends Annotation
         $this->lifetime = $lifetime;
     }
 
+    /**
+     * @deprecated
+     */
     public function setNamespace(?string $namespace): void
     {
         $this->namespace = $namespace;
+    }
+
+    public function setVersion(?int $version): void
+    {
+        $this->version = $version;
     }
 
     /**

@@ -5,18 +5,16 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
 use Doctrine\Common\Annotations\AnnotationException;
-use OpenClassrooms\ServiceProxy\Handler\Exception\HandlerNotFound;
-use OpenClassrooms\ServiceProxy\Interceptor\Exception\DeprecatedAttributeException;
-use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\CacheInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\LegacyCacheInterceptor as CacheInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
-use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
-use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\CacheAnnotatedClass;
+use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\DoctrineCacheHandlerMock as CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\InvalidIdCacheAnnotatedClass;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\LegacyCacheAnnotatedClass as CacheAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\ParameterClassStub;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
 use PHPUnit\Framework\TestCase;
 
-final class CacheInterceptorTest extends TestCase
+final class LegacyCacheInterceptorTest extends TestCase
 {
     use ProxyTestTrait;
 
@@ -28,8 +26,9 @@ final class CacheInterceptorTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->cacheHandlerMock = new CacheHandlerMock();
+        $this->cacheHandlerMock = new CacheHandlerMock('legacy_handler_name');
         $this->cacheInterceptor = new CacheInterceptor([$this->cacheHandlerMock]);
+
         $this->proxyFactory = $this->getProxyFactory([
             $this->cacheInterceptor,
         ]);
@@ -42,6 +41,12 @@ final class CacheInterceptorTest extends TestCase
         $this->proxyFactory->createProxy(new InvalidIdCacheAnnotatedClass());
     }
 
+    public function testTagsInvalidationThrowException(): void
+    {
+        $this->expectException(\BadMethodCallException::class);
+        $this->cacheHandlerMock->invalidateTags(['foo']);
+    }
+
     public function testOnExceptionDontSave(): void
     {
         try {
@@ -51,7 +56,7 @@ final class CacheInterceptorTest extends TestCase
         } catch (\Exception $e) {
             $this->assertFalse(
                 $this->cacheHandlerMock->contains(
-                    str_replace('\\', '.', CacheAnnotatedClass::class) . '.cacheMethodWithException'
+                    CacheAnnotatedClass::class . '::cacheMethodWithException'
                 )
             );
         }
@@ -64,7 +69,7 @@ final class CacheInterceptorTest extends TestCase
         $this->assertEquals(
             CacheAnnotatedClass::DATA,
             $this->cacheHandlerMock->fetch(
-                str_replace('\\', '.', CacheAnnotatedClass::class) . '.annotatedMethod'
+                md5(CacheAnnotatedClass::class . '::annotatedMethod')
             )
         );
     }
@@ -73,10 +78,21 @@ final class CacheInterceptorTest extends TestCase
     {
         $inCacheData = 'InCacheData';
         $this->cacheHandlerMock->save(
-            str_replace('\\', '.', CacheAnnotatedClass::class) . '.annotatedMethod',
+            md5(CacheAnnotatedClass::class . '::annotatedMethod'),
             $inCacheData
         );
         $data = $this->proxy->annotatedMethod();
+        $this->assertEquals($inCacheData, $data);
+    }
+
+    public function testInCacheWithNamespaceReturnData(): void
+    {
+        $inCacheData = 'InCacheData';
+        $this->cacheHandlerMock->save(
+            md5(CacheAnnotatedClass::class . '::cacheWithNamespace'),
+            $inCacheData
+        );
+        $data = $this->proxy->cacheWithNamespace();
         $this->assertEquals($inCacheData, $data);
     }
 
@@ -91,106 +107,83 @@ final class CacheInterceptorTest extends TestCase
     {
         $data = $this->proxy->cacheWithId();
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
-        $this->assertEquals(
-            CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch('test')
-        );
+        $this->assertEquals(CacheAnnotatedClass::DATA, $this->cacheHandlerMock->fetch('test'));
     }
 
     public function testWithIdAndParametersReturnData(): void
     {
         $data = $this->proxy->cacheWithIdAndParameters(new ParameterClassStub(), 'param 2');
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
-        $this->assertEquals(
-            CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch('test1')
-        );
+        $this->assertEquals(CacheAnnotatedClass::DATA, $this->cacheHandlerMock->fetch('test1'));
     }
 
-    public function testWithNamespaceThrowsDeprecationException(): void
+    public function testWithNamespaceReturnData(): void
     {
-        $this->expectException(DeprecatedAttributeException::class);
-        $this->proxy->cacheWithNamespace();
-    }
-
-    public function testWithTagsReturnDataAndCanBeInvalidated(): void
-    {
-        $data = $this->proxy->cacheWithIdAndTags();
-
-        $this->assertEquals(CacheAnnotatedClass::DATA, $data);
-        $this->assertEquals(
-            CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch('test_id')
-        );
-
-        $this->cacheHandlerMock->invalidateTags(['wrong_tag']);
-
-        $this->assertEquals(
-            CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch('test_id')
-        );
-
-        $this->cacheHandlerMock->invalidateTags(['custom_tag', 'another_tag']);
-
-        $this->assertNull($this->cacheHandlerMock->fetch('test_id'));
-    }
-
-    public function testWithTagsAndParameterReturnDataAndCanBeInvalidated(): void
-    {
-        $data = $this->proxy->cacheWithTagsAndParameters(new ParameterClassStub(), 'param 2');
-        $cacheKey = str_replace('\\', '.', CacheAnnotatedClass::class) . '.cacheWithTagsAndParameters'
-                    . '.param1.' . md5(serialize(new ParameterClassStub())) . '.param2.' . md5(serialize('param 2'));
-
-        $this->assertEquals(CacheAnnotatedClass::DATA, $data);
-        $this->assertEquals(
-            CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch($cacheKey)
-        );
-
-        $this->cacheHandlerMock->invalidateTags(['custom_tag1']);
-
-        $this->assertNull($this->cacheHandlerMock->fetch($cacheKey));
-    }
-
-    public function testWithVersionReturnData(): void
-    {
-        $data = $this->proxy->cacheWithVersion(new ParameterClassStub());
+        $data = $this->proxy->cacheWithNamespace();
 
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
         $this->assertEquals(
             CacheAnnotatedClass::DATA,
             $this->cacheHandlerMock->fetch(
-                str_replace('\\', '.', CacheAnnotatedClass::class) . '.cacheWithVersion'
-                . '.v2'
+                $this->cacheHandlerMock->fetch(md5('test-namespace')) .
+                md5(CacheAnnotatedClass::class . '::cacheWithNamespace')
             )
         );
     }
 
-    public function testWithIdAndVersionReturnData(): void
+    public function testWithNamespaceAndIdReturnData(): void
     {
-        $data = $this->proxy->cacheWithIdAndVersion(new ParameterClassStub());
+        $data = $this->proxy->cacheWithNamespaceAndId();
 
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
         $this->assertEquals(
             CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch('test_id2.v2')
+            $this->cacheHandlerMock->fetch(
+                $this->cacheHandlerMock->fetch(md5('test-namespace')) .
+                'toto'
+            )
         );
     }
 
-    public function testInvalidHandlerThrowsException(): void
+    public function testWithNamespaceAndParametersReturnData(): void
     {
-        $this->expectException(HandlerNotFound::class);
-        $this->proxy->invalidHandler();
+        $data = $this->proxy->cacheWithNamespaceAndParameters(new ParameterClassStub(), 'param 2');
+
+        $this->assertEquals(CacheAnnotatedClass::DATA, $data);
+        $this->assertEquals(
+            CacheAnnotatedClass::DATA,
+            $this->cacheHandlerMock->fetch(
+                $this->cacheHandlerMock->fetch(md5('test-namespace1')) .
+                md5(
+                    CacheAnnotatedClass::class . '::cacheWithNamespaceAndParameters'
+                    . '::' . serialize(new ParameterClassStub()) . '::' . serialize('param 2')
+                )
+            )
+        );
     }
 
-    public function testDoesNotSupportLegacyHandlerAttribute(): void
+    public function methodNamesProvider(): array
+    {
+        return [
+            'legacy handler' => ['annotatedMethod', true],
+            'another legacy handler' => ['annotatedMethodWithException', true],
+            'legacy random handler' => ['annotatedMethodWithAnotherLegacyHandler', true],
+            'invalid handler' => ['invalidHandler', false],
+            'non legacy handler' => ['annotatedMethodWithNonLegacyHandler', false],
+        ];
+    }
+
+    /**
+     * @dataProvider methodNamesProvider
+     */
+    public function testSupportsLegacyHandlerAttribute(string $methodName, bool $supports): void
     {
         $method = Instance::createFromMethod(
             new CacheAnnotatedClass(),
-            'annotatedWithLegacyHandlerAttribute'
+            $methodName
         );
 
-        $this->assertFalse($this->cacheInterceptor->supportsPrefix($method));
-        $this->assertFalse($this->cacheInterceptor->supportsSuffix($method));
+        $this->assertEquals($supports, $this->cacheInterceptor->supportsPrefix($method));
+        $this->assertEquals($supports, $this->cacheInterceptor->supportsSuffix($method));
     }
 }

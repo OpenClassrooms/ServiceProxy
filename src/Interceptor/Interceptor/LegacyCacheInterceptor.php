@@ -9,44 +9,43 @@ use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
-use OpenClassrooms\ServiceProxy\Interceptor\Exception\DeprecatedAttributeException;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
-final class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
+/**
+ * @deprecated use CacheHandler instead
+ */
+final class LegacyCacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
     public function prefix(Instance $instance): Response
     {
         $annotation = $instance->getMethod()
             ->getAnnotation(Cache::class)
         ;
-
-        $cacheKey = $this->buildCacheKey($instance, $annotation);
-
-        // @phpstan-ignore-next-line
-        if ($annotation->getNamespace() !== null) {
-            throw new DeprecatedAttributeException(
-                'Attribute "namespace" is deprecated. Use "id" instead'
-            );
-        }
+        $proxyId = $this->getProxyId($instance, $annotation);
+        $tags = $this->getTags($instance, $annotation);
 
         $returnType = $instance->getMethod()
             ->getReflection()
             ->getReturnType()
         ;
-
         if ($returnType instanceof \ReflectionNamedType && $returnType->getName() === 'void') {
             return new Response(null, false);
         }
 
         $handler = $this->getHandler(CacheHandler::class, $annotation);
 
-        if ($handler->contains($cacheKey) === false) {
+        array_unshift($tags, $proxyId);
+        $data = $handler->fetch(implode('|', $tags));
+
+        // this is needed to solve a bug (when the false is stored in the cache)
+
+        if ($data === false) {
             return new Response(null, false);
         }
 
-        return new Response($handler->fetch($cacheKey), true);
+        return new Response($data, true);
     }
 
     public function suffix(Instance $instance): Response
@@ -58,8 +57,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $annotation = $instance->getMethod()
             ->getAnnotation(Cache::class)
         ;
-
-        $cacheKey = $this->buildCacheKey($instance, $annotation);
+        $proxyId = $this->getProxyId($instance, $annotation);
         $tags = $this->getTags($instance, $annotation);
 
         $data = $instance->getMethod()
@@ -69,7 +67,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $handler = $this->getHandler(CacheHandler::class, $annotation);
 
         $handler->save(
-            $cacheKey,
+            $proxyId,
             $data,
             $annotation->getLifetime(),
             $tags
@@ -92,7 +90,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $method = $instance->getMethod();
         $annotation = $method->getAnnotation(Cache::class);
 
-        if (mb_substr($annotation->getHandler() ?? '', 0, 7) === 'legacy_') {
+        if (mb_substr($annotation->getHandler() ?? '', 0, 7) !== 'legacy_') {
             return false;
         }
 
@@ -109,36 +107,44 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         return 20;
     }
 
-    private function buildCacheKey(Instance $instance, Cache $annotation): string
-    {
-        $version = $annotation->getVersion() !== null ? '.v' . $annotation->getVersion() : null;
-
-        if ($annotation->getId() !== null) {
-            $parameters = $instance->getMethod()
-                ->getParameters();
-
-            return $this->resolveExpression($annotation->getId(), $parameters) . $version;
-        }
-
-        return $this->buildDefaultIdentifier($instance, $annotation) . $version;
-    }
-
-    private function buildDefaultIdentifier(Instance $instance, Cache $annotation): string
+    private function getNamespace(Instance $instance, Cache $annotation): ?string
     {
         $parameters = $instance->getMethod()
             ->getParameters()
         ;
+        if ($annotation->getNamespace() !== null) {
+            $resolvedExpression = $this->resolveExpression(
+                $annotation->getNamespace(),
+                $parameters
+            );
 
-        $identifier = str_replace('\\', '.', $instance->getReflection()
-            ->getName()) . '.' . $instance->getMethod()->getName();
+            return md5($resolvedExpression);
+        }
 
+        return null;
+    }
+
+    private function getProxyId(Instance $instance, Cache $annotation): string
+    {
+        $parameters = $instance->getMethod()
+            ->getParameters()
+        ;
+        if ($annotation->getId() !== null) {
+            return $this->resolveExpression(
+                $annotation->getId(),
+                $parameters
+            );
+        }
+
+        $key = $instance->getReflection()
+            ->getName() . '::' . $instance->getMethod()->getName();
         if (\count($parameters) > 0) {
-            foreach ($parameters as $parameterName => $parameterValue) {
-                $identifier .= '.' . $parameterName . '.' . md5(serialize($parameterValue));
+            foreach ($parameters as $parameter) {
+                $key .= '::' . serialize($parameter);
             }
         }
 
-        return $identifier;
+        return md5($key);
     }
 
     /**
@@ -166,6 +172,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
      */
     private function getTags(Instance $instance, Cache $annotation): array
     {
+        $namespace = $this->getNamespace($instance, $annotation);
         $parameters = $instance->getMethod()
             ->getParameters();
         $tags = [];
@@ -174,6 +181,10 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
                 $tag,
                 $parameters
             );
+        }
+
+        if ($namespace !== null) {
+            array_unshift($tags, $namespace);
         }
 
         return array_filter($tags);

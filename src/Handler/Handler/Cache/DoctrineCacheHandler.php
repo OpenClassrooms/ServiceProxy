@@ -9,6 +9,9 @@ use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Handler\Handler\ConfigurableHandler;
 
+/**
+ * @deprecated use SymfonyCacheHandler instead
+ */
 final class DoctrineCacheHandler implements CacheHandler
 {
     use ConfigurableHandler;
@@ -23,23 +26,31 @@ final class DoctrineCacheHandler implements CacheHandler
         $this->name = $name;
     }
 
-    public function fetch(string $id, array $tags = [])
+    public function fetch(string $id)
     {
+        $tags = explode('|', $id);
+        $id = array_shift($tags);
+
         return $this->cacheProvider->fetchWithNamespace($id, $tags[0] ?? null);
     }
 
-    public function save(string $id, $data, array $tags = [], ?int $lifeTime = null): bool
+    public function save(string $id, $data, ?int $lifeTime = null, array $tags = []): void
     {
-        return $this->cacheProvider->saveWithNamespace($id, $data, $tags[0] ?? null, $lifeTime);
+        $this->cacheProvider->saveWithNamespace($id, $data, $tags[0] ?? null, $lifeTime);
     }
 
-    public function contains(string $id, array $tags = []): bool
+    public function contains(string $id): bool
     {
         return $this->cacheProvider->contains($id);
     }
 
+    public function invalidateTags(array $tags): void
+    {
+        throw new \BadMethodCallException('Cache provider does not support tags invalidation');
+    }
+
     public function getName(): string
     {
-        return $this->name ?? 'array';
+        return $this->name ?? 'doctrine_array';
     }
 }

@@ -7,7 +7,7 @@ namespace OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache;
 use OpenClassrooms\ServiceProxy\Annotation\Cache;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\ParameterClassStub;
 
-class CacheAnnotatedClass
+class LegacyCacheAnnotatedClass
 {
     public const DATA = 'data';
 
@@ -17,7 +17,7 @@ class CacheAnnotatedClass
     }
 
     /**
-     * @Cache
+     * @Cache(handler="legacy_handler_name")
      */
     public function annotatedMethodWithException(): array
     {
@@ -25,7 +25,7 @@ class CacheAnnotatedClass
     }
 
     /**
-     * @Cache
+     * @Cache(handler="legacy_handler_name")
      */
     public function annotatedMethodWithVoidReturn(): void
     {
@@ -44,7 +44,7 @@ class CacheAnnotatedClass
     }
 
     /**
-     * @Cache
+     * @Cache(handler="legacy_handler_name")
      */
     public function annotatedMethod(): string
     {
@@ -52,7 +52,7 @@ class CacheAnnotatedClass
     }
 
     /**
-     * @Cache(lifetime=60)
+     * @Cache(handler="legacy_handler_name", lifetime=60)
      */
     public function cacheWithLifeTime(): string
     {
@@ -60,7 +60,7 @@ class CacheAnnotatedClass
     }
 
     /**
-     * @Cache(id="'test'")
+     * @Cache(handler="legacy_handler_name", id="'test'")
      */
     public function cacheWithId(): string
     {
@@ -68,7 +68,7 @@ class CacheAnnotatedClass
     }
 
     /**
-     * @Cache(id="'test' ~ param1.publicField")
+     * @Cache(handler="legacy_handler_name", id="'test' ~ param1.publicField")
      * @noinspection PhpUnusedParameterInspection
      */
     public function cacheWithIdAndParameters(ParameterClassStub $param1, $param2): string
@@ -77,7 +77,7 @@ class CacheAnnotatedClass
     }
 
     /**
-     * @Cache(namespace="'test-namespace'")
+     * @Cache(handler="legacy_handler_name", namespace="'test-namespace'")
      */
     public function cacheWithNamespace(): string
     {
@@ -85,33 +85,18 @@ class CacheAnnotatedClass
     }
 
     /**
-     * @Cache(id="'test_id'", tags={"'custom_tag'"})
+     * @Cache(handler="legacy_handler_name", namespace="'test-namespace'", id="'toto'")
      */
-    public function cacheWithIdAndTags(): string
+    public function cacheWithNamespaceAndId(): string
     {
         return self::DATA;
     }
 
     /**
-     * @Cache(tags={"'custom_tag' ~ param1.publicField"})
+     * @Cache(handler="legacy_handler_name", namespace="'test-namespace' ~ param1.publicField")
+     * @noinspection PhpUnusedParameterInspection
      */
-    public function cacheWithTagsAndParameters(ParameterClassStub $param1, $param2): string
-    {
-        return self::DATA;
-    }
-
-    /**
-     * @Cache(version=2)
-     */
-    public function cacheWithVersion(): string
-    {
-        return self::DATA;
-    }
-
-    /**
-     * @Cache(id="'test_id' ~ param1.getPrivateField()", version=2)
-     */
-    public function cacheWithIdAndVersion(ParameterClassStub $param1): string
+    public function cacheWithNamespaceAndParameters(ParameterClassStub $param1, $param2): string
     {
         return self::DATA;
     }
@@ -125,9 +110,17 @@ class CacheAnnotatedClass
     }
 
     /**
-     * @Cache(handler="legacy_handler")
+     * @Cache(handler="legacy_random_name")
      */
-    public function annotatedWithLegacyHandlerAttribute(): string
+    public function annotatedMethodWithAnotherLegacyHandler(): string
+    {
+        return self::DATA;
+    }
+
+    /**
+     * @Cache(handler="non_legacy_handler")
+     */
+    public function annotatedMethodWithNonLegacyHandler(): string
     {
         return self::DATA;
     }

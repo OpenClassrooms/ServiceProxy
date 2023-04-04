@@ -4,25 +4,30 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache;
 
+use Doctrine\Common\Cache\ArrayCache;
+use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
-use OpenClassrooms\ServiceProxy\Handler\Handler\Cache\SymfonyCacheHandler;
+use OpenClassrooms\ServiceProxy\Handler\Handler\Cache\DoctrineCacheHandler;
 
-final class CacheHandlerMock implements CacheHandler
+final class DoctrineCacheHandlerMock implements CacheHandler
 {
     public static ?int $lifeTime = null;
 
-    private string $name;
+    private CacheHandler $wrappedHandler;
+
+    private CacheProviderDecorator $cacheProvider;
 
     private bool $default;
 
-    private CacheHandler $wrappedHandler;
+    private string $name;
 
     public function __construct(?string $name = null, bool $default = true)
     {
         $this->name = $name ?? 'array';
         $this->default = $default;
 
-        $this->wrappedHandler = new SymfonyCacheHandler(null, $name);
+        $cacheProvider = new CacheProviderDecorator(new ArrayCache());
+        $this->wrappedHandler = new DoctrineCacheHandler($cacheProvider, $name);
     }
 
     public function fetch(string $id)
@@ -37,19 +42,19 @@ final class CacheHandlerMock implements CacheHandler
         $this->wrappedHandler->save($id, $data, $lifeTime, $tags);
     }
 
-    public function contains(string $id): bool
+    public function contains(string $id, array $tags = []): bool
     {
         return $this->wrappedHandler->contains($id);
-    }
-
-    public function isDefault(): bool
-    {
-        return $this->default;
     }
 
     public function invalidateTags(array $tags): void
     {
         $this->wrappedHandler->invalidateTags($tags);
+    }
+
+    public function isDefault(): bool
+    {
+        return $this->default;
     }
 
     public function getName(): string
