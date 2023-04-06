@@ -46,7 +46,7 @@ abstract class Annotation
      *
      * @throws \BadMethodCallException
      */
-    final public function __isset(string $name): void
+    final public function __isset(string $name): bool
     {
         throw new \BadMethodCallException(
             sprintf("Unknown property '%s' on annotation '%s'.", $name, static::class)

@@ -9,6 +9,7 @@ use OpenClassrooms\ServiceProxy\Handler\Exception\HandlerNotFound;
 use OpenClassrooms\ServiceProxy\Interceptor\Exception\DeprecatedAttributeException;
 use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\CacheInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
+use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\CacheAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\InvalidIdCacheAnnotatedClass;
@@ -25,6 +26,8 @@ final class CacheInterceptorTest extends TestCase
     private CacheHandlerMock $cacheHandlerMock;
 
     private CacheAnnotatedClass $proxy;
+
+    private ProxyFactory $proxyFactory;
 
     protected function setUp(): void
     {
@@ -93,7 +96,7 @@ final class CacheInterceptorTest extends TestCase
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
         $this->assertEquals(
             CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch('test')
+            $this->cacheHandlerMock->fetch(str_replace('\\', '.', CacheAnnotatedClass::class) . '.' . 'test')
         );
     }
 
@@ -103,7 +106,7 @@ final class CacheInterceptorTest extends TestCase
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
         $this->assertEquals(
             CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch('test1')
+            $this->cacheHandlerMock->fetch(str_replace('\\', '.', CacheAnnotatedClass::class) . '.' . 'test1')
         );
     }
 
@@ -120,19 +123,21 @@ final class CacheInterceptorTest extends TestCase
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
         $this->assertEquals(
             CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch('test_id')
+            $this->cacheHandlerMock->fetch(str_replace('\\', '.', CacheAnnotatedClass::class) . '.' . 'test_id')
         );
 
         $this->cacheHandlerMock->invalidateTags(['wrong_tag']);
 
         $this->assertEquals(
             CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch('test_id')
+            $this->cacheHandlerMock->fetch(str_replace('\\', '.', CacheAnnotatedClass::class) . '.' . 'test_id')
         );
 
         $this->cacheHandlerMock->invalidateTags(['custom_tag', 'another_tag']);
 
-        $this->assertNull($this->cacheHandlerMock->fetch('test_id'));
+        $this->assertNull(
+            $this->cacheHandlerMock->fetch(str_replace('\\', '.', CacheAnnotatedClass::class) . '.' . 'test_id')
+        );
     }
 
     public function testWithTagsAndParameterReturnDataAndCanBeInvalidated(): void
@@ -173,7 +178,7 @@ final class CacheInterceptorTest extends TestCase
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
         $this->assertEquals(
             CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch('test_id2.v2')
+            $this->cacheHandlerMock->fetch(str_replace('\\', '.', CacheAnnotatedClass::class) . '.' . 'test_id2.v2')
         );
     }
 

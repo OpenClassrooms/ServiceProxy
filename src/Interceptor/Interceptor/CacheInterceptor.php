@@ -92,11 +92,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $method = $instance->getMethod();
         $annotation = $method->getAnnotation(Cache::class);
 
-        if (mb_substr($annotation->getHandler() ?? '', 0, 7) === 'legacy_') {
-            return false;
-        }
-
-        return true;
+        return mb_strpos($annotation->getHandler() ?? '', 'legacy_') !== 0;
     }
 
     public function getPrefixPriority(): int
@@ -117,13 +113,15 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             $parameters = $instance->getMethod()
                 ->getParameters();
 
-            return $this->resolveExpression($annotation->getId(), $parameters) . $version;
+            return str_replace('\\', '.', $instance->getReflection()->getName())
+                . '.'
+                . $this->resolveExpression($annotation->getId(), $parameters) . $version;
         }
 
-        return $this->buildDefaultIdentifier($instance, $annotation) . $version;
+        return $this->buildDefaultIdentifier($instance) . $version;
     }
 
-    private function buildDefaultIdentifier(Instance $instance, Cache $annotation): string
+    private function buildDefaultIdentifier(Instance $instance): string
     {
         $parameters = $instance->getMethod()
             ->getParameters()

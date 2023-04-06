@@ -6,6 +6,7 @@ namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
 use Doctrine\Common\Annotations\AnnotationException;
 use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\EventInterceptor;
+use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event\EventHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\EventAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\InvalidMethodEventAnnotatedClass;
@@ -19,6 +20,8 @@ final class EventInterceptorTest extends TestCase
     private EventHandlerMock $handler;
 
     private EventAnnotatedClass $proxy;
+
+    private ProxyFactory $proxyFactory;
 
     protected function setUp(): void
     {
