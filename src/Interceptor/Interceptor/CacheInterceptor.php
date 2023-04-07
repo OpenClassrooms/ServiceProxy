@@ -19,12 +19,19 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     /**
      * @var string[]
      */
-    private static array $hits = [];
+    private static array $hits;
 
     /**
      * @var string[]
      */
-    private static array $misses = [];
+    private static array $misses;
+
+    public function __construct(iterable $handlers = [])
+    {
+        parent::__construct($handlers);
+        self::$hits ??= [];
+        self::$misses ??= [];
+    }
 
     /**
      * @return string[]
@@ -63,6 +70,8 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         ;
 
         if ($returnType instanceof \ReflectionNamedType && $returnType->getName() === 'void') {
+            self::$misses[] = $cacheKey;
+
             return new Response(null, false);
         }
 
