@@ -16,6 +16,32 @@ use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 final class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
+    /**
+     * @var string[]
+     */
+    private static array $hits = [];
+
+    /**
+     * @var string[]
+     */
+    private static array $misses = [];
+
+    /**
+     * @return string[]
+     */
+    public static function getHits(): array
+    {
+        return self::$hits;
+    }
+
+    /**
+     * @return string[]
+     */
+    public static function getMisses(): array
+    {
+        return self::$misses;
+    }
+
     public function prefix(Instance $instance): Response
     {
         $annotation = $instance->getMethod()
@@ -43,8 +69,12 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $handler = $this->getHandler(CacheHandler::class, $annotation);
 
         if ($handler->contains($cacheKey) === false) {
+            self::$misses[] = $cacheKey;
+
             return new Response(null, false);
         }
+
+        self::$hits[] = $cacheKey;
 
         return new Response($handler->fetch($cacheKey), true);
     }
@@ -92,7 +122,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $method = $instance->getMethod();
         $annotation = $method->getAnnotation(Cache::class);
 
-        return mb_strpos($annotation->getHandler() ?? '', 'legacy_') !== 0;
+        return !str_starts_with($annotation->getHandler() ?? '', 'legacy_');
     }
 
     public function getPrefixPriority(): int

@@ -18,9 +18,36 @@ use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
  */
 final class LegacyCacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
+    /**
+     * @var string[]
+     */
+    private static array $hits = [];
+
+    /**
+     * @var string[]
+     */
+    private static array $misses = [];
+
+    /**
+     * @return string[]
+     */
+    public static function getHits(): array
+    {
+        return self::$hits;
+    }
+
+    /**
+     * @return string[]
+     */
+    public static function getMisses(): array
+    {
+        return self::$misses;
+    }
+
     public function prefix(Instance $instance): Response
     {
-        $annotation = $instance->getMethod()
+        $annotation = $instance
+            ->getMethod()
             ->getAnnotation(Cache::class)
         ;
         $proxyId = $this->getProxyId($instance, $annotation);
@@ -39,11 +66,13 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
         array_unshift($tags, $proxyId);
         $data = $handler->fetch(implode('|', $tags));
 
-        // this is needed to solve a bug (when the false is stored in the cache)
-
         if ($data === false) {
+            self::$misses[] = implode('|', $tags);
+
             return new Response(null, false);
         }
+
+        self::$hits[] = implode('|', $tags);
 
         return new Response($data, true);
     }
@@ -90,7 +119,7 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
         $method = $instance->getMethod();
         $annotation = $method->getAnnotation(Cache::class);
 
-        if (mb_substr($annotation->getHandler() ?? '', 0, 7) !== 'legacy_') {
+        if (!str_starts_with($annotation->getHandler() ?? '', 'legacy_')) {
             return false;
         }
 
