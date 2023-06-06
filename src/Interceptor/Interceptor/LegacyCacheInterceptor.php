@@ -83,18 +83,8 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
 
     public function supportsPrefix(Instance $instance): bool
     {
-        if (!$instance->getMethod()->hasAnnotation(Cache::class)) {
-            return false;
-        }
-
-        $method = $instance->getMethod();
-        $annotation = $method->getAnnotation(Cache::class);
-
-        if (mb_substr($annotation->getHandler() ?? '', 0, 7) !== 'legacy_') {
-            return false;
-        }
-
-        return true;
+        return $instance->getMethod()
+            ->hasAnnotation(Cache::class);
     }
 
     public function getPrefixPriority(): int

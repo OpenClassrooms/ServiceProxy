@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Stub;
 
-use OpenClassrooms\ServiceProxy\Annotation\Cache;
+use OpenClassrooms\ServiceProxy\Attribute\Cache;
 
 class WithConstructorAnnotationClass
 {
@@ -19,9 +19,7 @@ class WithConstructorAnnotationClass
         return true;
     }
 
-    /**
-     * @Cache
-     */
+    #[Cache]
     public function onlyCache(): string
     {
         return self::DATA;

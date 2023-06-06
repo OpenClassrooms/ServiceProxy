@@ -12,7 +12,7 @@ use OpenClassrooms\ServiceProxy\Handler\Exception\HandlerNotFound;
 use OpenClassrooms\ServiceProxy\Handler\Exception\MissingDefaultHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\CacheInterceptor;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
-use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\CacheAnnotatedClass;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ClassWithCacheAttributes;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
 use PHPUnit\Framework\TestCase;
 
@@ -25,7 +25,7 @@ final class AbstractInterceptorTest extends TestCase
         $this->expectException(HandlerNotFound::class);
         $this->getProxyFactory(
             [new CacheInterceptor([new CacheHandlerMock()])]
-        )->createProxy(new CacheAnnotatedClass())
+        )->createProxy(new ClassWithCacheAttributes())
             ->invalidHandler();
     }
 

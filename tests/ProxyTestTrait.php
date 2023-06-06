@@ -48,17 +48,4 @@ trait ProxyTestTrait
             $interceptors,
         );
     }
-
-    /**
-     * @param callable $call
-     *
-     * @throws \ReflectionException
-     */
-    private function proxyCall(array $call)
-    {
-        [$object, $method] = $call;
-
-        return $this->proxyFactory->createProxy($object)
-            ->{$method}();
-    }
 }

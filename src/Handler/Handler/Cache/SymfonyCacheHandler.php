@@ -16,12 +16,18 @@ final class SymfonyCacheHandler implements CacheHandler
 
     private ?string $name;
 
+    private ?int $defaultLifetime;
+
     private TagAwareAdapterInterface $cacheAdapter;
 
-    public function __construct(?TagAwareAdapterInterface $cacheAdapter = null, ?string $name = null)
-    {
+    public function __construct(
+        ?TagAwareAdapterInterface $cacheAdapter = null,
+        ?string $name = null,
+        ?int $defaultLifetime = null
+    ) {
         $this->cacheAdapter = $cacheAdapter ?? new TagAwareAdapter(new ArrayAdapter());
         $this->name = $name;
+        $this->defaultLifetime = $defaultLifetime;
     }
 
     public function fetch(string $id)
@@ -36,7 +42,7 @@ final class SymfonyCacheHandler implements CacheHandler
     {
         $item = $this->cacheAdapter->getItem($id)
             ->set($data)
-            ->expiresAfter($lifeTime)
+            ->expiresAfter($lifeTime ?? $this->defaultLifetime)
             ->tag($tags)
         ;
 

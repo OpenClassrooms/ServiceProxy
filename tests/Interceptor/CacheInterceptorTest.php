@@ -4,27 +4,35 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
-use Doctrine\Common\Annotations\AnnotationException;
 use OpenClassrooms\ServiceProxy\Handler\Exception\HandlerNotFound;
-use OpenClassrooms\ServiceProxy\Interceptor\Exception\DeprecatedAttributeException;
 use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\CacheInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
+use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
-use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\CacheAnnotatedClass;
-use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\InvalidIdCacheAnnotatedClass;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ClassWithCacheAttributes;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\LegacyCacheAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\ParameterClassStub;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Filesystem\Filesystem;
 
 final class CacheInterceptorTest extends TestCase
 {
-    use ProxyTestTrait;
+    use ProxyTestTrait {
+        tearDown as protected proxyTearDown;
+    }
 
     private CacheInterceptor $cacheInterceptor;
 
     private CacheHandlerMock $cacheHandlerMock;
 
-    private CacheAnnotatedClass $proxy;
+    private ProxyFactory $proxyFactory;
+
+    private Filesystem $fs;
+
+    private string $tmpDir = __DIR__ . '/tmp';
+
+    private string $templateFilePath = __DIR__ . '/templates/CachedClass.php.template';
 
     protected function setUp(): void
     {
@@ -33,164 +41,273 @@ final class CacheInterceptorTest extends TestCase
         $this->proxyFactory = $this->getProxyFactory([
             $this->cacheInterceptor,
         ]);
-        $this->proxy = $this->proxyFactory->createProxy(new CacheAnnotatedClass());
+        $this->fs = new Filesystem();
     }
 
-    public function testTooLongIdWithIdThrowException(): void
+    protected function tearDown(): void
     {
-        $this->expectException(AnnotationException::class);
-        $this->proxyFactory->createProxy(new InvalidIdCacheAnnotatedClass());
+        $this->fs->remove($this->tmpDir);
+        $this->proxyTearDown();
     }
 
-    public function testOnExceptionDontSave(): void
+    public function testSupportsCacheAttribute(): void
     {
-        try {
-            $this->proxy->annotatedMethodWithException();
-            /** @noinspection PhpUnreachableStatementInspection */
-            $this->fail('Exception should be thrown');
-        } catch (\Exception $e) {
-            $this->assertFalse(
-                $this->cacheHandlerMock->contains(
-                    str_replace('\\', '.', CacheAnnotatedClass::class) . '.cacheMethodWithException'
-                )
-            );
-        }
+        $method = Instance::createFromMethod(
+            new ClassWithCacheAttributes(),
+            'methodWithoutAttribute'
+        );
+
+        $this->assertFalse($this->cacheInterceptor->supportsPrefix($method));
+        $this->assertFalse($this->cacheInterceptor->supportsSuffix($method));
+
+        $method = Instance::createFromMethod(
+            new ClassWithCacheAttributes(),
+            'methodWithAttribute'
+        );
+
+        $this->assertTrue($this->cacheInterceptor->supportsPrefix($method));
+        $this->assertTrue($this->cacheInterceptor->supportsSuffix($method));
+    }
+
+    public function testNotSupportsCacheAnnotation(): void
+    {
+        $method = Instance::createFromMethod(
+            new LegacyCacheAnnotatedClass(),
+            'annotatedMethod'
+        );
+
+        $this->assertFalse($this->cacheInterceptor->supportsPrefix($method));
+        $this->assertFalse($this->cacheInterceptor->supportsSuffix($method));
+    }
+
+    public function testMethodWithoutCache(): void
+    {
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+
+        $this->assertEquals(ClassWithCacheAttributes::DATA, $proxy->methodWithAttribute());
     }
 
     public function testNotInCacheReturnData(): void
     {
-        $data = $this->proxyCall([new CacheAnnotatedClass(), 'annotatedMethod']);
-        $this->assertEquals(CacheAnnotatedClass::DATA, $data);
-        $this->assertEquals(
-            CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch(
-                str_replace('\\', '.', CacheAnnotatedClass::class) . '.annotatedMethod'
-            )
-        );
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+
+        $this->assertEquals(ClassWithCacheAttributes::DATA, $proxy->methodWithAttribute());
+        $this->assertEmpty($this->cacheInterceptor->getHits());
+        $this->assertNotEmpty($this->cacheInterceptor->getMisses());
     }
 
     public function testInCacheReturnData(): void
     {
-        $inCacheData = 'InCacheData';
-        $this->cacheHandlerMock->save(
-            str_replace('\\', '.', CacheAnnotatedClass::class) . '.annotatedMethod',
-            $inCacheData
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy->methodWithAttribute();
+
+        $this->assertEmpty($this->cacheInterceptor->getHits());
+        $this->assertNotEmpty($this->cacheInterceptor->getMisses());
+
+        $result = $proxy->methodWithAttribute();
+
+        $this->assertEquals(ClassWithCacheAttributes::DATA, $result);
+        $this->assertNotEmpty($this->cacheInterceptor->getHits());
+        $this->assertEmpty($this->cacheInterceptor->getMisses());
+    }
+
+    public function testMethodWithVoidReturnIsNotCached(): void
+    {
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy->methodWithVoidReturn();
+
+        $this->assertEmpty($this->cacheInterceptor->getHits());
+        $this->assertNotEmpty($this->cacheInterceptor->getMisses());
+
+        $result = $proxy->methodWithVoidReturn();
+
+        $this->assertNull($result);
+        $this->assertEmpty($this->cacheInterceptor->getHits());
+        $this->assertNotEmpty($this->cacheInterceptor->getMisses());
+    }
+
+    public function testCachedMethodWithArguments(): void
+    {
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy->methodWithArguments('value1', 'value2');
+
+        $this->assertEmpty($this->cacheInterceptor->getHits());
+        $this->assertNotEmpty($this->cacheInterceptor->getMisses());
+
+        $proxy->methodWithArguments('value3', 'value4');
+
+        $this->assertEmpty($this->cacheInterceptor->getHits());
+        $this->assertNotEmpty($this->cacheInterceptor->getMisses());
+
+        $proxy->methodWithArguments('value1', 'value2');
+
+        $this->assertNotEmpty($this->cacheInterceptor->getHits());
+        $this->assertEmpty($this->cacheInterceptor->getMisses());
+
+        $proxy->methodWithArguments('value3', 'value4');
+
+        $this->assertNotEmpty($this->cacheInterceptor->getHits());
+        $this->assertEmpty($this->cacheInterceptor->getMisses());
+    }
+
+    public function testCodeUpdateInvalidatesCache(): void
+    {
+        $proxy = $this->writeProxy(
+            className: 'ClassWithCache',
+            methodName: 'execute',
+            methodAttribute: '#[\OpenClassrooms\ServiceProxy\Attribute\Cache]',
+            methodBody: 'return "FOO";',
         );
-        $data = $this->proxy->annotatedMethod();
-        $this->assertEquals($inCacheData, $data);
+
+        $proxy->execute();
+        $this->assertEmpty($this->cacheInterceptor->getHits());
+        $this->assertNotEmpty($this->cacheInterceptor->getMisses());
+
+        $proxy->execute();
+        $this->assertNotEmpty($this->cacheInterceptor->getHits());
+        $this->assertEmpty($this->cacheInterceptor->getMisses());
+
+        $proxy = $this->writeProxy(
+            className: 'ClassWithCache',
+            methodName: 'execute',
+            methodAttribute: '#[\OpenClassrooms\ServiceProxy\Attribute\Cache]',
+            methodBody: 'return "BAR";',
+        );
+
+        $proxy->execute();
+        $this->assertEmpty($this->cacheInterceptor->getHits());
+        $this->assertNotEmpty($this->cacheInterceptor->getMisses());
+    }
+
+    public function testOnExceptionDontSave(): void
+    {
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+
+        try {
+            $proxy->methodWithException();
+        } catch (\Exception $e) {
+        }
+
+        $this->assertEmpty($this->cacheInterceptor->getHits());
+        $this->assertNotEmpty($this->cacheInterceptor->getMisses());
+
+        try {
+            $proxy->methodWithException();
+        } catch (\Exception $e) {
+        }
+
+        $this->assertEmpty($this->cacheInterceptor->getHits());
+        $this->assertNotEmpty($this->cacheInterceptor->getMisses());
     }
 
     public function testWithLifeTimeReturnData(): void
     {
-        $data = $this->proxy->cacheWithLifeTime();
-        $this->assertEquals(CacheAnnotatedClass::DATA, $data);
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+
+        $data = $proxy->methodWithLifetime();
+
+        $this->assertEquals(ClassWithCacheAttributes::DATA, $data);
         $this->assertEquals(60, CacheHandlerMock::$lifeTime);
-    }
-
-    public function testWithIdReturnData(): void
-    {
-        $data = $this->proxy->cacheWithId();
-        $this->assertEquals(CacheAnnotatedClass::DATA, $data);
-        $this->assertEquals(
-            CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch('test')
-        );
-    }
-
-    public function testWithIdAndParametersReturnData(): void
-    {
-        $data = $this->proxy->cacheWithIdAndParameters(new ParameterClassStub(), 'param 2');
-        $this->assertEquals(CacheAnnotatedClass::DATA, $data);
-        $this->assertEquals(
-            CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch('test1')
-        );
-    }
-
-    public function testWithNamespaceThrowsDeprecationException(): void
-    {
-        $this->expectException(DeprecatedAttributeException::class);
-        $this->proxy->cacheWithNamespace();
     }
 
     public function testWithTagsReturnDataAndCanBeInvalidated(): void
     {
-        $data = $this->proxy->cacheWithIdAndTags();
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy->methodWithTaggedCache();
 
-        $this->assertEquals(CacheAnnotatedClass::DATA, $data);
-        $this->assertEquals(
-            CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch('test_id')
-        );
+        $this->assertEmpty($this->cacheInterceptor->getHits());
+        $this->assertNotEmpty($this->cacheInterceptor->getMisses());
 
         $this->cacheHandlerMock->invalidateTags(['wrong_tag']);
 
-        $this->assertEquals(
-            CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch('test_id')
-        );
+        $proxy->methodWithTaggedCache();
 
-        $this->cacheHandlerMock->invalidateTags(['custom_tag', 'another_tag']);
+        $this->assertNotEmpty($this->cacheInterceptor->getHits());
+        $this->assertEmpty($this->cacheInterceptor->getMisses());
 
-        $this->assertNull($this->cacheHandlerMock->fetch('test_id'));
+        $this->cacheHandlerMock->invalidateTags(['my_tag', 'another_tag']);
+
+        $proxy->methodWithTaggedCache();
+
+        $this->assertEmpty($this->cacheInterceptor->getHits());
+        $this->assertNotEmpty($this->cacheInterceptor->getMisses());
     }
 
     public function testWithTagsAndParameterReturnDataAndCanBeInvalidated(): void
     {
-        $data = $this->proxy->cacheWithTagsAndParameters(new ParameterClassStub(), 'param 2');
-        $cacheKey = str_replace('\\', '.', CacheAnnotatedClass::class) . '.cacheWithTagsAndParameters'
-                    . '.param1.' . md5(serialize(new ParameterClassStub())) . '.param2.' . md5(serialize('param 2'));
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy->methodWithResolvedTag(new ParameterClassStub());
 
-        $this->assertEquals(CacheAnnotatedClass::DATA, $data);
-        $this->assertEquals(
-            CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch($cacheKey)
-        );
+        $this->assertEmpty($this->cacheInterceptor->getHits());
+        $this->assertNotEmpty($this->cacheInterceptor->getMisses());
 
-        $this->cacheHandlerMock->invalidateTags(['custom_tag1']);
+        $proxy->methodWithResolvedTag(new ParameterClassStub());
 
-        $this->assertNull($this->cacheHandlerMock->fetch($cacheKey));
-    }
+        $this->assertNotEmpty($this->cacheInterceptor->getHits());
+        $this->assertEmpty($this->cacheInterceptor->getMisses());
 
-    public function testWithVersionReturnData(): void
-    {
-        $data = $this->proxy->cacheWithVersion(new ParameterClassStub());
+        $this->cacheHandlerMock->invalidateTags(['my_tag1']);
 
-        $this->assertEquals(CacheAnnotatedClass::DATA, $data);
-        $this->assertEquals(
-            CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch(
-                str_replace('\\', '.', CacheAnnotatedClass::class) . '.cacheWithVersion'
-                . '.v2'
-            )
-        );
-    }
+        $proxy->methodWithResolvedTag(new ParameterClassStub());
 
-    public function testWithIdAndVersionReturnData(): void
-    {
-        $data = $this->proxy->cacheWithIdAndVersion(new ParameterClassStub());
-
-        $this->assertEquals(CacheAnnotatedClass::DATA, $data);
-        $this->assertEquals(
-            CacheAnnotatedClass::DATA,
-            $this->cacheHandlerMock->fetch('test_id2.v2')
-        );
+        $this->assertEmpty($this->cacheInterceptor->getHits());
+        $this->assertNotEmpty($this->cacheInterceptor->getMisses());
     }
 
     public function testInvalidHandlerThrowsException(): void
     {
         $this->expectException(HandlerNotFound::class);
-        $this->proxy->invalidHandler();
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy->invalidHandler();
     }
 
-    public function testDoesNotSupportLegacyHandlerAttribute(): void
+    public function testInvalidPoolThrowsException(): void
     {
-        $method = Instance::createFromMethod(
-            new CacheAnnotatedClass(),
-            'annotatedWithLegacyHandlerAttribute'
-        );
+        $this->expectException(HandlerNotFound::class);
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy->invalidPool();
+    }
 
-        $this->assertFalse($this->cacheInterceptor->supportsPrefix($method));
-        $this->assertFalse($this->cacheInterceptor->supportsSuffix($method));
+    public function testPoolIsAnAliasForHandler(): void
+    {
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+
+        $this->assertEquals(ClassWithCacheAttributes::DATA, $proxy->methodWithPool());
+        $this->assertEmpty($this->cacheInterceptor->getHits());
+        $this->assertNotEmpty($this->cacheInterceptor->getMisses());
+    }
+
+    public function testBothHandlerAndPoolThrowsException(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy->bothHandlerAndPool();
+    }
+
+    private function writeProxy(
+        string $className,
+        string $methodName,
+        ?string $methodAttribute = '',
+        ?string $methodArgs = '',
+        ?string $methodReturnType = '',
+        string $methodBody = ''
+    ): object {
+        $namespace = __NAMESPACE__ . str_replace('/', '\\', str_replace(__DIR__, '', $this->tmpDir));
+
+        $content = file_get_contents($this->templateFilePath);
+        $content = str_replace('__CLASS_NAME__', $className, $content);
+        $content = str_replace('__METHOD_NAME__', $methodName, $content);
+        $content = str_replace('__METHOD_BODY__', $methodBody, $content);
+        $content = str_replace('__METHOD_ARGS__', $methodArgs, $content);
+        $content = str_replace('__METHOD_ATTRIBUTE__', $methodAttribute, $content);
+        $content = str_replace('__METHOD_RETURN_TYPE__', $methodReturnType ? ': ' . $methodReturnType : '', $content);
+        $content = str_replace('__NAMESPACE__', $namespace, $content);
+
+        $filePath = $this->tmpDir . '/' . $className . '.php';
+        $this->fs->dumpFile($filePath, $content);
+
+        $fqcn = $namespace . '\\' . $className;
+
+        return $this->proxyFactory->createProxy(new $fqcn());
     }
 }
