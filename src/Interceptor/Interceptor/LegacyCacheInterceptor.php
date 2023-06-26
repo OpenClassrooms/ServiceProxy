@@ -5,19 +5,28 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Interceptor\Interceptor;
 
 use OpenClassrooms\ServiceProxy\Annotation\Cache;
+use OpenClassrooms\ServiceProxy\ExpressionLanguage\ExpressionResolver;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
-use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 /**
  * @deprecated use CacheHandler instead
  */
 final class LegacyCacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
+    private ExpressionResolver $expressionResolver;
+
+    public function __construct(iterable $handlers = [])
+    {
+        parent::__construct($handlers);
+
+        $this->expressionResolver = new ExpressionResolver();
+    }
+
     public function prefix(Instance $instance): Response
     {
         $annotation = $instance->getMethod()
@@ -103,7 +112,7 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
             ->getParameters()
         ;
         if ($annotation->getNamespace() !== null) {
-            $resolvedExpression = $this->resolveExpression(
+            $resolvedExpression = $this->expressionResolver->resolve(
                 $annotation->getNamespace(),
                 $parameters
             );
@@ -120,7 +129,7 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
             ->getParameters()
         ;
         if ($annotation->getId() !== null) {
-            return $this->resolveExpression(
+            return $this->expressionResolver->resolve(
                 $annotation->getId(),
                 $parameters
             );
@@ -138,26 +147,6 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
     }
 
     /**
-     * @param mixed[] $parameters
-     */
-    private function resolveExpression(string $expression, array $parameters): string
-    {
-        $expressionLanguage = new ExpressionLanguage();
-        $resolvedExpression = $expressionLanguage->evaluate(
-            $expression,
-            $parameters
-        );
-
-        if (!\is_string($resolvedExpression)) {
-            throw new \InvalidArgumentException(
-                "Provided expression `{$expression}` did not resolve to a string."
-            );
-        }
-
-        return $resolvedExpression;
-    }
-
-    /**
      * @return array<int, string>
      */
     private function getTags(Instance $instance, Cache $annotation): array
@@ -167,7 +156,7 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
             ->getParameters();
         $tags = [];
         foreach ($annotation->getTags() as $tag) {
-            $tags[] = $this->resolveExpression(
+            $tags[] = $this->expressionResolver->resolve(
                 $tag,
                 $parameters
             );

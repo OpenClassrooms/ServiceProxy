@@ -5,15 +5,24 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Interceptor\Interceptor;
 
 use OpenClassrooms\ServiceProxy\Attribute\InvalidateCache;
+use OpenClassrooms\ServiceProxy\ExpressionLanguage\ExpressionResolver;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
-use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 final class InvalidateCacheInterceptor extends AbstractInterceptor implements SuffixInterceptor
 {
+    private ExpressionResolver $expressionResolver;
+
+    public function __construct(iterable $handlers = [])
+    {
+        parent::__construct($handlers);
+
+        $this->expressionResolver = new ExpressionResolver();
+    }
+
     public function suffix(Instance $instance): Response
     {
         if ($instance->getMethod()->threwException()) {
@@ -44,39 +53,17 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
     }
 
     /**
-     * @param mixed[] $parameters
-     */
-    private function resolveExpression(string $expression, array $parameters): string
-    {
-        $expressionLanguage = new ExpressionLanguage();
-        $resolvedExpression = $expressionLanguage->evaluate(
-            $expression,
-            $parameters
-        );
-
-        if (!\is_string($resolvedExpression)) {
-            throw new \InvalidArgumentException(
-                "Provided expression `{$expression}` did not resolve to a string."
-            );
-        }
-
-        return $resolvedExpression;
-    }
-
-    /**
      * @return array<int, string>
      */
     private function getTags(Instance $instance, InvalidateCache $attribute): array
     {
         $parameters = $instance->getMethod()
             ->getParameters();
-        $tags = [];
-        foreach ($attribute->getTags() as $tag) {
-            $tags[] = $this->resolveExpression(
-                $tag,
-                $parameters
-            );
-        }
+
+        $tags = array_map(
+            fn (string $expression) => $this->expressionResolver->resolve($expression, $parameters),
+            $attribute->getTags()
+        );
 
         return array_filter($tags);
     }
