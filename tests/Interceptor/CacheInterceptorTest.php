@@ -28,7 +28,7 @@ final class CacheInterceptorTest extends TestCase
 
     private ProxyFactory $proxyFactory;
 
-    private Filesystem $fs;
+    private Filesystem $filesystem;
 
     private string $tmpDir = __DIR__ . '/tmp';
 
@@ -41,12 +41,12 @@ final class CacheInterceptorTest extends TestCase
         $this->proxyFactory = $this->getProxyFactory([
             $this->cacheInterceptor,
         ]);
-        $this->fs = new Filesystem();
+        $this->filesystem = new Filesystem();
     }
 
     protected function tearDown(): void
     {
-        $this->fs->remove($this->tmpDir);
+        $this->filesystem->remove($this->tmpDir);
         $this->proxyTearDown();
     }
 
@@ -304,7 +304,7 @@ final class CacheInterceptorTest extends TestCase
         $content = str_replace('__NAMESPACE__', $namespace, $content);
 
         $filePath = $this->tmpDir . '/' . $className . '.php';
-        $this->fs->dumpFile($filePath, $content);
+        $this->filesystem->dumpFile($filePath, $content);
 
         $fqcn = $namespace . '\\' . $className;
 
