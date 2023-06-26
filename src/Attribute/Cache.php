@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Attribute;
 
-use Attribute;
-use OpenClassrooms\ServiceProxy\Annotation\Annotation;
 use OpenClassrooms\ServiceProxy\Handler\Contract\AnnotationHandler;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 
 #[\Attribute(\Attribute::TARGET_METHOD)]
-final class Cache extends Annotation
+final class Cache extends Attribute
 {
     private ?int $lifetime = null;
 
