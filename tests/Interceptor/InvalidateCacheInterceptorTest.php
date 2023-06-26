@@ -8,7 +8,7 @@ use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\CacheInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\InvalidateCacheInterceptor;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
-use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ClassWithCacheAttributes;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ClassWithInvalidateCacheAttributes;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
 use PHPUnit\Framework\TestCase;
 
@@ -24,7 +24,7 @@ final class InvalidateCacheInterceptorTest extends TestCase
 
     private ProxyFactory $proxyFactory;
 
-    private ClassWithCacheAttributes $proxy;
+    private ClassWithInvalidateCacheAttributes $proxy;
 
     protected function setUp(): void
     {
@@ -37,7 +37,7 @@ final class InvalidateCacheInterceptorTest extends TestCase
             $this->invalidateCacheInterceptor,
         ]);
 
-        $this->proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $this->proxy = $this->proxyFactory->createProxy(new ClassWithInvalidateCacheAttributes());
     }
 
     public function testInCacheCanBeInvalidated(): void
