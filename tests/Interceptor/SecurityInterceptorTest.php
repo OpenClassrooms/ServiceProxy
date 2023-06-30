@@ -6,6 +6,7 @@ namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\SecurityHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\SecurityInterceptor;
+use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Security\SecurityHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Security\SecurityAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
@@ -18,6 +19,8 @@ final class SecurityInterceptorTest extends TestCase
     private SecurityHandler $handler;
 
     private SecurityAnnotatedClass $proxy;
+
+    private ProxyFactory $proxyFactory;
 
     protected function setUp(): void
     {

@@ -97,6 +97,38 @@ final class Method
         throw new \LogicException("The annotation {$annotationClass} is not defined.");
     }
 
+    /**
+     * @template T of Annotation
+     *
+     * @param class-string<T> $attributeClass
+     *
+     * @return T
+     */
+    public function getAttribute(string $attributeClass): object
+    {
+        $attributes = $this->getAttributes($attributeClass);
+
+        return array_values($attributes)[0]->newInstance();
+    }
+
+    /**
+     * @template T of Annotation
+     *
+     * @param class-string<T>|null $attributeClass
+     *
+     * @return array<int, \ReflectionAttribute<T>>
+     */
+    public function getAttributes(?string $attributeClass = null): array
+    {
+        $attributes = $this->reflection->getAttributes($attributeClass);
+
+        if (\count($attributes) === 0) {
+            throw new \LogicException("The attribute {$attributeClass} is not defined.");
+        }
+
+        return $attributes;
+    }
+
     public function getName(): string
     {
         return $this->reflection->getName();
@@ -158,6 +190,21 @@ final class Method
     {
         try {
             $this->getAnnotations($annotationClass);
+
+            return true;
+        } /** @noinspection BadExceptionsProcessingInspection */
+        catch (\LogicException $_) {
+            return false;
+        }
+    }
+
+    /**
+     * @param class-string<Annotation> $attributeClass
+     */
+    public function hasAttribute(string $attributeClass): bool
+    {
+        try {
+            $this->getAttributes($attributeClass);
 
             return true;
         } /** @noinspection BadExceptionsProcessingInspection */

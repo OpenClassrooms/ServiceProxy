@@ -15,7 +15,7 @@ use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event\EventHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Security\SecurityHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Transaction\TransactionHandlerMock;
-use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\CacheAnnotatedClass;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ClassWithCacheAttributes;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\WithConstructorAnnotationClass;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\WithoutAnnotationClass;
 use PHPUnit\Framework\TestCase;
@@ -51,11 +51,11 @@ final class ProxyFactoryTest extends TestCase
 
     public function testWithCacheAnnotationReturnServiceProxyCacheInterface(): void
     {
-        $inputClass = new CacheAnnotatedClass();
+        $inputClass = new ClassWithCacheAttributes();
         $proxy = $this->factory->createProxy($inputClass);
 
         $this->assertProxy($inputClass, $proxy);
-        $this->assertTrue($proxy->nonAnnotatedMethod());
+        $this->assertTrue($proxy->methodWithoutAttribute());
     }
 
     public function testWithCacheAnnotationWithConstructorReturnServiceProxyCacheInterface(): void

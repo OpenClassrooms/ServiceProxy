@@ -17,7 +17,7 @@ abstract class Annotation
     /**
      * @param array<string, mixed> $data Key-value for properties to be defined in this class.
      */
-    final public function __construct(array $data = [])
+    public function __construct(array $data = [])
     {
         foreach ($data as $key => $value) {
             if (method_exists($this, 'set' . ucfirst($key))) {
@@ -46,7 +46,7 @@ abstract class Annotation
      *
      * @throws \BadMethodCallException
      */
-    final public function __isset(string $name): void
+    final public function __isset(string $name): bool
     {
         throw new \BadMethodCallException(
             sprintf("Unknown property '%s' on annotation '%s'.", $name, static::class)

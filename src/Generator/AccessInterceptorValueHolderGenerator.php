@@ -120,8 +120,7 @@ final class AccessInterceptorValueHolderGenerator implements ProxyGeneratorInter
         MethodPrefixInterceptors $prefixes,
         MethodSuffixInterceptors $suffixes,
         ValueHolderProperty $valueHolder
-    ): callable
-    {
+    ): callable {
         return static function (\ReflectionMethod $method) use ($prefixes, $suffixes, $valueHolder): InterceptedMethod {
             return InterceptedMethod::generateMethod(
                 new MethodReflection($method->getDeclaringClass()->getName(), $method->getName()),

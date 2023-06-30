@@ -4,32 +4,63 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Interceptor\Interceptor;
 
-use OpenClassrooms\ServiceProxy\Annotation\Cache;
+use OpenClassrooms\ServiceProxy\Attribute\Cache;
+use OpenClassrooms\ServiceProxy\ExpressionLanguage\ExpressionResolver;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
-use OpenClassrooms\ServiceProxy\Interceptor\Exception\DeprecatedAttributeException;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
-use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 final class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
+    /**
+     * @var string[]
+     */
+    private static array $hits;
+
+    /**
+     * @var string[]
+     */
+    private static array $misses;
+
+    private ExpressionResolver $expressionResolver;
+
+    public function __construct(iterable $handlers = [])
+    {
+        parent::__construct($handlers);
+
+        $this->expressionResolver = new ExpressionResolver();
+        self::$hits ??= [];
+        self::$misses ??= [];
+    }
+
+    /**
+     * @return string[]
+     */
+    public static function getHits(): array
+    {
+        return self::$hits;
+    }
+
+    /**
+     * @return string[]
+     */
+    public static function getMisses(): array
+    {
+        return self::$misses;
+    }
+
     public function prefix(Instance $instance): Response
     {
-        $annotation = $instance->getMethod()
-            ->getAnnotation(Cache::class)
-        ;
+        self::$hits = [];
+        self::$misses = [];
 
-        $cacheKey = $this->buildCacheKey($instance, $annotation);
+        $attribute = $instance->getMethod()
+            ->getAttribute(Cache::class);
 
-        // @phpstan-ignore-next-line
-        if ($annotation->getNamespace() !== null) {
-            throw new DeprecatedAttributeException(
-                'Attribute "namespace" is deprecated. Use "id" instead'
-            );
-        }
+        $cacheKey = $this->buildCacheKey($instance, $attribute);
 
         $returnType = $instance->getMethod()
             ->getReflection()
@@ -37,42 +68,47 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         ;
 
         if ($returnType instanceof \ReflectionNamedType && $returnType->getName() === 'void') {
+            self::$misses[] = $cacheKey;
+
             return new Response(null, false);
         }
 
-        $handler = $this->getHandler(CacheHandler::class, $annotation);
+        $handler = $this->getHandler(CacheHandler::class, $attribute);
 
         if ($handler->contains($cacheKey) === false) {
+            self::$misses[] = $cacheKey;
+
             return new Response(null, false);
         }
+
+        self::$hits[] = $cacheKey;
 
         return new Response($handler->fetch($cacheKey), true);
     }
 
     public function suffix(Instance $instance): Response
     {
-        if ($instance->getMethod()->getResponse() instanceof \Exception) {
+        if ($instance->getMethod()->threwException()) {
             return new Response();
         }
 
-        $annotation = $instance->getMethod()
-            ->getAnnotation(Cache::class)
+        $attribute = $instance->getMethod()
+            ->getAttribute(Cache::class)
         ;
 
-        $cacheKey = $this->buildCacheKey($instance, $annotation);
-        $tags = $this->getTags($instance, $annotation);
+        $cacheKey = $this->buildCacheKey($instance, $attribute);
 
         $data = $instance->getMethod()
             ->getResponse()
         ;
 
-        $handler = $this->getHandler(CacheHandler::class, $annotation);
+        $handler = $this->getHandler(CacheHandler::class, $attribute);
 
         $handler->save(
             $cacheKey,
             $data,
-            $annotation->getLifetime(),
-            $tags
+            $attribute->getLifetime(),
+            $this->getTags($instance, $attribute)
         );
 
         return new Response($data);
@@ -85,18 +121,8 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
     public function supportsPrefix(Instance $instance): bool
     {
-        if (!$instance->getMethod()->hasAnnotation(Cache::class)) {
-            return false;
-        }
-
-        $method = $instance->getMethod();
-        $annotation = $method->getAnnotation(Cache::class);
-
-        if (mb_substr($annotation->getHandler() ?? '', 0, 7) === 'legacy_') {
-            return false;
-        }
-
-        return true;
+        return $instance->getMethod()
+            ->hasAttribute(Cache::class);
     }
 
     public function getPrefixPriority(): int
@@ -109,72 +135,83 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         return 20;
     }
 
-    private function buildCacheKey(Instance $instance, Cache $annotation): string
+    private function buildCacheKey(Instance $instance, Cache $attribute): string
     {
-        $version = $annotation->getVersion() !== null ? '.v' . $annotation->getVersion() : null;
+        $method = $instance->getMethod();
 
-        if ($annotation->getId() !== null) {
-            $parameters = $instance->getMethod()
-                ->getParameters();
+        $parameters = $method->getParameters();
 
-            return $this->resolveExpression($annotation->getId(), $parameters) . $version;
-        }
-
-        return $this->buildDefaultIdentifier($instance, $annotation) . $version;
-    }
-
-    private function buildDefaultIdentifier(Instance $instance, Cache $annotation): string
-    {
-        $parameters = $instance->getMethod()
-            ->getParameters()
-        ;
-
-        $identifier = str_replace('\\', '.', $instance->getReflection()
-            ->getName()) . '.' . $instance->getMethod()->getName();
+        $identifier = $instance->getReflection()
+            ->getName() . '.' . $method->getName();
 
         if (\count($parameters) > 0) {
             foreach ($parameters as $parameterName => $parameterValue) {
-                $identifier .= '.' . $parameterName . '.' . md5(serialize($parameterValue));
+                $identifier .= '.' . $parameterName . '.' . hash('xxh3', serialize($parameterValue));
             }
         }
 
-        return $identifier;
-    }
-
-    /**
-     * @param mixed[] $parameters
-     */
-    private function resolveExpression(string $expression, array $parameters): string
-    {
-        $expressionLanguage = new ExpressionLanguage();
-        $resolvedExpression = $expressionLanguage->evaluate(
-            $expression,
-            $parameters
+        $identifier = array_reduce(
+            $this->getTags($instance, $attribute),
+            static fn (string $identifier, string $tag) => $identifier .= '.' . $tag,
+            $identifier
         );
 
-        if (!\is_string($resolvedExpression)) {
-            throw new \InvalidArgumentException(
-                "Provided expression `{$expression}` did not resolve to a string."
-            );
+        $identifier .= $this->getMethodCode($method->getReflection());
+
+        return hash('xxh3', $identifier);
+    }
+
+    private function getMethodCode(\ReflectionMethod $reflectionMethod): string
+    {
+        $methodName = $reflectionMethod->getName();
+        $filename = $reflectionMethod->getFileName();
+
+        if ($filename === false) {
+            throw new \RuntimeException("Method {$methodName} seems to be an internal method.");
         }
 
-        return $resolvedExpression;
+        $file = file($filename);
+
+        if ($file === false) {
+            throw new \LogicException("Unable to open file {$filename}.");
+        }
+
+        $startLine = $reflectionMethod->getStartLine();
+
+        if ($startLine === false) {
+            throw new \LogicException("Unable to find {$methodName} start line.");
+        }
+
+        $endLine = $reflectionMethod->getEndLine();
+
+        if ($endLine === false) {
+            throw new \LogicException("Unable to find {$methodName} end line.");
+        }
+
+        $length = $endLine - $startLine;
+
+        $code = \array_slice($file, $startLine, $length);
+        $code = preg_replace('/\s+/', '', implode('', $code));
+
+        if ($code === null) {
+            throw new \RuntimeException("An error occurd while cleaning {$methodName} method's code.");
+        }
+
+        return $code;
     }
 
     /**
      * @return array<int, string>
      */
-    private function getTags(Instance $instance, Cache $annotation): array
+    private function getTags(Instance $instance, Cache $attribute): array
     {
         $parameters = $instance->getMethod()
             ->getParameters();
-        $tags = [];
-        foreach ($annotation->getTags() as $tag) {
-            $tags[] = $this->resolveExpression(
-                $tag,
-                $parameters
-            );
-        }
+
+        $tags = array_map(
+            fn (string $expression) => $this->expressionResolver->resolve($expression, $parameters),
+            $attribute->getTags()
+        );
 
         return array_filter($tags);
     }

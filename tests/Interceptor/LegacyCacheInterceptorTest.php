@@ -6,7 +6,7 @@ namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
 use Doctrine\Common\Annotations\AnnotationException;
 use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\LegacyCacheInterceptor as CacheInterceptor;
-use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
+use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\DoctrineCacheHandlerMock as CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\InvalidIdCacheAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\LegacyCacheAnnotatedClass as CacheAnnotatedClass;
@@ -24,9 +24,11 @@ final class LegacyCacheInterceptorTest extends TestCase
 
     private CacheAnnotatedClass $proxy;
 
+    private ProxyFactory $proxyFactory;
+
     protected function setUp(): void
     {
-        $this->cacheHandlerMock = new CacheHandlerMock('legacy_handler_name');
+        $this->cacheHandlerMock = new CacheHandlerMock();
         $this->cacheInterceptor = new CacheInterceptor([$this->cacheHandlerMock]);
 
         $this->proxyFactory = $this->getProxyFactory([
@@ -64,7 +66,7 @@ final class LegacyCacheInterceptorTest extends TestCase
 
     public function testNotInCacheReturnData(): void
     {
-        $data = $this->proxyCall([new CacheAnnotatedClass(), 'annotatedMethod']);
+        $data = $this->proxy->annotatedMethod();
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
         $this->assertEquals(
             CacheAnnotatedClass::DATA,
@@ -160,30 +162,5 @@ final class LegacyCacheInterceptorTest extends TestCase
                 )
             )
         );
-    }
-
-    public function methodNamesProvider(): array
-    {
-        return [
-            'legacy handler' => ['annotatedMethod', true],
-            'another legacy handler' => ['annotatedMethodWithException', true],
-            'legacy random handler' => ['annotatedMethodWithAnotherLegacyHandler', true],
-            'invalid handler' => ['invalidHandler', false],
-            'non legacy handler' => ['annotatedMethodWithNonLegacyHandler', false],
-        ];
-    }
-
-    /**
-     * @dataProvider methodNamesProvider
-     */
-    public function testSupportsLegacyHandlerAttribute(string $methodName, bool $supports): void
-    {
-        $method = Instance::createFromMethod(
-            new CacheAnnotatedClass(),
-            $methodName
-        );
-
-        $this->assertEquals($supports, $this->cacheInterceptor->supportsPrefix($method));
-        $this->assertEquals($supports, $this->cacheInterceptor->supportsSuffix($method));
     }
 }

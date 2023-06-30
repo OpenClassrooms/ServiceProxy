@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
 use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\TransactionInterceptor;
+use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Transaction\TransactionHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Transaction\TransactionAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
@@ -17,6 +18,8 @@ final class TransactionInterceptorTest extends TestCase
     private TransactionHandlerMock $handler;
 
     private TransactionAnnotatedClass $proxy;
+
+    private ProxyFactory $proxyFactory;
 
     protected function setUp(): void
     {
