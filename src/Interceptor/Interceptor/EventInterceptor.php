@@ -7,6 +7,8 @@ namespace OpenClassrooms\ServiceProxy\Interceptor\Interceptor;
 use OpenClassrooms\ServiceProxy\Annotation\Event;
 use OpenClassrooms\ServiceProxy\Annotation\Exception\InvalidEventNameException;
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
+use OpenClassrooms\ServiceProxy\Handler\Handler\Event\GenericEventHandler;
+use OpenClassrooms\ServiceProxy\Handler\Handler\Event\SymfonyDispatcherEventHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
@@ -15,6 +17,13 @@ use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
 
 final class EventInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
+    public function __construct(
+        iterable $handlers = [],
+        private ?GenericEventHandler $genericEventHandler = null,
+    ) {
+        parent::__construct($handlers);
+    }
+
     /**
      * @throws InvalidEventNameException
      */
@@ -43,35 +52,42 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
      */
     public function suffix(Instance $instance): Response
     {
-        $annotations = $instance->getMethod()
-            ->getAnnotations(Event::class);
+        try {
+            $annotations = $instance->getMethod()
+                ->getAnnotations(Event::class);
 
-        foreach ($annotations as $annotation) {
-            $handler = $this->getHandler(EventHandler::class, $annotation);
+            foreach ($annotations as $annotation) {
+                $handler = $this->getHandler(EventHandler::class, $annotation);
 
-            if ($annotation->hasMethod(Event::POST_METHOD) && !$instance->getMethod()->threwException()) {
-                $event = $handler->make(
-                    $this->getEventName($instance, $annotation, Event::POST_METHOD),
-                    $instance->getMethod()
-                        ->getParameters(),
-                    $instance->getMethod()
-                        ->getReturnedValue(),
-                );
-                $handler->send($event);
+                if ($annotation->hasMethod(Event::POST_METHOD) && !$instance->getMethod()->threwException()) {
+                    $event = $handler->make(
+                        $this->getEventName($instance, $annotation, Event::POST_METHOD),
+                        $instance->getMethod()
+                            ->getParameters(),
+                        $instance->getMethod()
+                            ->getReturnedValue(),
+                    );
+                    $handler->send($event);
+                }
+
+                if ($annotation->hasMethod(Event::ON_EXCEPTION_METHOD) && $instance->getMethod()->threwException()) {
+                    $event = $handler->make(
+                        $this->getEventName($instance, $annotation, Event::ON_EXCEPTION_METHOD),
+                        $instance->getMethod()
+                            ->getParameters(),
+                        null,
+                        $instance->getMethod()
+                            ->getException()
+                    );
+                    $handler->send($event);
+                }
+
             }
+        } catch (\LogicException) {
 
-            if ($annotation->hasMethod(Event::ON_EXCEPTION_METHOD) && $instance->getMethod()->threwException()) {
-                $event = $handler->make(
-                    $this->getEventName($instance, $annotation, Event::ON_EXCEPTION_METHOD),
-                    $instance->getMethod()
-                        ->getParameters(),
-                    null,
-                    $instance->getMethod()
-                        ->getException()
-                );
-                $handler->send($event);
-            }
         }
+
+        $this->sendPostExecutionGenericEvent($instance);
 
         return new Response();
     }
@@ -84,7 +100,16 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
 
     public function supportsSuffix(Instance $instance): bool
     {
-        return $this->supportsPrefix($instance);
+        if ($this->supportsPrefix($instance)) {
+            return true;
+        }
+
+        $useCaseInstance = array_filter(
+            $instance->getReflection()->getInterfaceNames(),
+            static fn (string $interfaceName) => str_ends_with($interfaceName, 'UseCase')
+        );
+
+        return !empty($useCaseInstance);
     }
 
     public function getPrefixPriority(): int
@@ -116,5 +141,15 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
         $type = $type === Event::ON_EXCEPTION_METHOD ? 'exception' : $type;
 
         return "{$prefix}.{$type}.{$name}";
+    }
+
+    private function sendPostExecutionGenericEvent(Instance $instance): void
+    {
+        $event = $this->genericEventHandler?->make(
+            $instance->getReflection()->getShortName(),
+            $instance->getMethod()->getParameters(),
+            $instance->getMethod()->getReturnedValue(),
+        );
+        $this->genericEventHandler?->send($event);
     }
 }

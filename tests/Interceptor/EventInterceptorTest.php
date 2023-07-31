@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
 use Doctrine\Common\Annotations\AnnotationException;
+use OpenClassrooms\ServiceProxy\Handler\Handler\Event\GenericEventHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\EventInterceptor;
+use OpenClassrooms\ServiceProxy\Model\GenericEvent;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event\EventHandlerMock;
+use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Framework\EventDispatcher\EventDispatcherMock;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\UseCaseClass;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\EventAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\InvalidMethodEventAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
@@ -59,6 +63,23 @@ final class EventInterceptorTest extends TestCase
                 ]
             );
         }
+    }
+
+    private function assertEventsCount(int $count): void
+    {
+        $this->assertCount($count, $this->handler->getEvents());
+    }
+
+    /**
+     * @param array{parameters: array, response: mixed, exception: \Exception} $data
+     */
+    private function assertEvent(string $expectedEventName, array $data, int $position = 0): void
+    {
+        $this->assertNotEmpty($this->handler->getEvents());
+        $event = $this->handler->getEvent($expectedEventName, $position);
+        $this->assertNotEmpty($event);
+        $this->assertSame($expectedEventName, $event->getName());
+        $this->assertEquals($data, $event->getData());
     }
 
     public function testMultiEventsSendMultiple(): void
@@ -193,20 +214,38 @@ final class EventInterceptorTest extends TestCase
         ];
     }
 
-    private function assertEventsCount(int $count): void
+    public function testGenericEventSendPostExecution(): void
     {
-        $this->assertCount($count, $this->handler->getEvents());
-    }
+        $eventDispatcher = new EventDispatcherMock();
+        $this->assertNull($eventDispatcher->dispatchedEvent);
 
-    /**
-     * @param array{parameters: array, response: mixed, exception: \Exception} $data
-     */
-    private function assertEvent(string $expectedEventName, array $data, int $position = 0): void
-    {
-        $this->assertNotEmpty($this->handler->getEvents());
-        $event = $this->handler->getEvent($expectedEventName, $position);
+        $this->proxyFactory = $this->getProxyFactory(
+            [
+                new EventInterceptor(
+                    [$this->handler],
+                    new GenericEventHandler($eventDispatcher),
+                ),
+            ]
+        );
+
+        $proxy = $this->proxyFactory->createProxy(new UseCaseClass());
+        $response = $proxy->execute('whateverParameter');
+        $this->assertSame(1, $response);
+
+        $this->assertNotNull($eventDispatcher->dispatchedEvent);
+        $event = $eventDispatcher->dispatchedEvent;
+        $this->assertInstanceOf(GenericEvent::class, $event);
         $this->assertNotEmpty($event);
-        $this->assertSame($expectedEventName, $event->getName());
-        $this->assertEquals($data, $event->getData());
+        $this->assertSame('use_case.post.execute', $event->eventName);
+        $this->assertSame('UseCaseClass', $event->senderClassShortName);
+        $this->assertEquals(
+            [
+                'parameters' => [
+                    'parameters' => 'whateverParameter',
+                ],
+                'response' => 1,
+            ],
+            $event->getData()
+        );
     }
 }
