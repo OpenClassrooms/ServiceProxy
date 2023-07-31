@@ -20,6 +20,7 @@ interface EventHandler extends AnnotationHandler
      */
     public function make(
         string $eventName,
+        string $senderClassShortName,
         ?array $parameters = null,
         $response = null,
         \Exception $exception = null

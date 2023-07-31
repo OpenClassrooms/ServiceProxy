@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
-use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\EventStub;
+use OpenClassrooms\ServiceProxy\Model\Event;
 
 final class EventHandlerMock implements EventHandler
 {
     private array $events = [];
 
-    public function getEvent(string $name, int $position = 0): EventStub
+    public function getEvent(string $name, int $position = 0): Event
     {
         $events = $this->getEvents($name);
 
@@ -23,7 +23,7 @@ final class EventHandlerMock implements EventHandler
     }
 
     /**
-     * @return array<string, EventStub>
+     * @return array<string, Event>
      */
     public function getEvents(string $name = null): array
     {
@@ -31,7 +31,7 @@ final class EventHandlerMock implements EventHandler
             return array_values(
                 array_filter(
                     $this->events,
-                    static fn (EventStub $event) => $event->getName() === $name
+                    static fn (Event $event) => $event->eventName === $name
                 )
             );
         }
@@ -46,15 +46,16 @@ final class EventHandlerMock implements EventHandler
 
     public function make(
         $eventName,
+        string $senderClassShortName,
         ?array $parameters = null,
         $response = null,
         \Exception $exception = null
-    ): EventStub {
-        return new EventStub($eventName, compact('parameters', 'response', 'exception'));
+    ): Event {
+        return new Event($eventName, $senderClassShortName, $parameters, $response, $exception);
     }
 
     /**
-     * @param EventStub $event
+     * @param Event $event
      */
     public function send(object $event): void
     {
