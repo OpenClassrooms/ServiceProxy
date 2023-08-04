@@ -129,6 +129,8 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
     }
 
     /**
+     * @param EventHandler<Event> $handler
+     *
      * @throws InvalidEventNameException
      */
     private function sendPostExecutionGenericEvent(Instance $instance, EventHandler $handler): void
