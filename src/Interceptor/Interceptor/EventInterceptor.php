@@ -28,6 +28,8 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
             if ($annotation->hasMethod(Event::PRE_METHOD)) {
                 $event = $handler->make(
                     $this->getEventName($instance, $annotation, Event::PRE_METHOD),
+                    $instance->getReflection()
+                        ->getShortName(),
                     $instance->getMethod()
                         ->getParameters()
                 );
@@ -52,6 +54,8 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
             if ($annotation->hasMethod(Event::POST_METHOD) && !$instance->getMethod()->threwException()) {
                 $event = $handler->make(
                     $this->getEventName($instance, $annotation, Event::POST_METHOD),
+                    $instance->getReflection()
+                        ->getShortName(),
                     $instance->getMethod()
                         ->getParameters(),
                     $instance->getMethod()
@@ -63,6 +67,8 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
             if ($annotation->hasMethod(Event::ON_EXCEPTION_METHOD) && $instance->getMethod()->threwException()) {
                 $event = $handler->make(
                     $this->getEventName($instance, $annotation, Event::ON_EXCEPTION_METHOD),
+                    $instance->getReflection()
+                        ->getShortName(),
                     $instance->getMethod()
                         ->getParameters(),
                     null,
@@ -70,6 +76,10 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
                         ->getException()
                 );
                 $handler->send($event);
+            }
+
+            if ($this->isInstanceImplementInterfaceUseCase($instance)) {
+                $this->sendPostExecutionGenericEvent($instance, $handler);
             }
         }
 
@@ -116,5 +126,35 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
         $type = $type === Event::ON_EXCEPTION_METHOD ? 'exception' : $type;
 
         return "{$prefix}.{$type}.{$name}";
+    }
+
+    /**
+     * @param EventHandler<Event> $handler
+     *
+     * @throws InvalidEventNameException
+     */
+    private function sendPostExecutionGenericEvent(Instance $instance, EventHandler $handler): void
+    {
+        $event = $handler->make(
+            'use_case.post.execute',
+            $instance->getReflection()
+                ->getShortName(),
+            $instance->getMethod()
+                ->getParameters(),
+            $instance->getMethod()
+                ->getReturnedValue(),
+        );
+        $handler->send($event);
+    }
+
+    private function isInstanceImplementInterfaceUseCase(Instance $instance): bool
+    {
+        $useCaseInstance = array_filter(
+            $instance->getReflection()
+                ->getInterfaceNames(),
+            static fn (string $interfaceName) => str_ends_with($interfaceName, 'UseCase')
+        );
+
+        return \count($useCaseInstance) === 1;
     }
 }

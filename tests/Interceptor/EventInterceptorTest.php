@@ -6,8 +6,10 @@ namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
 use Doctrine\Common\Annotations\AnnotationException;
 use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\EventInterceptor;
+use OpenClassrooms\ServiceProxy\Model\Event;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event\EventHandlerMock;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\ClassImplementingUseCaseInterface;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\EventAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\InvalidMethodEventAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
@@ -193,6 +195,24 @@ final class EventInterceptorTest extends TestCase
         ];
     }
 
+    public function testGenericEventSendPostExecution(): void
+    {
+        $proxy = $this->proxyFactory->createProxy(new ClassImplementingUseCaseInterface());
+        $response = $proxy->execute('whateverParameter');
+        $this->assertSame(1, $response);
+
+        $events = $this->handler->getEvents('use_case.post.execute');
+        $event = reset($events);
+        $this->assertInstanceOf(Event::class, $event);
+        $this->assertNotEmpty($event);
+        $this->assertSame('use_case.post.execute', $event->eventName);
+        $this->assertSame('ClassImplementingUseCaseInterface', $event->senderClassShortName);
+        $this->assertSame([
+            'parameters' => 'whateverParameter',
+        ], $event->parameters);
+        $this->assertSame(1, $event->response);
+    }
+
     private function assertEventsCount(int $count): void
     {
         $this->assertCount($count, $this->handler->getEvents());
@@ -205,8 +225,13 @@ final class EventInterceptorTest extends TestCase
     {
         $this->assertNotEmpty($this->handler->getEvents());
         $event = $this->handler->getEvent($expectedEventName, $position);
+        $this->assertInstanceOf(Event::class, $event);
         $this->assertNotEmpty($event);
-        $this->assertSame($expectedEventName, $event->getName());
-        $this->assertEquals($data, $event->getData());
+        $this->assertSame($expectedEventName, $event->eventName);
+        $this->assertEquals($data, [
+            'parameters' => $event->parameters,
+            'response' => $event->response,
+            'exception' => $event->exception,
+        ]);
     }
 }
