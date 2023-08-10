@@ -24,6 +24,7 @@ final class SecurityInterceptorTest extends TestCase
 
     protected function setUp(): void
     {
+        parent::setUp();
         $this->handler = new SecurityHandlerMock();
         $this->proxyFactory = $this->getProxyFactory(
             [
@@ -41,25 +42,25 @@ final class SecurityInterceptorTest extends TestCase
         $this->proxy->nonAuthorizedRole(1);
     }
 
-    public function testOnlyAuthorizedRoleDonTThrowException(): void
+    public function testOnlyAuthorizedRoleAuthorize(): void
     {
         $this->proxy->oneRole(1);
         $this->assertSame(['ROLE_1'], $this->handler->attributes);
         $this->assertNull($this->handler->param);
     }
 
-    public function testManyRolesDonTThrowException(): void
+    public function testOrRolesAuthorize(): void
     {
-        $this->proxy->manyRoles('whatever');
-        $this->assertSame(['ROLE_1', 'ROLE_2'], $this->handler->attributes);
+        $this->proxy->orRoles();
+        $this->assertSame(['ROLE_1'], $this->handler->attributes);
         $this->assertNull($this->handler->param);
     }
 
-    public function testRequestCheckAccessOnRequest(): void
+    public function testAndRolesAuthorize(): void
     {
-        $this->proxy->checkRequestRoleSecurity(1);
-        $this->assertSame(['ROLE_1'], $this->handler->attributes);
-        $this->assertSame(1, $this->handler->param);
+        $this->proxy->andRoles();
+        $this->assertSame(['ROLE_1', 'ROLE_2'], $this->handler->attributes);
+        $this->assertNull($this->handler->param);
     }
 
     public function testFieldCheckAccessOnField(): void
@@ -76,31 +77,18 @@ final class SecurityInterceptorTest extends TestCase
     public function testFieldOnMultipleParamsCheckAccessOnField(): void
     {
         $this->proxy->fieldRoleSecurityWithMultipleParams(
-            [
-                'field' => [
+            (object) [
+                'field' => (object) [
                     'value1' => 'result1',
                 ],
             ],
-            [
-                'field2' => [
+            (object) [
+                'field2' => (object) [
                     'value2' => 'result2',
                 ],
             ]
         );
         $this->assertSame(['ROLE_1'], $this->handler->attributes);
         $this->assertSame('result2', $this->handler->param);
-    }
-
-    public function testMultipleSecurityAnnotationsDeny(): void
-    {
-        $this->expectException(\RuntimeException::class);
-        $this->proxy->multipleSecurityAnnotationNotAuthorized();
-    }
-
-    public function testMultipleSecurityAnnotationsAuthorize(): void
-    {
-        $this->proxy->multipleSecurityAnnotation();
-        $this->assertSame(['ROLE_2'], $this->handler->attributes);
-        $this->assertNull($this->handler->param);
     }
 }

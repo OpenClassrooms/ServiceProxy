@@ -16,29 +16,30 @@ final class SecurityHandlerMock implements SecurityHandler
     /**
      * @var string[]
      */
-    public array $attributes;
+    public array $attributes = [];
 
-    /**
-     * @var mixed
-     */
-    public $param;
+    public mixed $param;
 
     public function getName(): string
     {
         return 'array';
     }
 
-    public function checkAccess(array $attributes, $param = null): void
+    public function checkAccess(array $attributes, mixed $subject = null): bool
     {
-        $this->attributes = $attributes;
-        $this->param = $param;
-        if (array_intersect($attributes, $this->authorized) === []) {
-            throw new \RuntimeException('Not authorized');
-        }
+        $this->attributes = [...$this->attributes, ...$attributes];
+        $this->param = $subject;
+
+        return array_intersect($attributes, $this->authorized) !== [];
     }
 
     public function isDefault(): bool
     {
         return true;
+    }
+
+    public function getAccessDeniedException(): \RuntimeException
+    {
+        return new \RuntimeException();
     }
 }
