@@ -11,7 +11,7 @@ final class SecurityHandlerMock implements SecurityHandler
     /**
      * @var string[]
      */
-    public array $authorized = ['ROLE_1', 'ROLE_2'];
+    public array $authorized = ['ROLE_1', 'ROLE_2', 'ROLE_SECURITY_ANNOTATED_CLASS_MISSING_ROLES'];
 
     /**
      * @var string[]

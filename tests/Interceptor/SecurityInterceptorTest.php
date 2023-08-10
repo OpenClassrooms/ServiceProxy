@@ -91,4 +91,10 @@ final class SecurityInterceptorTest extends TestCase
         $this->assertSame(['ROLE_1'], $this->handler->attributes);
         $this->assertSame('result2', $this->handler->param);
     }
+
+    public function testMissingRole(): void
+    {
+        $this->proxy->missingRoles();
+        $this->assertSame(['ROLE_SECURITY_ANNOTATED_CLASS_MISSING_ROLES'], $this->handler->attributes);
+    }
 }

@@ -29,9 +29,8 @@ class SecurityAnnotatedClass
     }
 
     #[Security]
-    public function missingRoles(): int
+    public function missingRoles(): void
     {
-        return 1;
     }
 
     public function nonAnnotatedMethod(): bool

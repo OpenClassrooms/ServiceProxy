@@ -29,7 +29,8 @@ final class SecurityInterceptor extends AbstractInterceptor implements PrefixInt
             ->getAttribute(Security::class)
         ;
         $parameters = $instance->getMethod()
-            ->getParameters();
+            ->getParameters()
+        ;
         $expression = $attribute->expression;
         if ($expression === null) {
             $role = $this->guessRoleName($instance);
@@ -51,14 +52,16 @@ final class SecurityInterceptor extends AbstractInterceptor implements PrefixInt
     private function guessRoleName(Instance $instance): string
     {
         $className = $instance->getReflection()
-            ->getName();
+            ->getShortName()
+        ;
         $methodName = $instance->getMethod()
-            ->getName();
+            ->getName()
+        ;
 
         $className = $this->camelCaseToSnakeCase($className);
         $methodName = $this->camelCaseToSnakeCase($methodName);
-        $role = 'ROLE_' . $className;
 
+        $role = 'ROLE_' . $className;
         if (!\in_array($methodName, ['__CONSTRUCT', '__INVOKE', 'EXECUTE'], true)) {
             $role .= '_' . $methodName;
         }
