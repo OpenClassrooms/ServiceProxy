@@ -24,6 +24,7 @@ final class SecurityInterceptorTest extends TestCase
 
     protected function setUp(): void
     {
+        parent::setUp();
         $this->handler = new SecurityHandlerMock();
         $this->proxyFactory = $this->getProxyFactory(
             [
@@ -41,25 +42,25 @@ final class SecurityInterceptorTest extends TestCase
         $this->proxy->nonAuthorizedRole(1);
     }
 
-    public function testOnlyAuthorizedRoleDonTThrowException(): void
+    public function testOnlyAuthorizedRoleAuthorize(): void
     {
         $this->proxy->oneRole(1);
         $this->assertSame(['ROLE_1'], $this->handler->attributes);
         $this->assertNull($this->handler->param);
     }
 
-    public function testManyRolesDonTThrowException(): void
+    public function testOrRolesAuthorize(): void
     {
-        $this->proxy->manyRoles('whatever');
-        $this->assertSame(['ROLE_1', 'ROLE_2'], $this->handler->attributes);
+        $this->proxy->orRoles();
+        $this->assertSame(['ROLE_1'], $this->handler->attributes);
         $this->assertNull($this->handler->param);
     }
 
-    public function testRequestCheckAccessOnRequest(): void
+    public function testAndRolesAuthorize(): void
     {
-        $this->proxy->checkRequestRoleSecurity(1);
-        $this->assertSame(['ROLE_1'], $this->handler->attributes);
-        $this->assertSame(1, $this->handler->param);
+        $this->proxy->andRoles();
+        $this->assertSame(['ROLE_1', 'ROLE_2'], $this->handler->attributes);
+        $this->assertNull($this->handler->param);
     }
 
     public function testFieldCheckAccessOnField(): void
@@ -76,13 +77,13 @@ final class SecurityInterceptorTest extends TestCase
     public function testFieldOnMultipleParamsCheckAccessOnField(): void
     {
         $this->proxy->fieldRoleSecurityWithMultipleParams(
-            [
-                'field' => [
+            (object) [
+                'field' => (object) [
                     'value1' => 'result1',
                 ],
             ],
-            [
-                'field2' => [
+            (object) [
+                'field2' => (object) [
                     'value2' => 'result2',
                 ],
             ]
@@ -91,16 +92,23 @@ final class SecurityInterceptorTest extends TestCase
         $this->assertSame('result2', $this->handler->param);
     }
 
-    public function testMultipleSecurityAnnotationsDeny(): void
+    public function testMissingRole(): void
     {
-        $this->expectException(\RuntimeException::class);
-        $this->proxy->multipleSecurityAnnotationNotAuthorized();
+        $this->proxy->missingRoles();
+        $this->assertSame(['ROLE_SECURITY_ANNOTATED_CLASS_MISSING_ROLES'], $this->handler->attributes);
     }
 
-    public function testMultipleSecurityAnnotationsAuthorize(): void
+    public function testAccessDeniedWithMessage(): void
     {
-        $this->proxy->multipleSecurityAnnotation();
-        $this->assertSame(['ROLE_2'], $this->handler->attributes);
-        $this->assertNull($this->handler->param);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('You are not allowed.');
+        $this->proxy->accessDeniedWithMessage();
+    }
+
+    public function testAccessDeniedWithException(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid argument.');
+        $this->proxy->accessDeniedWithException();
     }
 }

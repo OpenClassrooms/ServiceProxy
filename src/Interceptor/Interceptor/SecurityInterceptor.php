@@ -4,127 +4,115 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Interceptor\Interceptor;
 
-use OpenClassrooms\ServiceProxy\Annotation\Security;
+use OpenClassrooms\ServiceProxy\Attribute\Security;
 use OpenClassrooms\ServiceProxy\Handler\Contract\SecurityHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
+use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 final class SecurityInterceptor extends AbstractInterceptor implements PrefixInterceptor
 {
-    /**
-     * @throws \ReflectionException
-     * @throws \Exception
-     */
-    public function prefix(Instance $instance): Response
-    {
-        $annotations = $instance->getMethod()
-            ->getAnnotations(Security::class);
-        foreach ($annotations as $annotation) {
-            $handler = $this->getHandler(SecurityHandler::class, $annotation);
-            $handler->checkAccess(
-                $annotation->getRoles(),
-                $this->getCheckParam($annotation, $instance)
-            );
-        }
-
-        return new Response();
-    }
-
-    /**
-     * @param mixed $input
-     *
-     * @return mixed
-     * @throws \ReflectionException
-     */
-    public function getByPath($input, string $path)
-    {
-        $field = $this->getFirstField($path);
-
-        if ($path) {
-            $value = $this->getByField($input, $field);
-
-            if (!\is_array($value) && !\is_object($value)) {
-                throw new \InvalidArgumentException('The path is not valid.');
-            }
-
-            return $this->getByPath($value, $path);
-        }
-
-        return $this->getByField($input, $field);
-    }
-
-    public function supportsPrefix(Instance $instance): bool
-    {
-        return $instance->getMethod()
-            ->hasAnnotation(Security::class);
-    }
-
     public function getPrefixPriority(): int
     {
         return 30;
     }
 
     /**
-     * @return mixed
-     *
      * @throws \ReflectionException
+     * @throws \Exception
      */
-    private function getCheckParam(Security $annotation, Instance $instance)
+    public function prefix(Instance $instance): Response
     {
-        $param = null;
-        $field = $annotation->getCheckField();
-
+        $attribute = $instance->getMethod()
+            ->getAttribute(Security::class)
+        ;
         $parameters = $instance->getMethod()
-            ->getParameters();
-        if (\count($parameters) === 1) {
-            $parameters = reset($parameters);
+            ->getParameters()
+        ;
+        $expression = $attribute->expression;
+        if ($expression === null) {
+            $role = $this->guessRoleName($instance);
+            $expression = "is_granted(['{$role}'])";
         }
+        $handler = $this->getHandler(SecurityHandler::class, $attribute);
+        $this->resolveExpression(
+            $handler,
+            $expression,
+            $parameters,
+            $attribute
+        );
 
-        if ($annotation->checkRequest()) {
-            $param = $parameters;
-        } elseif ($field !== null) {
-            $param = $this->getByPath($parameters, $field);
-        }
-
-        return $param;
+        return new Response();
     }
 
-    private function getFirstField(string &$path): string
+    public function supportsPrefix(Instance $instance): bool
     {
-        $parts = explode('.', $path);
-        $field = array_shift($parts);
-        $path = implode('.', $parts);
+        return $instance->getMethod()
+            ->hasAttribute(Security::class)
+        ;
+    }
 
-        return $field;
+    private function guessRoleName(Instance $instance): string
+    {
+        $className = $instance->getReflection()
+            ->getShortName()
+        ;
+        $methodName = $instance->getMethod()
+            ->getName()
+        ;
+
+        $className = $this->camelCaseToSnakeCase($className);
+        $methodName = $this->camelCaseToSnakeCase($methodName);
+
+        $role = 'ROLE_' . $className;
+        if (!\in_array($methodName, ['__CONSTRUCT', '__INVOKE', 'EXECUTE'], true)) {
+            $role .= '_' . $methodName;
+        }
+
+        return $role;
+    }
+
+    private function camelCaseToSnakeCase(string $string): string
+    {
+        return mb_strtoupper((string) preg_replace('/(?<!^)[A-Z]/', '_$0', $string));
     }
 
     /**
-     * @param mixed $input
+     * @param mixed[] $parameters
      *
-     * @return mixed
+     * @throws \Exception
      */
-    private function getByField($input, string $field)
-    {
-        if (\is_array($input) || $input instanceof \ArrayAccess) {
-            return $input[$field];
-        }
+    private function resolveExpression(
+        SecurityHandler $handler,
+        string          $expression,
+        array           $parameters,
+        Security        $attribute,
+    ): void {
+        $expressionLanguage = new ExpressionLanguage();
+        $expressionLanguage->register(
+            'is_granted',
+            static fn ($attributes, string $object = 'null') => sprintf(
+                'return $handler->checkAccess(%s, %s)',
+                $attributes,
+                $object
+            ),
+            static fn (array $variables, $attributes, $object = null) => $handler->checkAccess(
+                (array) $attributes,
+                $object
+            )
+        );
 
-        if (\is_object($input)) {
-            try {
-                // @phpstan-ignore-next-line
-                return $input->{$field};
-                // @phpstan-ignore-next-line
-            } catch (\Throwable $_) {
-                $ref = new \ReflectionClass($input);
-                $property = $ref->getProperty($field);
-                $property->setAccessible(true);
-
-                return $property->getValue($input);
+        /** @var bool $authorized */
+        $authorized = $expressionLanguage->evaluate($expression, $parameters);
+        if (!$authorized) {
+            if ($attribute->exception !== null) {
+                $exception = $attribute->exception;
+                throw new $exception($attribute->message);
             }
-        }
 
-        throw new \InvalidArgumentException('Input must be an array or an object');
+            throw $handler->getAccessDeniedException($attribute->message);
+        }
     }
 }

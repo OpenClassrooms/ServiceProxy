@@ -8,9 +8,10 @@ interface SecurityHandler extends AnnotationHandler
 {
     /**
      * @param string[] $attributes
-     * @param mixed $param
      *
      * @throws \Exception
      */
-    public function checkAccess(array $attributes, $param = null): void;
+    public function checkAccess(array $attributes, mixed $subject = null): bool;
+
+    public function getAccessDeniedException(?string $message = null): \Exception;
 }

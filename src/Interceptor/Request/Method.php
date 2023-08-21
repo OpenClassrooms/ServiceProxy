@@ -25,10 +25,7 @@ final class Method
 
     private \ReflectionMethod $reflection;
 
-    /**
-     * @var mixed
-     */
-    private $response;
+    private mixed $response;
 
     private function __construct()
     {
@@ -151,10 +148,7 @@ final class Method
         return $this->reflection;
     }
 
-    /**
-     * @return mixed|\Exception
-     */
-    public function getResponse()
+    public function getResponse(): mixed
     {
         if (!isset($this->definedValues['response'])) {
             throw new \LogicException('The response is not defined at this point.');
@@ -175,10 +169,7 @@ final class Method
         return $response instanceof \Exception ? $response : null;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getReturnedValue()
+    public function getReturnedValue(): mixed
     {
         return !$this->threwException() ? $this->getResponse() : null;
     }
@@ -192,8 +183,7 @@ final class Method
             $this->getAnnotations($annotationClass);
 
             return true;
-        } /** @noinspection BadExceptionsProcessingInspection */
-        catch (\LogicException $_) {
+        } catch (\LogicException) {
             return false;
         }
     }
@@ -207,8 +197,7 @@ final class Method
             $this->getAttributes($attributeClass);
 
             return true;
-        } /** @noinspection BadExceptionsProcessingInspection */
-        catch (\LogicException $_) {
+        } catch (\LogicException) {
             return false;
         }
     }
@@ -222,10 +211,7 @@ final class Method
         $this->definedValues['parameters'] = true;
     }
 
-    /**
-     * @param mixed $response
-     */
-    public function setResponse($response): void
+    public function setResponse(mixed $response): void
     {
         $this->response = $response;
         $this->definedValues['response'] = true;
