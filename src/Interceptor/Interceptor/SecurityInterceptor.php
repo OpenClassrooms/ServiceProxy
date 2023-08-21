@@ -37,7 +37,12 @@ final class SecurityInterceptor extends AbstractInterceptor implements PrefixInt
             $expression = "is_granted(['{$role}'])";
         }
         $handler = $this->getHandler(SecurityHandler::class, $attribute);
-        $this->resolveExpression($handler, $expression, $parameters);
+        $this->resolveExpression(
+            $handler,
+            $expression,
+            $parameters,
+            $attribute
+        );
 
         return new Response();
     }
@@ -83,6 +88,7 @@ final class SecurityInterceptor extends AbstractInterceptor implements PrefixInt
         SecurityHandler $handler,
         string          $expression,
         array           $parameters,
+        Security        $attribute,
     ): void {
         $expressionLanguage = new ExpressionLanguage();
         $expressionLanguage->register(
@@ -101,7 +107,12 @@ final class SecurityInterceptor extends AbstractInterceptor implements PrefixInt
         /** @var bool $authorized */
         $authorized = $expressionLanguage->evaluate($expression, $parameters);
         if (!$authorized) {
-            throw $handler->getAccessDeniedException();
+            if ($attribute->exception !== null) {
+                $exception = $attribute->exception;
+                throw new $exception($attribute->message);
+            }
+
+            throw $handler->getAccessDeniedException($attribute->message);
         }
     }
 }

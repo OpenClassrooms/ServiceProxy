@@ -38,8 +38,11 @@ final class SecurityHandlerMock implements SecurityHandler
         return true;
     }
 
-    public function getAccessDeniedException(): \RuntimeException
+    public function getAccessDeniedException(?string $message = null): \RuntimeException
     {
-        return new \RuntimeException();
+        if ($message === null) {
+            $message = 'Access Denied.';
+        }
+        return new \RuntimeException($message);
     }
 }

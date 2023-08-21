@@ -13,5 +13,5 @@ interface SecurityHandler extends AnnotationHandler
      */
     public function checkAccess(array $attributes, mixed $subject = null): bool;
 
-    public function getAccessDeniedException(): \Exception;
+    public function getAccessDeniedException(?string $message = null): \Exception;
 }

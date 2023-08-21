@@ -47,4 +47,18 @@ class SecurityAnnotatedClass
     public function nonAuthorizedRole(mixed $useCaseRequest): void
     {
     }
+
+    #[Security("is_granted('ROLE_NOT_AUTHORIZED')", message: 'You are not allowed.')]
+    public function accessDeniedWithMessage(): void
+    {
+    }
+
+    #[Security(
+        "is_granted('ROLE_NOT_AUTHORIZED')",
+        exception: \InvalidArgumentException::class,
+        message: 'Invalid argument.'
+    )]
+    public function accessDeniedWithException(): void
+    {
+    }
 }

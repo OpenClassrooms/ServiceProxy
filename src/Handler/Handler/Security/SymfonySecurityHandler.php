@@ -30,8 +30,12 @@ final class SymfonySecurityHandler implements SecurityHandler
         return $this->authorizationChecker->isGranted($attributes, $subject);
     }
 
-    public function getAccessDeniedException(): AccessDeniedException
+    public function getAccessDeniedException(?string $message = null): AccessDeniedException
     {
-        return new AccessDeniedException();
+        if ($message === null) {
+            return new AccessDeniedException();
+        }
+
+        return new AccessDeniedException($message);
     }
 }

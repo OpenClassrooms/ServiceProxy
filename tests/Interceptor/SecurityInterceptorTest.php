@@ -97,4 +97,18 @@ final class SecurityInterceptorTest extends TestCase
         $this->proxy->missingRoles();
         $this->assertSame(['ROLE_SECURITY_ANNOTATED_CLASS_MISSING_ROLES'], $this->handler->attributes);
     }
+
+    public function testAccessDeniedWithMessage(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('You are not allowed.');
+        $this->proxy->accessDeniedWithMessage();
+    }
+
+    public function testAccessDeniedWithException(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid argument.');
+        $this->proxy->accessDeniedWithException();
+    }
 }
