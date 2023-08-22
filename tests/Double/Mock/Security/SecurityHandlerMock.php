@@ -25,12 +25,12 @@ final class SecurityHandlerMock implements SecurityHandler
         return 'array';
     }
 
-    public function checkAccess(array $attributes, mixed $subject = null): bool
+    public function checkAccess(string $attribute, mixed $subject = null): bool
     {
-        $this->attributes = [...$this->attributes, ...$attributes];
+        $this->attributes = [...$this->attributes, $attribute];
         $this->param = $subject;
 
-        return array_intersect($attributes, $this->authorized) !== [];
+        return array_intersect($this->attributes, $this->authorized) !== [];
     }
 
     public function isDefault(): bool

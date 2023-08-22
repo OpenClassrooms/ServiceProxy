@@ -34,7 +34,7 @@ final class SecurityInterceptor extends AbstractInterceptor implements PrefixInt
         $expression = $attribute->expression;
         if ($expression === null) {
             $role = $this->guessRoleName($instance);
-            $expression = "is_granted(['{$role}'])";
+            $expression = "is_granted('{$role}')";
         }
         $handler = $this->getHandler(SecurityHandler::class, $attribute);
         $this->resolveExpression(
@@ -99,7 +99,7 @@ final class SecurityInterceptor extends AbstractInterceptor implements PrefixInt
                 $object
             ),
             static fn (array $variables, $attributes, $object = null) => $handler->checkAccess(
-                (array) $attributes,
+                $attributes,
                 $object
             )
         );

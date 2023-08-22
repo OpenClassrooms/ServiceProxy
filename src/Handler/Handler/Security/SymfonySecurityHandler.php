@@ -25,9 +25,9 @@ final class SymfonySecurityHandler implements SecurityHandler
         return 'symfony_authorization_checker';
     }
 
-    public function checkAccess(array $attributes, mixed $subject = null): bool
+    public function checkAccess(string $attribute, mixed $subject = null): bool
     {
-        return $this->authorizationChecker->isGranted($attributes, $subject);
+        return $this->authorizationChecker->isGranted($attribute, $subject);
     }
 
     public function getAccessDeniedException(?string $message = null): AccessDeniedException
