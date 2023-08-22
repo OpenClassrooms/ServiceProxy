@@ -61,7 +61,7 @@
     "symfony/cache": "For Symfony integration with @Cache annotation",
     "symfony/http-kernel": "For Symfony integration",
     "symfony/event-dispatcher": "For Symfony integration with @Event annotation",
-    "symfony/security": "For Symfony integration with @Security annotation",
+    "symfony/security-bundle": "For Symfony integration with @Security annotation",
     "symfony/messenger": "For Symfony integration with @Event annotation",
     "doctrine/orm": "For Doctrine integration with @Transaction and legacy @Cache annotation"
   },
