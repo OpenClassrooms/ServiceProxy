@@ -4,64 +4,21 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event;
 
+use OpenClassrooms\ServiceProxy\Attribute\Event\Transport;
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
-use OpenClassrooms\ServiceProxy\Handler\Handler\Event\SymfonyDispatcherEventHandler;
 use OpenClassrooms\ServiceProxy\Model\Event;
-use Symfony\Component\EventDispatcher\EventDispatcher;
-use Symfony\Component\HttpKernel\Debug\TraceableEventDispatcher;
-use Symfony\Component\Stopwatch\Stopwatch;
+use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 
 final class EventHandlerMock implements EventHandler
 {
     private array $events = [];
 
-    private EventHandler $decoratedEventHandler;
-
-    private TraceableEventDispatcher $eventDispatcher;
-
-    public function __construct()
-    {
-        $this->eventDispatcher = new TraceableEventDispatcher(
-            new EventDispatcher(),
-            new Stopwatch()
-        );
-
-        $this->decoratedEventHandler = new SymfonyDispatcherEventHandler(
-            $this->eventDispatcher
-        );
-    }
-
-    public function getCreatedEvent(string $name, int $position = 0): Event
-    {
-        $events = $this->getCreatedEvents($name);
-
-        if (!isset($events[$position])) {
-            throw new \RuntimeException("Event {$name} not found at position {$position}");
-        }
-
-        return $events[$position];
-    }
-
     /**
-     * @return array<string, Event>
+     * @return array<string, object>
      */
-    public function getCreatedEvents(string $name = null): array
+    public function getEvents(): array
     {
-        if ($name !== null) {
-            return array_values(
-                array_filter(
-                    $this->events,
-                    static fn (Event $event) => $event->eventName === $name
-                )
-            );
-        }
-
         return $this->events;
-    }
-
-    public function getSentEvents(): array
-    {
-        return $this->eventDispatcher->getOrphanedEvents();
     }
 
     public function getName(): string
@@ -69,36 +26,21 @@ final class EventHandlerMock implements EventHandler
         return 'array';
     }
 
-    public function make(
-        $eventName,
-        string $senderClassShortName,
-        ?array $parameters = null,
-        $response = null,
-        \Exception $exception = null
-    ): Event {
-        $event = $this->decoratedEventHandler->make(
-            $eventName,
-            $senderClassShortName,
-            $parameters,
-            $response,
-            $exception
-        );
-
-        $this->events[] = $event;
-
-        return $event;
-    }
-
-    /**
-     * @param Event $event
-     */
-    public function send(object $event): void
+    public function dispatch(Event $event, ?string $queue = null): void
     {
-        $this->decoratedEventHandler->send($event);
+        $this->events[] = $event;
     }
 
     public function isDefault(): bool
     {
         return true;
+    }
+
+    public function setDefaultHandlers(array $defaultHandlers): void
+    {
+    }
+
+    public function listen(Instance $instance, string $name, ?Transport $transport = null, int $priority = 0): void
+    {
     }
 }

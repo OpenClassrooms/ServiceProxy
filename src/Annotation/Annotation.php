@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Annotation;
 
-use OpenClassrooms\ServiceProxy\Handler\Contract\AnnotationHandler;
-
 abstract class Annotation
 {
-    protected ?string $handler = null;
-
-    protected int $prefixPriority = 0;
-
-    protected int $suffixPriority = 0;
+    /**
+     * @var array<string>|null
+     */
+    protected array|string|null $handler = null;
 
     /**
      * @param array<string, mixed> $data Key-value for properties to be defined in this class.
@@ -42,8 +39,6 @@ abstract class Annotation
     }
 
     /**
-     * @param string $name Unknown property name.
-     *
      * @throws \BadMethodCallException
      */
     final public function __isset(string $name): bool
@@ -54,50 +49,42 @@ abstract class Annotation
     }
 
     /**
-     * @param string $name  Unknown property name.
-     * @param mixed  $value Property value.
-     *
      * @throws \BadMethodCallException
      */
-    final public function __set(string $name, $value): void
+    final public function __set(string $name, mixed $value): void
     {
         throw new \BadMethodCallException(
             sprintf("Unknown property '%s' on annotation '%s'.", $name, static::class)
         );
     }
 
-    final public function getHandler(): ?string
+    /**
+     * @return array<string>
+     */
+    final public function getHandlers(): array
     {
-        return $this->handler;
+        return (array) ($this->handler ?? []);
     }
 
     /**
-     * @return class-string<AnnotationHandler>
+     * @param array<string, string>|string|null $handlers
+     * @param array<string, array<string>|string|null> $aliases
      */
-    abstract public function getHandlerClass(): string;
-
-    final public function getPrefixPriority(): int
+    final protected function setHandlers(array|string|null $handlers = null, array $aliases = []): void
     {
-        return $this->prefixPriority;
-    }
+        if (\count($aliases) > 0) {
+            $values = array_values($aliases);
+            $keys = array_keys($aliases);
+            if ($values[0] !== null && $values[1] !== null) {
+                throw new \RuntimeException(
+                    "Argument '{$keys[1]}' is an alias for '{$keys[0]}'.
+                You can only define one of the two arguments."
+                );
+            }
 
-    final public function getSuffixPriority(): int
-    {
-        return $this->suffixPriority;
-    }
-
-    final public function setHandler(?string $handler): void
-    {
-        $this->handler = $handler;
-    }
-
-    final public function setPrefixPriority(int $prefixPriority): void
-    {
-        $this->prefixPriority = $prefixPriority;
-    }
-
-    final public function setSuffixPriority(int $suffixPriority): void
-    {
-        $this->suffixPriority = $suffixPriority;
+            $this->handler = $values[0] ?? $values[1];
+        } else {
+            $this->handler = $handlers;
+        }
     }
 }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
-use OpenClassrooms\ServiceProxy\Handler\Handler\Cache\SymfonyCacheHandler;
+use OpenClassrooms\ServiceProxy\Handler\Impl\Cache\SymfonyCacheHandler;
 
 final class CacheHandlerMock implements CacheHandler
 {
@@ -55,5 +55,9 @@ final class CacheHandlerMock implements CacheHandler
     public function getName(): string
     {
         return $this->name;
+    }
+
+    public function setDefaultHandlers(array $defaultHandlers): void
+    {
     }
 }

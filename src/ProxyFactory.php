@@ -9,8 +9,8 @@ use Doctrine\Common\Annotations\AnnotationReader;
 use OpenClassrooms\ServiceProxy\Generator\Factory\AccessInterceptorValueHolderFactory;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
-use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
-use OpenClassrooms\ServiceProxy\Interceptor\Request\Method;
+use OpenClassrooms\ServiceProxy\Model\Request\Instance;
+use OpenClassrooms\ServiceProxy\Model\Request\Method;
 use ProxyManager\Configuration as ProxyManagerConfiguration;
 use ProxyManager\FileLocator\FileLocator;
 use ProxyManager\GeneratorStrategy\FileWriterGeneratorStrategy;
@@ -20,7 +20,7 @@ final class ProxyFactory
 {
     private AnnotationReader $annotationReader;
 
-    private Configuration $configuration;
+    private ProxyFactoryConfiguration $configuration;
 
     /**
      * @var array<string, PrefixInterceptor[]|SuffixInterceptor[]>
@@ -34,9 +34,9 @@ final class ProxyFactory
      * @throws AnnotationException
      */
     public function __construct(
-        Configuration $configuration,
-        iterable $prefixInterceptors,
-        iterable $suffixInterceptors
+        ProxyFactoryConfiguration $configuration,
+        iterable                  $prefixInterceptors,
+        iterable                  $suffixInterceptors
     ) {
         $this->annotationReader = new AnnotationReader();
         $this->configuration = $configuration;
@@ -100,19 +100,24 @@ final class ProxyFactory
     }
 
     /**
+     * @return array<string, PrefixInterceptor[]|SuffixInterceptor[]>
+     */
+    public function getInterceptors(): array
+    {
+        return $this->interceptors;
+    }
+
+    /**
      * @param PrefixInterceptor::PREFIX_TYPE|SuffixInterceptor::SUFFIX_TYPE $type
      * @param PrefixInterceptor[]|SuffixInterceptor[]                       $interceptors
-     * @param mixed                                                         $response
-     *
-     * @return mixed
      */
-    public function intercept(
-        string $type,
-        array $interceptors,
+    private function intercept(
+        string   $type,
+        array    $interceptors,
         Instance $instance,
-        $response,
-        bool &$returnEarly
-    ) {
+        mixed    $response,
+        bool     &$returnEarly
+    ): mixed {
         foreach ($interceptors as $interceptor) {
             if ($type === PrefixInterceptor::PREFIX_TYPE && $interceptor instanceof PrefixInterceptor) {
                 $interceptorResponse = $interceptor->prefix($instance);
@@ -132,14 +137,6 @@ final class ProxyFactory
     }
 
     /**
-     * @return array<string, PrefixInterceptor[]|SuffixInterceptor[]>
-     */
-    public function getInterceptors(): array
-    {
-        return $this->interceptors;
-    }
-
-    /**
      * @param PrefixInterceptor[]|SuffixInterceptor[] $interceptors
      * @param PrefixInterceptor::PREFIX_TYPE|SuffixInterceptor::SUFFIX_TYPE $type
      *
@@ -148,7 +145,6 @@ final class ProxyFactory
     private function orderByPriority(iterable $interceptors, string $type): array
     {
         if (!\is_array($interceptors)) {
-            /** @noinspection PhpParamsInspection */
             $interceptors = iterator_to_array($interceptors);
         }
         usort(

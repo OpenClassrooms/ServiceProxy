@@ -6,7 +6,6 @@ namespace OpenClassrooms\ServiceProxy\Interceptor\Contract;
 
 use OpenClassrooms\ServiceProxy\Annotation\Annotation;
 use OpenClassrooms\ServiceProxy\Handler\Contract\AnnotationHandler;
-use OpenClassrooms\ServiceProxy\Handler\Exception\DuplicatedDefaultHandler;
 use OpenClassrooms\ServiceProxy\Handler\Exception\DuplicatedHandler;
 use OpenClassrooms\ServiceProxy\Handler\Exception\HandlerNotFound;
 use OpenClassrooms\ServiceProxy\Handler\Exception\MissingDefaultHandler;
@@ -32,10 +31,7 @@ abstract class AbstractInterceptor
     final public function setHandlers(iterable $handlers): void
     {
         $handlers = $this->indexHandlers($handlers);
-
-        $this->checkDuplicateDefaults($handlers);
         $this->checkMultipleHandlersWithNoDefault($handlers);
-
         $this->handlers = $handlers;
     }
 
@@ -44,37 +40,39 @@ abstract class AbstractInterceptor
      *
      * @param class-string<T> $handlerInterface
      *
-     * @return T
+     * @return T[]
      */
-    final public function getHandler(string $handlerInterface, Annotation $annotation): AnnotationHandler
+    final public function getHandlers(string $handlerInterface, Annotation $annotation): array
     {
+        $annotationClass = \get_class($annotation);
         $handlers = $this->handlers[$handlerInterface] ?? [];
-        if ($annotation->getHandler() === null) {
+        if (\count($annotation->getHandlers()) === 0) {
             if (\count($handlers) === 1) {
                 // @phpstan-ignore-next-line
-                return array_values($handlers)[0];
+                return array_values($handlers);
             }
             if (\count($handlers) > 1) {
-                foreach ($handlers as $handler) {
-                    if ($handler->isDefault()) {
-                        // @phpstan-ignore-next-line
-                        return $handler;
-                    }
-                }
+                // @phpstan-ignore-next-line
+                return array_values(
+                    array_filter($handlers, static fn (AnnotationHandler $handler) => $handler->isDefault())
+                );
             }
         }
 
-        $handlerName = $annotation->getHandler();
-        if (isset($handlers[$handlerName])) {
-            // @phpstan-ignore-next-line
-            return $handlers[$handlerName];
+        $foundHandlers = [];
+        foreach ($annotation->getHandlers() as $handlerName) {
+            if (!isset($handlers[$handlerName])) {
+                throw new HandlerNotFound("No handler '{$handlerName}' found for annotation {$annotationClass}");
+            }
+            $foundHandlers[$handlerName] = $handlers[$handlerName];
         }
 
-        $handlerName = $handlerName ?? 'default';
-        $annotationClass = \get_class($annotation);
-        throw new HandlerNotFound(
-            "No handler found for annotation {$annotationClass} with name {$handlerName}"
-        );
+        if (\count($foundHandlers) > 0) {
+            // @phpstan-ignore-next-line
+            return array_values($foundHandlers);
+        }
+
+        throw new HandlerNotFound("No handler found for annotation {$annotationClass}");
     }
 
     /**
@@ -114,24 +112,6 @@ abstract class AbstractInterceptor
         throw new \InvalidArgumentException(
             'All handlers must implement AnnotationHandler interface.'
         );
-    }
-
-    /**
-     * @param array<class-string<AnnotationHandler>, array<string, AnnotationHandler>> $handlers
-     */
-    private function checkDuplicateDefaults(array $handlers): void
-    {
-        foreach ($handlers as $handlerInterface => $handlersByInterface) {
-            $defaultHandlers = 0;
-            foreach ($handlersByInterface as $handler) {
-                if ($handler->isDefault()) {
-                    $defaultHandlers++;
-                }
-            }
-            if ($defaultHandlers > 1) {
-                throw new DuplicatedDefaultHandler("Only one default handler is allowed for {$handlerInterface}.");
-            }
-        }
     }
 
     /**
