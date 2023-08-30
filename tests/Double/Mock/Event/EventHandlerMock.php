@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
-use OpenClassrooms\ServiceProxy\Model\Event;
+use OpenClassrooms\ServiceProxy\Model\Message\Message;
 
 final class EventHandlerMock implements EventHandler
 {
+    /**
+     * @var array<string, Message>
+     */
     private array $events = [];
 
-    public function getEvent(string $name, int $position = 0): Event
+    public function getEvent(string $name, int $position = 0): Message
     {
         $events = $this->getEvents($name);
 
@@ -23,7 +26,7 @@ final class EventHandlerMock implements EventHandler
     }
 
     /**
-     * @return array<string, Event>
+     * @return array<string, Message>
      */
     public function getEvents(string $name = null): array
     {
@@ -31,7 +34,7 @@ final class EventHandlerMock implements EventHandler
             return array_values(
                 array_filter(
                     $this->events,
-                    static fn (Event $event) => $event->eventName === $name
+                    static fn (Message $event) => $event->name === $name
                 )
             );
         }
@@ -44,22 +47,9 @@ final class EventHandlerMock implements EventHandler
         return 'array';
     }
 
-    public function make(
-        $eventName,
-        string $senderClassShortName,
-        ?array $parameters = null,
-        $response = null,
-        \Exception $exception = null
-    ): Event {
-        return new Event($eventName, $senderClassShortName, $parameters, $response, $exception);
-    }
-
-    /**
-     * @param Event $event
-     */
-    public function send(object $event): void
+    public function dispatch(Message $message): void
     {
-        $this->events[] = $event;
+        $this->events[] = $message;
     }
 
     public function isDefault(): bool

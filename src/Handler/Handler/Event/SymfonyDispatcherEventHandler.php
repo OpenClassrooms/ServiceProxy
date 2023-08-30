@@ -6,12 +6,10 @@ namespace OpenClassrooms\ServiceProxy\Handler\Handler\Event;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
 use OpenClassrooms\ServiceProxy\Handler\Handler\ConfigurableHandler;
-use OpenClassrooms\ServiceProxy\Model\Event;
+use OpenClassrooms\ServiceProxy\Model\Message\Message;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
-/**
- * @implements EventHandler<Event>
- */
+
 final class SymfonyDispatcherEventHandler implements EventHandler
 {
     use ConfigurableHandler;
@@ -23,23 +21,13 @@ final class SymfonyDispatcherEventHandler implements EventHandler
         $this->eventDispatcher = $eventDispatcher;
     }
 
-    public function send(object $event): void
+    public function dispatch(Message $message): void
     {
-        $this->eventDispatcher->dispatch($event);
+        $this->eventDispatcher->dispatch($message);
     }
 
     public function getName(): string
     {
         return 'symfony_event_dispatcher';
-    }
-
-    public function make(
-        string $eventName,
-        string $senderClassShortName,
-        ?array $parameters = null,
-        $response = null,
-        \Exception $exception = null
-    ): Event {
-        return new Event($eventName, $senderClassShortName, $parameters, $response, $exception);
     }
 }

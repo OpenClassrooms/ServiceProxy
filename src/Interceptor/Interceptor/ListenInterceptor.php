@@ -6,6 +6,7 @@ namespace OpenClassrooms\ServiceProxy\Interceptor\Interceptor;
 
 use OpenClassrooms\ServiceProxy\Annotation\Event;
 use OpenClassrooms\ServiceProxy\Annotation\Exception\InvalidEventNameException;
+use OpenClassrooms\ServiceProxy\Attribute\Listen;
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
@@ -14,7 +15,7 @@ use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
 use OpenClassrooms\ServiceProxy\Model\Message\Message;
 
-final class EventInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
+final class ListenInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
     public function getPrefixPriority(): int
     {
@@ -114,43 +115,9 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
                 );
                 $handler->dispatch($event);
             }
-
-            if ($this->isInstanceImplementInterfaceUseCase($instance)) {
-                $this->sendPostExecutionGenericEvent($instance, $handler);
-            }
         }
 
         return new Response();
-    }
-
-    private function isInstanceImplementInterfaceUseCase(Instance $instance): bool
-    {
-        $useCaseInstance = array_filter(
-            $instance->getReflection()
-                     ->getInterfaceNames(),
-            static fn (string $interfaceName) => str_ends_with($interfaceName, 'UseCase')
-        );
-
-        return \count($useCaseInstance) === 1;
-    }
-
-    /**
-     * @throws InvalidEventNameException
-     */
-    private function sendPostExecutionGenericEvent(Instance $instance, EventHandler $handler): void
-    {
-        $event = new Message(
-            name: 'use_case.post.execute',
-            body: [
-                      'sender'     => $instance->getReflection()
-                                               ->getShortName(),
-                      'parameters' => $instance->getMethod()
-                                               ->getParameters(),
-                      'response'   => $instance->getMethod()
-                                               ->getReturnedValue(),
-                  ],
-        );
-        $handler->dispatch($event);
     }
 
     public function supportsSuffix(Instance $instance): bool
@@ -161,7 +128,7 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
     public function supportsPrefix(Instance $instance): bool
     {
         return $instance->getMethod()
-                        ->hasAnnotation(Event::class)
+                        ->hasAnnotation(Listen::class)
         ;
     }
 }
