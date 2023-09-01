@@ -9,8 +9,7 @@ use OpenClassrooms\ServiceProxy\Handler\Handler\ConfigurableHandler;
 use OpenClassrooms\ServiceProxy\Model\Message\Message;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
-
-final class SymfonyDispatcherEventHandler implements EventHandler
+final class SymfonyEventDispatcherEventHandler implements EventHandler
 {
     use ConfigurableHandler;
 

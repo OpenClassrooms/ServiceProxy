@@ -23,7 +23,6 @@ final class InvalidateCache extends Attribute
         ?string $handler = null,
         ?string $pool = null
     ) {
-        $this->handler = $handler;
         $this->tags = $tags;
 
         if ($pool !== null && $handler !== null && $handler !== $pool) {
@@ -34,10 +33,10 @@ final class InvalidateCache extends Attribute
         }
 
         if ($pool !== null) {
-            $this->handler = $pool;
+            $handler = $pool;
         }
 
-        parent::__construct();
+        parent::__construct($handler);
     }
 
     /**
@@ -46,13 +45,5 @@ final class InvalidateCache extends Attribute
     public function getTags(): array
     {
         return $this->tags;
-    }
-
-    /**
-     * @return class-string<AnnotationHandler>
-     */
-    public function getHandlerClass(): string
-    {
-        return CacheHandler::class;
     }
 }

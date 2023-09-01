@@ -10,26 +10,15 @@ use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 #[\Attribute(\Attribute::TARGET_METHOD)]
 final class Cache extends Attribute
 {
-    private ?int $lifetime = null;
-
-    /**
-     * @var array<int, string>
-     */
-    private array $tags = [];
-
     /**
      * @param array<int, string> $tags
      */
     public function __construct(
         ?string $handler = null,
         ?string $pool = null,
-        ?int $lifetime = null,
-        array $tags = []
+        private readonly ?int $lifetime = null,
+        private readonly array $tags = []
     ) {
-        $this->handler = $handler;
-        $this->lifetime = $lifetime;
-        $this->tags = $tags;
-
         if ($pool !== null && $handler !== null && $handler !== $pool) {
             throw new \RuntimeException(
                 'Argument \'pool\' is an alias for \'handler\'.
@@ -41,7 +30,7 @@ final class Cache extends Attribute
             $this->handler = $pool;
         }
 
-        parent::__construct();
+        parent::__construct($handler);
     }
 
     public function getLifetime(): ?int
@@ -55,13 +44,5 @@ final class Cache extends Attribute
     public function getTags(): array
     {
         return $this->tags;
-    }
-
-    /**
-     * @return class-string<AnnotationHandler>
-     */
-    public function getHandlerClass(): string
-    {
-        return CacheHandler::class;
     }
 }

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Annotation;
 
-use OpenClassrooms\ServiceProxy\Handler\Contract\AnnotationHandler;
-
 abstract class Annotation
 {
     protected ?string $handler = null;
@@ -70,11 +68,6 @@ abstract class Annotation
     {
         return $this->handler;
     }
-
-    /**
-     * @return class-string<AnnotationHandler>
-     */
-    abstract public function getHandlerClass(): string;
 
     final public function getPrefixPriority(): int
     {

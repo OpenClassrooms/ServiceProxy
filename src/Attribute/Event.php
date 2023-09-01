@@ -9,12 +9,8 @@ final class Event extends Attribute
 {
     public function __construct(
         public readonly string $topic,
+        ?string $handler = null
     ) {
-        parent::__construct();
-    }
-
-    public function getHandlerClass(): string
-    {
-
+        parent::__construct($handler);
     }
 }

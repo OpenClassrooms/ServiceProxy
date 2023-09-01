@@ -38,6 +38,7 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
         foreach ($annotations as $annotation) {
             $handler = $this->getHandler(EventHandler::class, $annotation);
             if ($annotation->hasMethod(Event::PRE_METHOD)) {
+                // todo use a factory in order to be able to customize the message body in the application by injecting a custom factory
                 $event = new Message(
                     name: $this->getEventName($instance, $annotation, Event::PRE_METHOD),
                     body: [

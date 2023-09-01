@@ -19,14 +19,6 @@ final class Security extends Attribute
         public ?string $message = null,
         public ?string $exception = null,
     ) {
-        parent::__construct();
-    }
-
-    /**
-     * @return class-string<AnnotationHandler>
-     */
-    public function getHandlerClass(): string
-    {
-        return SecurityHandler::class;
+        parent::__construct($handler);
     }
 }
