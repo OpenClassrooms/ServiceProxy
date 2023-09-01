@@ -2,143 +2,90 @@
 
 declare(strict_types=1);
 
-/** @noinspection PhpUnusedParameterInspection */
-
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event;
 
-use OpenClassrooms\ServiceProxy\Annotation\Event;
+use OpenClassrooms\ServiceProxy\Attribute\Event;
 
 class EventAnnotatedClass
 {
+    #[Event]
+    public function __invoke(mixed $useCaseRequest): int
+    {
+        return 1;
+    }
+
     public function nonAnnotatedMethod(): bool
     {
         return true;
     }
 
-    /**
-     * @Event
-     */
-    public function annotatedMethodWithException(): array
+    #[Event]
+    public function annotatedMethodWithException(): void
     {
         throw new \RuntimeException();
     }
 
-    /**
-     * @Event
-     */
-    public function annotatedMethod($useCaseRequest): int
+    #[Event]
+    public function annotatedMethod(mixed $useCaseRequest): int
     {
         return 1;
     }
 
-    /**
-     * @Event
-     */
+    #[Event]
     public function annotatedMethodWithoutParams(): int
     {
         return 1;
     }
 
-    /**
-     * @Event
-     */
+    #[Event]
     public function annotatedMethodWithoutReturn(): void
     {
     }
 
-    /**
-     * @Event(methods="post", name="first_event")
-     * @Event(methods="post", name="first_event")
-     */
-    public function duplicatedEvent($useCaseRequest): int
+    #[Event(name: 'first_event', methods: ['post'])]
+    #[Event(name: 'first_event', methods: ['post'])]
+    public function duplicatedEvent(mixed $useCaseRequest): mixed
     {
-        return 1;
-    }
-
-    /**
-     * @Event(name="event_name")
-     */
-    public function eventWithOnlyName($useCaseRequest): int
-    {
-        return 1;
-    }
-
-    /**
-     * @Event(methods="post")
-     */
-    public function eventPost($useCaseRequest): int
-    {
-        return 1;
-    }
-
-    /**
-     * @Event(methods="pre")
-     */
-    public function eventPre($useCaseRequest): int
-    {
-        return 1;
-    }
-
-    /**
-     * @Event(methods="onException")
-     */
-    public function eventOnException($useCaseRequest)
-    {
-        throw new \RuntimeException();
-
-        /** @noinspection PhpUnreachableStatementInspection */
         return $useCaseRequest;
     }
 
-    /**
-     * @Event(name="wrong_event_name")
-     */
-    public function eventWithWrongName($useCaseRequest): int
+    #[Event(name: 'event_name')]
+    public function eventWithOnlyName(mixed $useCaseRequest): int
     {
         return 1;
     }
 
-    /**
-     * @Event(methods="pre", name="first_event")
-     * @Event(methods="post", name="first_event")
-     * @Event(methods="post", name="first_event")
-     * @Event(methods="post", name="second_event")
-     * @Event(methods="pre,post,onException", name="third_event")
-     * @Event(methods="pre,post,onException")
-     */
-    public function multiEvents($useCaseRequest): int
+    #[Event(name: 'first_event', methods: ['post'])]
+    public function eventPost(mixed $useCaseRequest): int
     {
         return 1;
     }
 
-    /**
-     * @Event(defaultPrefix="toto")
-     */
-    public function prefixedEvent($useCaseRequest): int
+    #[Event(name: 'first_event', methods: ['pre'])]
+    public function eventPre(mixed $useCaseRequest): int
     {
         return 1;
     }
 
-    /**
-     * @Event(defaultPrefix="toto", name="first_event")
-     */
-    public function namedEventWithPrefix($useCaseRequest): int
+    #[Event(methods: ['onException'])]
+    public function eventOnException(mixed $useCaseRequest): mixed
+    {
+        throw new \RuntimeException();
+    }
+
+    #[Event(name: 'wrong_event_name')]
+    public function eventWithWrongName(mixed $useCaseRequest): int
     {
         return 1;
     }
 
-    /**
-     * @Event(defaultPrefix="")
-     */
-    public function eventEmptyPrefix($useCaseRequest): int
-    {
-        return 1;
-    }
-
-    /**
-     * @Event(useClassNameOnly=false)
-     */
-    public function EventWithMethodName($useCaseRequest): int
+    #[Event(name: 'first_event', methods: ['pre'])]
+    #[Event(name: 'first_event', methods: ['post'])]
+    #[Event(name: 'first_event', methods: ['post'])]
+    #[Event(name: 'second_event', methods: ['post'])]
+    #[Event(name: 'third_event', methods: ['pre', 'post', 'onException'])]
+    #[Event(methods: ['pre', 'post', 'onException'])]
+    public function multiEvents(mixed $useCaseRequest): int
     {
         return 1;
     }

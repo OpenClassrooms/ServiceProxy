@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Handler\Contract;
 
-use OpenClassrooms\ServiceProxy\Model\Message\Message;
+use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 
 interface EventHandler extends AnnotationHandler
 {
-    public function dispatch(Message $message): void;
+    public function dispatch(Instance $instance): void;
 }

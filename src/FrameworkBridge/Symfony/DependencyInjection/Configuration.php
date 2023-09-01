@@ -39,24 +39,8 @@ final class Configuration implements ConfigurationInterface
             ->end()
             ->defaultValue(['prod'])
             ->end()
-            ->arrayNode('handlers')
-            ->children()
-            ->arrayNode('symfony_http')
-            ->children()
-            ->scalarNode('esb.endpoint')
-            ->isRequired()
-            ->cannotBeEmpty()
-            ->defaultValue('%env(resolve:ESB_ENDPOINT)%')
             ->end()
-            ->children()
-            ->scalarNode('esb.api_key')
-            ->isRequired()
-            ->cannotBeEmpty()
-            ->defaultValue('%env(resolve:ESB_API_KEY)%')
-            ->end()
-            ->end()
-            ->end()
-            ->end();
+        ;
 
         return $treeBuilder;
     }

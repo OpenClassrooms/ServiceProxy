@@ -5,40 +5,20 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
-use OpenClassrooms\ServiceProxy\Model\Message\Message;
+use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 
 final class EventHandlerMock implements EventHandler
 {
     /**
-     * @var array<string, Message>
+     * @var array<string, object>
      */
     private array $events = [];
 
-    public function getEvent(string $name, int $position = 0): Message
-    {
-        $events = $this->getEvents($name);
-
-        if (!isset($events[$position])) {
-            throw new \RuntimeException("Event {$name} not found at position {$position}");
-        }
-
-        return $events[$position];
-    }
-
     /**
-     * @return array<string, Message>
+     * @return array<string, object>
      */
-    public function getEvents(string $name = null): array
+    public function getEvents(): array
     {
-        if ($name !== null) {
-            return array_values(
-                array_filter(
-                    $this->events,
-                    static fn (Message $event) => $event->name === $name
-                )
-            );
-        }
-
         return $this->events;
     }
 
@@ -47,9 +27,16 @@ final class EventHandlerMock implements EventHandler
         return 'array';
     }
 
-    public function dispatch(Message $message): void
+    public function dispatch(Instance $instance): void
     {
-        $this->events[] = $message;
+        $data = [
+            ...$instance->getData(),
+            'name' => $instance->getContext()?->attribute
+->name,
+            'type' => $instance->getContext()?->type
+->value,
+        ];
+        $this->events[] = (object) $data;
     }
 
     public function isDefault(): bool

@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Attribute;
 
-use OpenClassrooms\ServiceProxy\Handler\Contract\AnnotationHandler;
-use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
-
 #[\Attribute(\Attribute::TARGET_METHOD)]
 final class InvalidateCache extends Attribute
 {

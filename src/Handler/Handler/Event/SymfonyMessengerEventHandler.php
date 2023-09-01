@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Handler\Handler\Event;
 
-use OpenClassrooms\ServiceProxy\Handler\Handler\ConfigurableHandler;
-use OpenClassrooms\ServiceProxy\Model\Message\Message;
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
+use OpenClassrooms\ServiceProxy\Handler\Handler\ConfigurableHandler;
+use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use Symfony\Component\Messenger\MessageBusInterface;
 
-// async over messenger event dispatcher
-class SymfonyMessengerEventHandler implements EventHandler
+final class SymfonyMessengerEventHandler implements EventHandler
 {
     use ConfigurableHandler;
 
@@ -19,9 +18,9 @@ class SymfonyMessengerEventHandler implements EventHandler
     ) {
     }
 
-    public function dispatch(Message $message): void
+    public function dispatch(Instance $instance): void
     {
-        $this->bus->dispatch($message);
+        $this->bus->dispatch((object) $instance->getData());
     }
 
     public function getName(): string

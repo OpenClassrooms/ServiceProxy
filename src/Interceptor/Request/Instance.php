@@ -15,13 +15,14 @@ final class Instance
 
     private \ReflectionObject $reflection;
 
+    private ?Context $context;
+
     private function __construct()
     {
     }
 
     /**
      * @param array<string, mixed>|null $parameters
-     * @param mixed $response
      *
      * @throws \ReflectionException
      * @throws AnnotationException
@@ -30,7 +31,7 @@ final class Instance
         object $object,
         string $methodName,
         ?array $parameters = null,
-        $response = null
+        mixed $response = null
     ): self {
         $annotationReader = new AnnotationReader();
         $reflection = new \ReflectionObject($object);
@@ -75,14 +76,16 @@ final class Instance
         return $this;
     }
 
-    /**
-     * @param mixed $response
-     */
-    public function setResponse($response): self
+    public function setResponse(mixed $response): self
     {
         $this->method->setResponse($response);
 
         return $this;
+    }
+
+    public function getContext(): ?Context
+    {
+        return $this->context;
     }
 
     public function getObject(): object
@@ -93,5 +96,38 @@ final class Instance
     public function getReflection(): \ReflectionObject
     {
         return $this->reflection;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getData(): array
+    {
+        $data = [
+            'class' => $this->getReflection()
+                ->getName(),
+            'class_short_name' => $this->getReflection()
+                ->getShortName(),
+            'method' => $this->getMethod()
+                ->getName(),
+            'parameters' => $this->getMethod()
+                ->getParameters(),
+        ];
+
+        if ($this->getContext() === null) {
+            return $data;
+        }
+
+        if ($this->getContext()->type !== ContextType::PREFIX) {
+            $data['response'] = $this->getMethod()->getReturnedValue();
+            $data['exception'] = $this->getMethod()->getException();
+        }
+
+        return $data;
+    }
+
+    public function setContext(Context $context): void
+    {
+        $this->context = $context;
     }
 }

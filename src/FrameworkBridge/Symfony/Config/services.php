@@ -8,14 +8,11 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use function Symfony\Component\DependencyInjection\Loader\Configurator\inline_service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
-use OpenClassrooms\ServiceProxy\Handler\Handler\Event\SymfonyHttpEventHandler;
 
 return static function (ContainerConfigurator $containerConfigurator) {
     $services = $containerConfigurator->services();
 
     $services->defaults()
-        ->bind('string $esbEndpoint', param('esb.endpoint'))
-        ->bind('string $esbApiKey', param('esb.api_key'))
         ->autowire()
         ->autoconfigure()
     ;
