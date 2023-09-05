@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
 use Doctrine\Common\Annotations\AnnotationException;
-use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\EventInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Impl\EventInterceptor;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event\EventHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\EventAnnotatedClass;

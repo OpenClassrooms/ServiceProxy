@@ -14,20 +14,10 @@ final class Cache extends Attribute
         ?string $handler = null,
         ?string $pool = null,
         private readonly ?int $lifetime = null,
-        private readonly array $tags = []
+        private readonly array $tags = [],
     ) {
-        if ($pool !== null && $handler !== null && $handler !== $pool) {
-            throw new \RuntimeException(
-                'Argument \'pool\' is an alias for \'handler\'.
-                You can only define one of the two arguments.'
-            );
-        }
-
-        if ($pool !== null) {
-            $handler = $pool;
-        }
-
-        parent::__construct($handler);
+        parent::__construct();
+        $this->setHandler(aliases: compact('handler', 'pool'));
     }
 
     public function getLifetime(): ?int

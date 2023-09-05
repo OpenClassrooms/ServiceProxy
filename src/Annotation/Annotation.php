@@ -79,11 +79,6 @@ abstract class Annotation
         return $this->suffixPriority;
     }
 
-    final public function setHandler(?string $handler): void
-    {
-        $this->handler = $handler;
-    }
-
     final public function setPrefixPriority(int $prefixPriority): void
     {
         $this->prefixPriority = $prefixPriority;
@@ -92,5 +87,26 @@ abstract class Annotation
     final public function setSuffixPriority(int $suffixPriority): void
     {
         $this->suffixPriority = $suffixPriority;
+    }
+
+    /**
+     * @param array<string, null|string> $aliases
+     */
+    final protected function setHandler(?string $handler = null, array $aliases = []): void
+    {
+        if (\count($aliases) > 0) {
+            $values = array_values($aliases);
+            $keys = array_keys($aliases);
+            if ($values[0] !== null && $values[1] !== null) {
+                throw new \RuntimeException(
+                    "Argument '{$keys[1]}' is an alias for '{$keys[0]}'.
+                You can only define one of the two arguments."
+                );
+            }
+
+            $this->handler = $values[0] ?? $values[1];
+        } else {
+            $this->handler = $handler;
+        }
     }
 }

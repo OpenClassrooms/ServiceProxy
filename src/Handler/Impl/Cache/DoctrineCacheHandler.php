@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Handler\Handler\Cache;
+namespace OpenClassrooms\ServiceProxy\Handler\Impl\Cache;
 
 use Doctrine\Common\Cache\ArrayCache;
 use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
-use OpenClassrooms\ServiceProxy\Handler\Handler\ConfigurableHandler;
+use OpenClassrooms\ServiceProxy\Handler\Impl\ConfigurableHandler;
 
 /**
  * @deprecated use SymfonyCacheHandler instead

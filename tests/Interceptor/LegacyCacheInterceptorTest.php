@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
 use Doctrine\Common\Annotations\AnnotationException;
-use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\LegacyCacheInterceptor as CacheInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Impl\LegacyCacheInterceptor as CacheInterceptor;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\DoctrineCacheHandlerMock as CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\InvalidIdCacheAnnotatedClass;

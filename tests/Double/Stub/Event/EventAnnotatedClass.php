@@ -42,8 +42,8 @@ class EventAnnotatedClass
     {
     }
 
-    #[Event(name: 'first_event', methods: ['post'])]
-    #[Event(name: 'first_event', methods: ['post'])]
+    #[Event(name: 'first_event', dispatch: [Event\On::POST])]
+    #[Event(name: 'first_event', dispatch: [Event\On::POST])]
     public function duplicatedEvent(mixed $useCaseRequest): mixed
     {
         return $useCaseRequest;
@@ -55,19 +55,19 @@ class EventAnnotatedClass
         return 1;
     }
 
-    #[Event(name: 'first_event', methods: ['post'])]
+    #[Event(name: 'first_event', dispatch: [Event\On::POST])]
     public function eventPost(mixed $useCaseRequest): int
     {
         return 1;
     }
 
-    #[Event(name: 'first_event', methods: ['pre'])]
+    #[Event(name: 'first_event', dispatch: [Event\On::PRE])]
     public function eventPre(mixed $useCaseRequest): int
     {
         return 1;
     }
 
-    #[Event(methods: ['onException'])]
+    #[Event(dispatch: ['onException'])]
     public function eventOnException(mixed $useCaseRequest): mixed
     {
         throw new \RuntimeException();
@@ -79,12 +79,12 @@ class EventAnnotatedClass
         return 1;
     }
 
-    #[Event(name: 'first_event', methods: ['pre'])]
-    #[Event(name: 'first_event', methods: ['post'])]
-    #[Event(name: 'first_event', methods: ['post'])]
-    #[Event(name: 'second_event', methods: ['post'])]
-    #[Event(name: 'third_event', methods: ['pre', 'post', 'onException'])]
-    #[Event(methods: ['pre', 'post', 'onException'])]
+    #[Event(name: 'first_event', dispatch: [Event\On::PRE])]
+    #[Event(name: 'first_event', dispatch: [Event\On::POST])]
+    #[Event(name: 'first_event', dispatch: [Event\On::POST])]
+    #[Event(name: 'second_event', dispatch: [Event\On::POST])]
+    #[Event(name: 'third_event', dispatch: [Event\On::PRE, Event\On::POST, Event\On::EXCEPTION])]
+    #[Event(dispatch: [Event\On::PRE, Event\On::POST, Event\On::EXCEPTION])]
     public function multiEvents(mixed $useCaseRequest): int
     {
         return 1;

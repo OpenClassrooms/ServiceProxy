@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Handler\Handler\Transaction;
+namespace OpenClassrooms\ServiceProxy\Handler\Impl\Transaction;
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\Persistence\ManagerRegistry;
 use OpenClassrooms\ServiceProxy\Handler\Contract\TransactionHandler;
-use OpenClassrooms\ServiceProxy\Handler\Handler\ConfigurableHandler;
+use OpenClassrooms\ServiceProxy\Handler\Impl\ConfigurableHandler;
 
 final class DoctrineOrmTransactionHandler implements TransactionHandler
 {

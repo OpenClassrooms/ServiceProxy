@@ -7,7 +7,7 @@ namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache;
 use Doctrine\Common\Cache\ArrayCache;
 use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
-use OpenClassrooms\ServiceProxy\Handler\Handler\Cache\DoctrineCacheHandler;
+use OpenClassrooms\ServiceProxy\Handler\Impl\Cache\DoctrineCacheHandler;
 
 final class DoctrineCacheHandlerMock implements CacheHandler
 {
@@ -60,5 +60,9 @@ final class DoctrineCacheHandlerMock implements CacheHandler
     public function getName(): string
     {
         return $this->name;
+    }
+
+    public function setDefaultHandlers(array $defaultHandlers): void
+    {
     }
 }

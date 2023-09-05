@@ -10,7 +10,7 @@ use OpenClassrooms\ServiceProxy\Handler\Exception\DuplicatedDefaultHandler;
 use OpenClassrooms\ServiceProxy\Handler\Exception\DuplicatedHandler;
 use OpenClassrooms\ServiceProxy\Handler\Exception\HandlerNotFound;
 use OpenClassrooms\ServiceProxy\Handler\Exception\MissingDefaultHandler;
-use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\CacheInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Impl\CacheInterceptor;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ClassWithCacheAttributes;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;

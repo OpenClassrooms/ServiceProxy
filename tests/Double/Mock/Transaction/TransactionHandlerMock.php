@@ -45,4 +45,8 @@ final class TransactionHandlerMock implements TransactionHandler
     {
         return true;
     }
+
+    public function setDefaultHandlers(array $defaultHandlers): void
+    {
+    }
 }

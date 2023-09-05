@@ -30,7 +30,7 @@ final class EventHandlerMock implements EventHandler
     public function dispatch(Instance $instance): void
     {
         $data = [
-            ...$instance->getData(),
+            ...$instance->getEvent(),
             'name' => $instance->getContext()?->attribute
 ->name,
             'type' => $instance->getContext()?->type
@@ -42,5 +42,13 @@ final class EventHandlerMock implements EventHandler
     public function isDefault(): bool
     {
         return true;
+    }
+
+    public function setDefaultHandlers(array $defaultHandlers): void
+    {
+    }
+
+    public function listen(Instance $instance): void
+    {
     }
 }

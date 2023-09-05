@@ -4,59 +4,38 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Attribute;
 
+use OpenClassrooms\ServiceProxy\Attribute\Event\On;
+use Webmozart\Assert\Assert;
+
 #[\Attribute(\Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
 final class Event extends Attribute
 {
-    public const ON_EXCEPTION_METHOD = 'onException';
-
-    public const POST_METHOD = 'post';
-
-    public const PRE_METHOD = 'pre';
-
     /**
-     * @var string[]
-     */
-    private static array $allowedMethods = [
-        self::PRE_METHOD,
-        self::POST_METHOD,
-        self::ON_EXCEPTION_METHOD,
-    ];
-
-    /**
-     * @param array<int, 'pre'|'post'|'onException'> $methods
+     * @param array<On> $dispatch
      */
     public function __construct(
+        ?string                 $handler = null,
+        ?string                 $transport = null,
         public readonly ?string $name = null,
-        public readonly ?string $topic = null,
-        public readonly array $methods = [self::POST_METHOD],
-        ?string $handler = null,
+        public readonly array   $dispatch = [On::POST],
     ) {
-        foreach ($this->methods as $method) {
-            if (!\in_array($method, self::$allowedMethods, true)) {
-                throw new \InvalidArgumentException(
-                    sprintf(
-                        'Invalid method "%s" for event annotation. Allowed methods are "%s".',
-                        $method,
-                        implode('", "', self::$allowedMethods)
-                    )
-                );
-            }
-        }
-        parent::__construct($handler);
-    }
-
-    public function isPre(): bool
-    {
-        return \in_array(self::PRE_METHOD, $this->methods, true);
-    }
-
-    public function isPost(): bool
-    {
-        return \in_array(self::POST_METHOD, $this->methods, true);
+        parent::__construct();
+        Assert::allIsInstanceOf($dispatch, On::class);
+        $this->setHandler(aliases: compact('handler', 'transport'));
     }
 
     public function isOnException(): bool
     {
-        return \in_array(self::ON_EXCEPTION_METHOD, $this->methods, true);
+        return \in_array(On::EXCEPTION, $this->dispatch, true);
+    }
+
+    public function isPost(): bool
+    {
+        return \in_array(On::POST, $this->dispatch, true);
+    }
+
+    public function isPre(): bool
+    {
+        return \in_array(On::PRE, $this->dispatch, true);
     }
 }

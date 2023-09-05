@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\SecurityHandler;
-use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\SecurityInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Impl\SecurityInterceptor;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Security\SecurityHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Security\SecurityAnnotatedClass;

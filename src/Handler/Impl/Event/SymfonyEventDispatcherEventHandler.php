@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Handler\Handler\Event;
+namespace OpenClassrooms\ServiceProxy\Handler\Impl\Event;
 
 use OpenClassrooms\ServiceProxy\Attribute\Event;
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
-use OpenClassrooms\ServiceProxy\Handler\Handler\ConfigurableHandler;
+use OpenClassrooms\ServiceProxy\Handler\Impl\ConfigurableHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -14,17 +14,15 @@ final class SymfonyEventDispatcherEventHandler implements EventHandler
 {
     use ConfigurableHandler;
 
-    private EventDispatcherInterface $eventDispatcher;
-
-    public function __construct(EventDispatcherInterface $eventDispatcher)
-    {
-        $this->eventDispatcher = $eventDispatcher;
+    public function __construct(
+        private readonly EventDispatcherInterface $eventDispatcher
+    ) {
     }
 
     public function dispatch(Instance $instance): void
     {
         $this->eventDispatcher->dispatch(
-            (object) $instance->getData(),
+            $instance->getEvent(),
             $this->getEventName($instance)
         );
     }
@@ -32,6 +30,15 @@ final class SymfonyEventDispatcherEventHandler implements EventHandler
     public function getName(): string
     {
         return 'symfony_event_dispatcher';
+    }
+
+    public function listen(Instance $instance): void
+    {
+        $this->eventDispatcher->addListener(
+            $instance->getMethod()
+                ->getAttribute(Event\Listen::class)->name,
+            $this->getCallable($instance)
+        );
     }
 
     private function getEventName(Instance $instance): string
@@ -42,7 +49,8 @@ final class SymfonyEventDispatcherEventHandler implements EventHandler
         }
 
         $name = $instance->getReflection()
-            ->getShortName();
+            ->getShortName()
+        ;
         if (\in_array($instance->getMethod()->getName(), ['__invoke', 'execute'], true)) {
             $name = $instance->getMethod()
                 ->getName() . '.' . $name;
@@ -51,5 +59,28 @@ final class SymfonyEventDispatcherEventHandler implements EventHandler
         $type = $instance->getContext()?->type?->value;
 
         return "{$type}.{$name}";
+    }
+
+    private function getCallable(Instance $instance): callable
+    {
+        return function (\OpenClassrooms\ServiceProxy\Model\Event $event) use ($instance) {
+            $methodRef = $instance->getMethod()
+                ->getReflection()
+            ;
+            $args = $this->guessArgs($methodRef, $event);
+            $methodRef->invoke($instance->getObject(), $args);
+        };
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    private function guessArgs(
+        \ReflectionMethod                        $method,
+        \OpenClassrooms\ServiceProxy\Model\Event $event,
+    ): array {
+        $params = $method->getParameters();
+
+        return [...$event->parameters, ...$params];
     }
 }
