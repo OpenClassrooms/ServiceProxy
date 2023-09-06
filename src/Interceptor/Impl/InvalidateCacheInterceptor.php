@@ -5,24 +5,15 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Interceptor\Impl;
 
 use OpenClassrooms\ServiceProxy\Attribute\InvalidateCache;
-use OpenClassrooms\ServiceProxy\ExpressionLanguage\ExpressionResolver;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
+use OpenClassrooms\ServiceProxy\Util\Expression;
 
 final class InvalidateCacheInterceptor extends AbstractInterceptor implements SuffixInterceptor
 {
-    private ExpressionResolver $expressionResolver;
-
-    public function __construct(iterable $handlers = [])
-    {
-        parent::__construct($handlers);
-
-        $this->expressionResolver = new ExpressionResolver();
-    }
-
     public function suffix(Instance $instance): Response
     {
         if ($instance->getMethod()->threwException()) {
@@ -61,7 +52,7 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
             ->getParameters();
 
         $tags = array_map(
-            fn (string $expression) => $this->expressionResolver->resolve($expression, $parameters),
+            static fn (string $expression) => Expression::evaluateToString($expression, $parameters),
             $attribute->getTags()
         );
 

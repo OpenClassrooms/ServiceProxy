@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony;
 
 use OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\DependencyInjection\Compiler\ServiceProxyPass;
-use OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\DependencyInjection\Compiler\ServiceProxyRemovePass;
 use OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\DependencyInjection\OpenClassroomsServiceProxyExtension;
 use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -18,13 +17,10 @@ final class OpenClassroomsServiceProxyBundle extends Bundle
         $this->extension = new OpenClassroomsServiceProxyExtension();
     }
 
-    /**
-     * @throws \Doctrine\Common\Annotations\AnnotationException
-     */
     public function build(ContainerBuilder $container): void
     {
         parent::build($container);
         $container->addCompilerPass(new ServiceProxyPass(), PassConfig::TYPE_AFTER_REMOVING);
-        $container->addCompilerPass(new ServiceProxyRemovePass(), PassConfig::TYPE_REMOVE);
+        // $container->addCompilerPass(new ServiceProxyRemovePass(), PassConfig::TYPE_REMOVE);
     }
 }

@@ -5,36 +5,25 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Interceptor\Impl;
 
 use OpenClassrooms\ServiceProxy\Attribute\Cache;
-use OpenClassrooms\ServiceProxy\ExpressionLanguage\ExpressionResolver;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
+use OpenClassrooms\ServiceProxy\Util\Expression;
 
 final class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
     /**
      * @var string[]
      */
-    private static array $hits;
+    private static array $hits = [];
 
     /**
      * @var string[]
      */
-    private static array $misses;
-
-    private ExpressionResolver $expressionResolver;
-
-    public function __construct(iterable $handlers = [])
-    {
-        parent::__construct($handlers);
-
-        $this->expressionResolver = new ExpressionResolver();
-        self::$hits ??= [];
-        self::$misses ??= [];
-    }
+    private static array $misses = [];
 
     /**
      * @return string[]
@@ -209,7 +198,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             ->getParameters();
 
         $tags = array_map(
-            fn (string $expression) => $this->expressionResolver->resolve($expression, $parameters),
+            static fn (string $expression) => Expression::evaluateToString($expression, $parameters),
             $attribute->getTags()
         );
 

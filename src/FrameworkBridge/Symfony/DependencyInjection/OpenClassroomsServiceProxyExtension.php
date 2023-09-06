@@ -8,6 +8,7 @@ use OpenClassrooms\ServiceProxy\Handler\Contract\AnnotationHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\Interceptable;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Contract\StartUpInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -39,6 +40,10 @@ final class OpenClassroomsServiceProxyExtension extends Extension
 
         $container->registerForAutoconfiguration(SuffixInterceptor::class)
             ->addTag('openclassrooms.service_proxy.suffix_interceptor')
+        ;
+
+        $container->registerForAutoconfiguration(StartUpInterceptor::class)
+            ->addTag('openclassrooms.service_proxy.start_up_interceptor')
         ;
 
         $container->registerForAutoconfiguration(AbstractInterceptor::class)

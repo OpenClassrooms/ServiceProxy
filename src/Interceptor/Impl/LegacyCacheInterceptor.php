@@ -5,28 +5,19 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Interceptor\Impl;
 
 use OpenClassrooms\ServiceProxy\Annotation\Cache;
-use OpenClassrooms\ServiceProxy\ExpressionLanguage\ExpressionResolver;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
+use OpenClassrooms\ServiceProxy\Util\Expression;
 
 /**
  * @deprecated use CacheHandler instead
  */
 final class LegacyCacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
-    private ExpressionResolver $expressionResolver;
-
-    public function __construct(iterable $handlers = [])
-    {
-        parent::__construct($handlers);
-
-        $this->expressionResolver = new ExpressionResolver();
-    }
-
     public function prefix(Instance $instance): Response
     {
         $annotation = $instance->getMethod()
@@ -112,7 +103,7 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
             ->getParameters()
         ;
         if ($annotation->getNamespace() !== null) {
-            $resolvedExpression = $this->expressionResolver->resolve(
+            $resolvedExpression = Expression::evaluateToString(
                 $annotation->getNamespace(),
                 $parameters
             );
@@ -129,7 +120,7 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
             ->getParameters()
         ;
         if ($annotation->getId() !== null) {
-            return $this->expressionResolver->resolve(
+            return Expression::evaluateToString(
                 $annotation->getId(),
                 $parameters
             );
@@ -156,7 +147,7 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
             ->getParameters();
         $tags = [];
         foreach ($annotation->getTags() as $tag) {
-            $tags[] = $this->expressionResolver->resolve(
+            $tags[] = Expression::evaluateToString(
                 $tag,
                 $parameters
             );
