@@ -63,6 +63,14 @@ final class EventInterceptorTest extends TestCase
         }
     }
 
+    public function testEventIsNotOrphan(): void
+    {
+            $eventName = 'use_case.post.event_annotated_class';
+            $this->handler->addListener($eventName, fn () => []);
+            $response = $this->proxy->eventPost('whatever');
+            $this->assertCount(0, $this->handler->getOrphanedEvents());
+    }
+
     public function testMultiEventsSendMultiple(): void
     {
         $response = $this->proxy->multiEvents('whatever');

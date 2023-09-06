@@ -25,7 +25,7 @@ final class SymfonyDispatcherEventHandler implements EventHandler
 
     public function send(object $event): void
     {
-        $this->eventDispatcher->dispatch($event);
+        $this->eventDispatcher->dispatch($event, $event->eventName);
     }
 
     public function getName(): string

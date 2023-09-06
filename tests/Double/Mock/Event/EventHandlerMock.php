@@ -5,11 +5,20 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
+use OpenClassrooms\ServiceProxy\Handler\Handler\Event\SymfonyDispatcherEventHandler;
 use OpenClassrooms\ServiceProxy\Model\Event;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 final class EventHandlerMock implements EventHandler
 {
     private array $events = [];
+
+    private EventDispatcherInterface $eventDispatcher;
+
+    public function __construct()
+    {
+        $this->eventDispatcher = new TraceableEventDispatcherMock();
+    }
 
     public function getEvent(string $name, int $position = 0): Event
     {
@@ -59,7 +68,19 @@ final class EventHandlerMock implements EventHandler
      */
     public function send(object $event): void
     {
+        $symfonyDispatcherEventHandler = new SymfonyDispatcherEventHandler($this->eventDispatcher);
+        $symfonyDispatcherEventHandler->send($event);
         $this->events[] = $event;
+    }
+
+    public function getOrphanedEvents(): array
+    {
+        return $this->eventDispatcher->getOrphanedEvents();
+    }
+
+    public function addListener(string $eventName, callable $listener): void
+    {
+        $this->eventDispatcher->addListener($eventName, $listener);
     }
 
     public function isDefault(): bool
