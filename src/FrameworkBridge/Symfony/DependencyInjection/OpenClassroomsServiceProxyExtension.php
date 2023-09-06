@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\DependencyInjection;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\AnnotationHandler;
+use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\Interceptable;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
@@ -32,6 +33,10 @@ final class OpenClassroomsServiceProxyExtension extends Extension
                 'setDefaultHandlers',
                 ['%openclassrooms.service_proxy.handler.defaults%']
             )
+        ;
+
+        $container->registerForAutoconfiguration(EventHandler::class)
+            ->addTag('openclassrooms.service_proxy.event_handler')
         ;
 
         $container->registerForAutoconfiguration(PrefixInterceptor::class)

@@ -26,7 +26,7 @@ final class ListenInterceptor extends AbstractInterceptor implements StartUpInte
     public function supportsStartUp(Instance $instance): bool
     {
         return $instance->getMethod()
-            ->hasAnnotation(Listen::class);
+            ->hasAttribute(Listen::class);
     }
 
     public function getStartUpPriority(): int

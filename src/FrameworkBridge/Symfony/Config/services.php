@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use OpenClassrooms\ServiceProxy\Configuration;
+use OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\Subscriber\ServiceProxySubscriber;
+use OpenClassrooms\ServiceProxy\Handler\Impl\Event\AggregateEventHandler;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\inline_service;
@@ -40,4 +42,17 @@ return static function (ContainerConfigurator $containerConfigurator) {
             tagged_iterator('openclassrooms.service_proxy.suffix_interceptor'),
         ])
     ;
+
+    $services->set(AggregateEventHandler::class)
+        ->args([
+            tagged_iterator('openclassrooms.service_proxy.event_handler'),
+        ]);
+
+    $services->set(ServiceProxySubscriber::class)
+        ->public()
+        ->args([
+            tagged_iterator('openclassrooms.service_proxy'),
+            tagged_iterator('openclassrooms.service_proxy.start_up_interceptor'),
+        ])
+        ->tag('kernel.event_subscriber');
 };

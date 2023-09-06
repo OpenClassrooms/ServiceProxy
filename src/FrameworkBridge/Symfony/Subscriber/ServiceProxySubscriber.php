@@ -8,7 +8,7 @@ use Doctrine\Common\Annotations\AnnotationReader;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\StartUpInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Method;
-use Psr\Container\ContainerInterface;
+use ProxyManager\Proxy\ValueHolderInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 
@@ -17,64 +17,24 @@ final class ServiceProxySubscriber implements EventSubscriberInterface
     private AnnotationReader $annotationReader;
 
     /**
-     * @param StartUpInterceptor[] $startUpInterceptors
-     * @param string[]             $proxiesIds
+     * @var array<StartUpInterceptor>
+     */
+    private array $startUpInterceptors;
+
+    /**
+     * @param iterable<StartUpInterceptor> $startUpInterceptors
+     * @param iterable<object>             $proxies
      *
      * @throws \Doctrine\Common\Annotations\AnnotationException
      */
     public function __construct(
-        private readonly ContainerInterface $serviceLocator,
-        private readonly array              $proxiesIds,
-        private array                       $startUpInterceptors = [],
+        private readonly iterable $proxies,
+        iterable          $startUpInterceptors,
     ) {
+        if (!\is_array($startUpInterceptors)) {
+            $this->startUpInterceptors = iterator_to_array($startUpInterceptors);
+        }
         $this->annotationReader = new AnnotationReader();
-    }
-
-    /**
-     * @return iterable<Instance>
-     * @throws \Psr\Container\ContainerExceptionInterface
-     * @throws \Psr\Container\NotFoundExceptionInterface
-     */
-    public function getInstances(): iterable
-    {
-        foreach ($this->proxiesIds as $proxiesId) {
-            /** @var object $object */
-            $object = $this->serviceLocator->get($proxiesId);
-            $instanceRef = new \ReflectionObject($object);
-            $methods = $instanceRef->getMethods(\ReflectionMethod::IS_PUBLIC);
-            foreach ($methods as $methodRef) {
-                $methodAnnotations = $this->annotationReader->getMethodAnnotations($methodRef);
-                $instance = Instance::create(
-                    $object,
-                    $instanceRef,
-                    Method::create(
-                        $methodRef,
-                        $methodAnnotations,
-                    )
-                );
-                yield $instance;
-            }
-        }
-    }
-
-    /**
-     * @throws \Psr\Container\NotFoundExceptionInterface
-     * @throws \Psr\Container\ContainerExceptionInterface
-     */
-    public function startUp(RequestEvent $event): void
-    {
-        usort(
-            $this->startUpInterceptors,
-            static fn (StartUpInterceptor $a, StartUpInterceptor $b) => $a->getStartUpPriority(
-            ) <=> $b->getStartUpPriority()
-        );
-        foreach ($this->getInstances() as $instance) {
-            foreach ($this->startUpInterceptors as $interceptor) {
-                if ($interceptor->supportsStartUp($instance)) {
-                    $interceptor->startUp($instance);
-                }
-            }
-        }
     }
 
     /**
@@ -87,8 +47,50 @@ final class ServiceProxySubscriber implements EventSubscriberInterface
         ];
     }
 
-    public function addStartUpInterceptor(StartUpInterceptor $interceptor): void
+    public function startUp(RequestEvent $event): void
     {
-        $this->startUpInterceptors[] = $interceptor;
+        usort(
+            $this->startUpInterceptors,
+            static fn (
+                StartUpInterceptor $a,
+                StartUpInterceptor $b
+            ) => $a->getStartUpPriority() <=> $b->getStartUpPriority()
+        );
+        foreach ($this->getInstances() as $instance) {
+            foreach ($this->startUpInterceptors as $interceptor) {
+                if ($interceptor->supportsStartUp($instance)) {
+                    $interceptor->startUp($instance);
+                }
+            }
+        }
+    }
+
+    /**
+     * @return iterable<Instance>
+     */
+    public function getInstances(): iterable
+    {
+        foreach ($this->proxies as $proxy) {
+            if ($proxy instanceof ValueHolderInterface) {
+                $proxy = $proxy->getWrappedValueHolderValue();
+                if ($proxy === null) {
+                    continue;
+                }
+            }
+            $instanceRef = new \ReflectionObject($proxy);
+            $methods = $instanceRef->getMethods(\ReflectionMethod::IS_PUBLIC);
+            foreach ($methods as $methodRef) {
+                $methodAnnotations = $this->annotationReader->getMethodAnnotations($methodRef);
+                $instance = Instance::create(
+                    $proxy,
+                    $instanceRef,
+                    Method::create(
+                        $methodRef,
+                        $methodAnnotations,
+                    )
+                );
+                yield $instance;
+            }
+        }
     }
 }
