@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Interceptor\Request;
+namespace OpenClassrooms\ServiceProxy\Model\Request;
 
 enum ContextType: string
 {

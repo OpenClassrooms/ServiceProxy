@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
-use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
+use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 
 final class EventHandlerMock implements EventHandler
 {
     /**
-     * @var array<string, object>
+     * @var array<\OpenClassrooms\ServiceProxy\Model\Event>
      */
     private array $events = [];
 
@@ -29,14 +29,7 @@ final class EventHandlerMock implements EventHandler
 
     public function dispatch(Instance $instance): void
     {
-        $data = [
-            ...$instance->getEvent(),
-            'name' => $instance->getContext()?->attribute
-->name,
-            'type' => $instance->getContext()?->type
-->value,
-        ];
-        $this->events[] = (object) $data;
+        $this->events[] = $instance->getEvent();
     }
 
     public function isDefault(): bool

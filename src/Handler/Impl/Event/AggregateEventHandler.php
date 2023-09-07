@@ -6,7 +6,7 @@ namespace OpenClassrooms\ServiceProxy\Handler\Impl\Event;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
 use OpenClassrooms\ServiceProxy\Handler\Impl\ConfigurableHandler;
-use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
+use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 
 final class AggregateEventHandler implements EventHandler
 {

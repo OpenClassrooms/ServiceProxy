@@ -8,8 +8,8 @@ use OpenClassrooms\ServiceProxy\Attribute\Security;
 use OpenClassrooms\ServiceProxy\Handler\Contract\SecurityHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
-use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
-use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
+use OpenClassrooms\ServiceProxy\Model\Request\Instance;
+use OpenClassrooms\ServiceProxy\Model\Response\Response;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 final class SecurityInterceptor extends AbstractInterceptor implements PrefixInterceptor

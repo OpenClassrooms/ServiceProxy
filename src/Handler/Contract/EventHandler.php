@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Handler\Contract;
 
-use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
+use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 
 interface EventHandler extends AnnotationHandler
 {

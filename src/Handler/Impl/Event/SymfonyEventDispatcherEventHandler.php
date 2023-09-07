@@ -7,7 +7,8 @@ namespace OpenClassrooms\ServiceProxy\Handler\Impl\Event;
 use OpenClassrooms\ServiceProxy\Attribute\Event;
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
 use OpenClassrooms\ServiceProxy\Handler\Impl\ConfigurableHandler;
-use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
+use OpenClassrooms\ServiceProxy\Invoker\Impl\AggregateMethodInvoker;
+use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 final class SymfonyEventDispatcherEventHandler implements EventHandler
@@ -15,7 +16,8 @@ final class SymfonyEventDispatcherEventHandler implements EventHandler
     use ConfigurableHandler;
 
     public function __construct(
-        private readonly EventDispatcherInterface $eventDispatcher
+        private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly AggregateMethodInvoker $aggregateMethodInvoker,
     ) {
     }
 
@@ -34,10 +36,13 @@ final class SymfonyEventDispatcherEventHandler implements EventHandler
 
     public function listen(Instance $instance): void
     {
+        $attribute = $instance->getMethod()
+            ->getAttribute(Event\Listen::class);
+
         $this->eventDispatcher->addListener(
-            $instance->getMethod()
-                ->getAttribute(Event\Listen::class)->name,
-            $this->getCallable($instance)
+            $attribute->name,
+            $this->getCallable($instance),
+            $attribute->priority,
         );
     }
 
@@ -63,24 +68,6 @@ final class SymfonyEventDispatcherEventHandler implements EventHandler
 
     private function getCallable(Instance $instance): callable
     {
-        return function (\OpenClassrooms\ServiceProxy\Model\Event $event) use ($instance) {
-            $methodRef = $instance->getMethod()
-                ->getReflection()
-            ;
-            $args = $this->guessArgs($methodRef, $event);
-            $methodRef->invoke($instance->getObject(), $args);
-        };
-    }
-
-    /**
-     * @return array<mixed>
-     */
-    private function guessArgs(
-        \ReflectionMethod                        $method,
-        \OpenClassrooms\ServiceProxy\Model\Event $event,
-    ): array {
-        $params = $method->getParameters();
-
-        return [...$event->parameters, ...$params];
+        return fn (object $event) => $this->aggregateMethodInvoker->invoke($instance, $event);
     }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Interceptor\Request;
+namespace OpenClassrooms\ServiceProxy\Model\Request;
 
 use OpenClassrooms\ServiceProxy\Annotation\Annotation;
 use OpenClassrooms\ServiceProxy\Attribute\Attribute;
@@ -96,7 +96,7 @@ final class Method
     }
 
     /**
-     * @template T of Annotation
+     * @template T of Attribute
      *
      * @param class-string<T> $attributeClass
      *
@@ -168,11 +168,11 @@ final class Method
 
     public function getResponse(): mixed
     {
-        if (!isset($this->definedValues['response'])) {
-            throw new \LogicException('The response is not defined at this point.');
-        }
+        // if (!isset($this->definedValues['response'])) {
+        //     throw new \LogicException('The response is not defined at this point.');
+        // }
 
-        return $this->response;
+        return $this->response ?? null;
     }
 
     public function threwException(): bool

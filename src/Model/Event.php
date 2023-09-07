@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Model;
 
-use OpenClassrooms\ServiceProxy\Interceptor\Request\ContextType;
+use OpenClassrooms\ServiceProxy\Model\Request\ContextType;
 
 final class Event
 {

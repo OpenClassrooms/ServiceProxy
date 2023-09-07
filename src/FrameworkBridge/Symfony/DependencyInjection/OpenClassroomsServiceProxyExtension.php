@@ -11,6 +11,7 @@ use OpenClassrooms\ServiceProxy\Interceptor\Contract\Interceptable;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\StartUpInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
+use OpenClassrooms\ServiceProxy\Invoker\Contract\MethodInvoker;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
@@ -56,6 +57,10 @@ final class OpenClassroomsServiceProxyExtension extends Extension
                 'setHandlers',
                 [tagged_iterator('openclassrooms.service_proxy.annotation_handler')]
             )
+        ;
+
+        $container->registerForAutoconfiguration(MethodInvoker::class)
+            ->addTag('openclassrooms.service_proxy.method_invoker')
         ;
 
         $container->registerForAutoconfiguration(Interceptable::class)

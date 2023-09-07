@@ -13,6 +13,7 @@ final class Listen extends Attribute
         public readonly string $name,
         ?string                $handler = null,
         ?string                $transport = null,
+        public readonly int    $priority = 0,
     ) {
         $this->setHandler(aliases: compact('handler', 'transport'));
         parent::__construct();
