@@ -201,7 +201,7 @@ final class EventInterceptorTest extends TestCase
         $response = $proxy->execute('whateverParameter');
         $this->assertSame(1, $response);
 
-        $events = $this->handler->getEvents('use_case.post.execute');
+        $events = $this->handler->getCreatedEvents('use_case.post.execute');
         $event = reset($events);
         $this->assertInstanceOf(Event::class, $event);
         $this->assertNotEmpty($event);
@@ -215,7 +215,8 @@ final class EventInterceptorTest extends TestCase
 
     private function assertEventsCount(int $count): void
     {
-        $this->assertCount($count, $this->handler->getEvents());
+        $this->assertCount($count, $this->handler->getCreatedEvents());
+        $this->assertCount($count, $this->handler->getSentEvents());
     }
 
     /**
@@ -223,8 +224,8 @@ final class EventInterceptorTest extends TestCase
      */
     private function assertEvent(string $expectedEventName, array $data, int $position = 0): void
     {
-        $this->assertNotEmpty($this->handler->getEvents());
-        $event = $this->handler->getEvent($expectedEventName, $position);
+        $this->assertNotEmpty($this->handler->getCreatedEvents());
+        $event = $this->handler->getCreatedEvent($expectedEventName, $position);
         $this->assertInstanceOf(Event::class, $event);
         $this->assertNotEmpty($event);
         $this->assertSame($expectedEventName, $event->eventName);
@@ -233,5 +234,6 @@ final class EventInterceptorTest extends TestCase
             'response' => $event->response,
             'exception' => $event->exception,
         ]);
+        $this->assertContains($expectedEventName, $this->handler->getSentEvents());
     }
 }
