@@ -12,12 +12,17 @@ final class EmptyParametersMethodInvoker implements MethodInvoker
     /**
      * @return array<mixed>
      */
-    public function invoke(Instance $instance, ?object $object = null): array
+    public function invoke(Instance $listenerInstance, ?object $event = null): array
     {
-        if ($instance->getMethod()->getReflection()->getNumberOfRequiredParameters() !== 0) {
+        if ($listenerInstance->getMethod()->getReflection()->getNumberOfRequiredParameters() !== 0) {
             throw new \InvalidArgumentException();
         }
 
         return [];
+    }
+
+    public function getPriority(): int
+    {
+        return -1000;
     }
 }

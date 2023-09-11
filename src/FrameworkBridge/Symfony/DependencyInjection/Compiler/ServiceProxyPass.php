@@ -24,7 +24,6 @@ final class ServiceProxyPass implements CompilerPassInterface
         $this->compiler = $container->getCompiler();
 
         $this->buildServiceProxies();
-        $this->injectMethodInvokers();
     }
 
     private function buildServiceProxies(): void
@@ -50,23 +49,5 @@ final class ServiceProxyPass implements CompilerPassInterface
         $factoryDefinition->setPublic($definition->isPublic());
         $factoryDefinition->setLazy($definition->isLazy());
         $factoryDefinition->setTags($definition->getTags());
-    }
-
-    private function injectMethodInvokers(): void
-    {
-        $methodInvokerIds = [];
-        $taggedServices = $this->container->findTaggedServiceIds('openclassrooms.service_proxy.method_invoker');
-        foreach ($taggedServices as $taggedServiceId => $tagParameters) {
-            if ($taggedServiceId === AggregateMethodInvoker::class) {
-                continue;
-            }
-            $methodInvokerIds[] = $taggedServiceId;
-        }
-        if ($this->container->has(AggregateMethodInvoker::class)) {
-            $definition = $this->container->getDefinition(AggregateMethodInvoker::class);
-            $definition->addMethodCall('setInvokers', [
-                array_map(static fn ($id) => new Reference($id), $methodInvokerIds),
-            ]);
-        }
     }
 }

@@ -11,5 +11,7 @@ interface MethodInvoker
     /**
      * @throws \InvalidArgumentException
      */
-    public function invoke(Instance $instance, ?object $object = null): mixed;
+    public function invoke(Instance $listenerInstance, ?object $event = null): mixed;
+
+    public function getPriority(): int;
 }

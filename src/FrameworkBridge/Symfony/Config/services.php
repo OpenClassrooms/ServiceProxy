@@ -54,12 +54,11 @@ return static function (ContainerConfigurator $containerConfigurator) {
             tagged_iterator('openclassrooms.service_proxy.event_handler'),
         ]);
 
-    // enable in symfony 6
-    // $services->set(AggregateMethodInvoker::class)
-    //     ->args([
-    //         tagged_iterator('openclassrooms.service_proxy.method_invoker'),
-    //     ])
-    // ;
+    $services->set(AggregateMethodInvoker::class)
+        ->args([
+            tagged_iterator('openclassrooms.service_proxy.method_invoker'),
+        ])
+    ;
 
     $services->set(ServiceProxySubscriber::class)
         ->public()
