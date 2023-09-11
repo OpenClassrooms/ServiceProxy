@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Interceptor\Interceptor;
 
-use OpenClassrooms\ServiceProxy\Annotation\Transaction;
+use OpenClassrooms\ServiceProxy\Attribute\Transaction;
 use OpenClassrooms\ServiceProxy\Handler\Contract\TransactionHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
@@ -16,9 +16,9 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
 {
     public function prefix(Instance $instance): Response
     {
-        $annotation = $instance->getMethod()
-            ->getAnnotation(Transaction::class);
-        $handler = $this->getHandler(TransactionHandler::class, $annotation);
+        $attribute = $instance->getMethod()
+            ->getAttribute(Transaction::class);
+        $handler = $this->getHandler(TransactionHandler::class, $attribute);
         $handler->begin();
 
         return new Response();
@@ -29,14 +29,14 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
      */
     public function suffix(Instance $instance): Response
     {
-        $annotation = $instance->getMethod()
-            ->getAnnotation(Transaction::class);
-        $handler = $this->getHandler(TransactionHandler::class, $annotation);
+        $attribute = $instance->getMethod()
+            ->getAttribute(Transaction::class);
+        $handler = $this->getHandler(TransactionHandler::class, $attribute);
         if ($instance->getMethod()->threwException()) {
             $handler->rollback();
 
-            if ($annotation->hasMappedExceptions()) {
-                $this->handleMappedException($instance, $annotation);
+            if ($attribute->hasMappedExceptions()) {
+                $this->handleMappedException($instance, $attribute);
             }
         } else {
             $handler->commit();
@@ -53,7 +53,7 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
     public function supportsPrefix(Instance $instance): bool
     {
         return $instance->getMethod()
-            ->hasAnnotation(Transaction::class);
+            ->hasAttribute(Transaction::class);
     }
 
     public function getPrefixPriority(): int
@@ -69,13 +69,13 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
     /**
      * @throws \Exception
      */
-    private function handleMappedException(Instance $instance, Transaction $annotation): void
+    private function handleMappedException(Instance $instance, Transaction $attribute): void
     {
         $thrownException = $instance->getMethod()
             ->getException();
 
         if ($thrownException instanceof \Exception) {
-            foreach ($annotation->getExceptions() as $fromException => $toException) {
+            foreach ($attribute->exceptions as $fromException => $toException) {
                 if (is_a($thrownException, $fromException)) {
                     $toThrow = new $toException();
 
