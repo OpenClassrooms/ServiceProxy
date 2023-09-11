@@ -17,6 +17,7 @@ final class Event extends Attribute
         ?string                 $handler = null,
         ?string                 $transport = null,
         public readonly ?string $name = null,
+        public readonly ?string  $queue = null,
         public readonly array   $dispatch = [On::POST],
     ) {
         parent::__construct();
