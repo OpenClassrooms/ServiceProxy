@@ -5,15 +5,35 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
+use OpenClassrooms\ServiceProxy\Handler\Handler\Event\SymfonyDispatcherEventHandler;
 use OpenClassrooms\ServiceProxy\Model\Event;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\HttpKernel\Debug\TraceableEventDispatcher;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 final class EventHandlerMock implements EventHandler
 {
     private array $events = [];
 
-    public function getEvent(string $name, int $position = 0): Event
+    private EventHandler $decoratedEventHandler;
+
+    private TraceableEventDispatcher $eventDispatcher;
+
+    public function __construct()
     {
-        $events = $this->getEvents($name);
+        $this->eventDispatcher = new TraceableEventDispatcher(
+            new EventDispatcher(),
+            new Stopwatch()
+        );
+
+        $this->decoratedEventHandler = new SymfonyDispatcherEventHandler(
+            $this->eventDispatcher
+        );
+    }
+
+    public function getCreatedEvent(string $name, int $position = 0): Event
+    {
+        $events = $this->getCreatedEvents($name);
 
         if (!isset($events[$position])) {
             throw new \RuntimeException("Event {$name} not found at position {$position}");
@@ -25,7 +45,7 @@ final class EventHandlerMock implements EventHandler
     /**
      * @return array<string, Event>
      */
-    public function getEvents(string $name = null): array
+    public function getCreatedEvents(string $name = null): array
     {
         if ($name !== null) {
             return array_values(
@@ -37,6 +57,11 @@ final class EventHandlerMock implements EventHandler
         }
 
         return $this->events;
+    }
+
+    public function getSentEvents(): array
+    {
+        return $this->eventDispatcher->getOrphanedEvents();
     }
 
     public function getName(): string
@@ -51,7 +76,17 @@ final class EventHandlerMock implements EventHandler
         $response = null,
         \Exception $exception = null
     ): Event {
-        return new Event($eventName, $senderClassShortName, $parameters, $response, $exception);
+        $event = $this->decoratedEventHandler->make(
+            $eventName,
+            $senderClassShortName,
+            $parameters,
+            $response,
+            $exception
+        );
+
+        $this->events[] = $event;
+
+        return $event;
     }
 
     /**
@@ -59,7 +94,7 @@ final class EventHandlerMock implements EventHandler
      */
     public function send(object $event): void
     {
-        $this->events[] = $event;
+        $this->decoratedEventHandler->send($event);
     }
 
     public function isDefault(): bool
