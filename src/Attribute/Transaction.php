@@ -13,7 +13,7 @@ final class Transaction extends Attribute
      * @param array<class-string, class-string> $exceptions
      */
     public function __construct(
-        public readonly array $exceptions
+        public readonly array $exceptions = []
     ) {
         parent::__construct();
     }

@@ -7,37 +7,40 @@ namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\TransactionInterceptor;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Transaction\TransactionHandlerMock;
-use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Transaction\TransactionAnnotatedClass;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Transaction\ClassWithTransactionAttribute;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
 use PHPUnit\Framework\TestCase;
 
 final class TransactionInterceptorTest extends TestCase
 {
-    use ProxyTestTrait;
+    use ProxyTestTrait {
+        tearDown as protected proxyTearDown;
+    }
 
     private TransactionHandlerMock $handler;
 
-    private TransactionAnnotatedClass $proxy;
+    private ClassWithTransactionAttribute $proxy;
 
     private ProxyFactory $proxyFactory;
+
+    private TransactionInterceptor $interceptor;
 
     protected function setUp(): void
     {
         $this->handler = new TransactionHandlerMock();
+        $this->interceptor = new TransactionInterceptor([$this->handler]);
         $this->proxyFactory = $this->getProxyFactory(
             [
-                new TransactionInterceptor(
-                    [$this->handler],
-                ),
+                $this->interceptor,
             ]
         );
-        $this->proxy = $this->proxyFactory->createProxy(new TransactionAnnotatedClass());
+        $this->proxy = $this->proxyFactory->createProxy(new ClassWithTransactionAttribute());
     }
 
     public function testExceptionTransactionRollBack(): void
     {
         try {
-            $this->proxy->annotatedMethodThatThrowsException();
+            $this->proxy->methodWithException();
             /** @noinspection PhpUnreachableStatementInspection */
             $this->fail();
         } catch (\Exception $e) {
@@ -49,7 +52,7 @@ final class TransactionInterceptorTest extends TestCase
     public function testExceptionTransactionRollBackWithExceptionMapping(): void
     {
         try {
-            $this->proxy->annotatedMethodWithExceptionMappingThatThrowsException();
+            $this->proxy->methodWithExceptionMappingThatThrowsException();
             /** @noinspection PhpUnreachableStatementInspection */
             $this->fail();
         } catch (\Exception $e) {
@@ -61,7 +64,7 @@ final class TransactionInterceptorTest extends TestCase
 
     public function testTransactionCommit(): void
     {
-        $this->proxy->annotatedMethod();
+        $this->proxy->method();
         $this->assertTrue($this->handler->committed);
         $this->assertFalse($this->handler->rollBacked);
     }
@@ -69,7 +72,7 @@ final class TransactionInterceptorTest extends TestCase
     public function testExceptionNestedTransactionRollBack(): void
     {
         try {
-            $this->proxy->nestedAnnotatedMethodThatThrowsException();
+            $this->proxy->nestedMethodThatThrowsException();
             $this->fail();
         } catch (\Exception $e) {
             $this->assertFalse($this->handler->committed);
@@ -79,7 +82,7 @@ final class TransactionInterceptorTest extends TestCase
 
     public function testNestedTransactionCommit(): void
     {
-        $this->proxy->nestedAnnotatedMethod();
+        $this->proxy->nestedMethod();
 
         $this->assertTrue($this->handler->committed);
         $this->assertFalse($this->handler->rollBacked);
