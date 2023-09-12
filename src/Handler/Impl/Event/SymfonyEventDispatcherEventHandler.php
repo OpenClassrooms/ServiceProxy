@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Handler\Impl\Event;
 
+use OpenClassrooms\ServiceProxy\Attribute\Event\Transport;
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
 use OpenClassrooms\ServiceProxy\Handler\Impl\ConfigurableHandler;
 use OpenClassrooms\ServiceProxy\Invoker\Impl\AggregateMethodInvoker;
@@ -25,7 +26,7 @@ final class SymfonyEventDispatcherEventHandler implements EventHandler
     {
         $this->eventDispatcher->dispatch(
             $event,
-            $event->name,
+            $event->name . '.' . Transport::SYNC->value,
         );
     }
 
@@ -34,8 +35,11 @@ final class SymfonyEventDispatcherEventHandler implements EventHandler
         return $this->name ?? 'symfony_event_dispatcher';
     }
 
-    public function listen(Instance $instance, string $name, int $priority = 0): void
+    public function listen(Instance $instance, string $name, ?Transport $transport = null, int $priority = 0): void
     {
+        if ($transport !== null) {
+            $name .= '.' . $transport->value;
+        }
         $this->eventDispatcher->addListener(
             $name,
             $this->getCallable($instance),

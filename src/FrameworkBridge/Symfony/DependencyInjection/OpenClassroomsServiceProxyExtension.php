@@ -14,7 +14,6 @@ use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Invoker\Contract\MethodInvoker;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Definition;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
@@ -120,7 +119,7 @@ final class OpenClassroomsServiceProxyExtension extends Extension
                 $args['$' . $key] = $value;
             }
             $container->register($handlerConfigClass)
-                      ->setArguments($args)
+                ->setArguments($args)
             ;
         }
     }

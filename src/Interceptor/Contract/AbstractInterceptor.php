@@ -6,7 +6,6 @@ namespace OpenClassrooms\ServiceProxy\Interceptor\Contract;
 
 use OpenClassrooms\ServiceProxy\Annotation\Annotation;
 use OpenClassrooms\ServiceProxy\Handler\Contract\AnnotationHandler;
-use OpenClassrooms\ServiceProxy\Handler\Exception\DuplicatedDefaultHandler;
 use OpenClassrooms\ServiceProxy\Handler\Exception\DuplicatedHandler;
 use OpenClassrooms\ServiceProxy\Handler\Exception\HandlerNotFound;
 use OpenClassrooms\ServiceProxy\Handler\Exception\MissingDefaultHandler;
@@ -32,10 +31,7 @@ abstract class AbstractInterceptor
     final public function setHandlers(iterable $handlers): void
     {
         $handlers = $this->indexHandlers($handlers);
-
-        // $this->checkDuplicateDefaults($handlers);
         $this->checkMultipleHandlersWithNoDefault($handlers);
-
         $this->handlers = $handlers;
     }
 
@@ -116,24 +112,6 @@ abstract class AbstractInterceptor
         throw new \InvalidArgumentException(
             'All handlers must implement AnnotationHandler interface.'
         );
-    }
-
-    /**
-     * @param array<class-string<AnnotationHandler>, array<string, AnnotationHandler>> $handlers
-     */
-    private function checkDuplicateDefaults(array $handlers): void
-    {
-        foreach ($handlers as $handlerInterface => $handlersByInterface) {
-            $defaultHandlers = 0;
-            foreach ($handlersByInterface as $handler) {
-                if ($handler->isDefault()) {
-                    $defaultHandlers++;
-                }
-            }
-            if ($defaultHandlers > 1) {
-                throw new DuplicatedDefaultHandler("Only one default handler is allowed for {$handlerInterface}.");
-            }
-        }
     }
 
     /**

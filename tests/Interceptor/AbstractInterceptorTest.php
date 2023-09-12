@@ -6,7 +6,6 @@ namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
 use OpenClassrooms\ServiceProxy\Annotation\Cache;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
-use OpenClassrooms\ServiceProxy\Handler\Exception\DuplicatedDefaultHandler;
 use OpenClassrooms\ServiceProxy\Handler\Exception\DuplicatedHandler;
 use OpenClassrooms\ServiceProxy\Handler\Exception\HandlerNotFound;
 use OpenClassrooms\ServiceProxy\Handler\Exception\MissingDefaultHandler;
@@ -33,12 +32,6 @@ final class AbstractInterceptorTest extends TestCase
     {
         $this->expectException(DuplicatedHandler::class);
         new CacheInterceptor([new CacheHandlerMock(), new CacheHandlerMock()]);
-    }
-
-    public function testWithMultipleDefaultHandlersThrowException(): void
-    {
-        $this->expectException(DuplicatedDefaultHandler::class);
-        new CacheInterceptor([new CacheHandlerMock(), new CacheHandlerMock('other')]);
     }
 
     public function testWithMultipleHandlersNoDefaultThrowException(): void

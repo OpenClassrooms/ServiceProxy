@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event;
 
+use OpenClassrooms\ServiceProxy\Attribute\Event\Transport;
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
 use OpenClassrooms\ServiceProxy\Model\Event;
 use OpenClassrooms\ServiceProxy\Model\Request\Instance;
@@ -42,7 +43,7 @@ final class EventHandlerMock implements EventHandler
     {
     }
 
-    public function listen(Instance $instance, string $name, int $priority = 0): void
+    public function listen(Instance $instance, string $name, ?Transport $transport = null, int $priority = 0): void
     {
     }
 }

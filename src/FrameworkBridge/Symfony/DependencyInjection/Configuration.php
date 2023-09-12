@@ -49,9 +49,9 @@ final class Configuration implements ConfigurationInterface
 
         $handlersNode = $children->arrayNode('handlers');
         $handlersNode->useAttributeAsKey('name')
-                            ->arrayPrototype()
-                            ->scalarPrototype()->end()
-                            ->end()
+            ->arrayPrototype()
+            ->scalarPrototype()->end()
+            ->end()
         ;
 
         $children->end();

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Handler\Impl\Event;
 
+use OpenClassrooms\ServiceProxy\Attribute\Event\Transport;
 use OpenClassrooms\ServiceProxy\Handler\Config\Event\HttpEventHandlerConfig;
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
 use OpenClassrooms\ServiceProxy\Handler\Impl\ConfigurableHandler;
@@ -63,7 +64,7 @@ final class HttpEventHandler implements EventHandler
         return $this->name ?? 'http_async';
     }
 
-    public function listen(Instance $instance, string $name, int $priority = 0): void
+    public function listen(Instance $instance, string $name, ?Transport $transport = null, int $priority = 0): void
     {
         throw new \RuntimeException('Http event handler can not listen events');
     }

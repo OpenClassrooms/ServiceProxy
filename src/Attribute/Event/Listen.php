@@ -11,15 +11,14 @@ final class Listen extends Attribute
 {
     /**
      * @param array<string, string>|null $handler
-     * @param array<string, string>|null $transport
      */
     public function __construct(
         public readonly string $name,
-        ?array                $handler = null,
-        ?array                $transport = null,
+        ?array                 $handler = null,
+        public ?Transport       $transport = null,
         public readonly int    $priority = 0,
     ) {
-        $this->setHandlers(aliases: compact('handler', 'transport'));
+        $this->setHandlers($handler);
         parent::__construct();
     }
 }

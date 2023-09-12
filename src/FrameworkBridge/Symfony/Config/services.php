@@ -57,7 +57,7 @@ return static function (ContainerConfigurator $containerConfigurator) {
     $services->set(MessageSerializer::class)
         ->autowire()
         ->autoconfigure()
-        ;
+    ;
 
     $services->set(ServiceProxySubscriber::class)
         ->public()
