@@ -9,9 +9,8 @@ use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
-use OpenClassrooms\ServiceProxy\Model\Request\Context;
-use OpenClassrooms\ServiceProxy\Model\Request\ContextType;
 use OpenClassrooms\ServiceProxy\Model\Request\Instance;
+use OpenClassrooms\ServiceProxy\Model\Request\Moment;
 use OpenClassrooms\ServiceProxy\Model\Response\Response;
 
 final class EventInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
@@ -33,10 +32,16 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
         ;
 
         foreach ($attributes as $attribute) {
-            $handler = $this->getHandler(EventHandler::class, $attribute);
-            if ($attribute->isPre()) {
-                $instance->setContext(new Context(ContextType::PREFIX, $attribute));
-                $handler->dispatch($instance);
+            $handlers = $this->getHandlers(EventHandler::class, $attribute);
+            $event = \OpenClassrooms\ServiceProxy\Model\Event::createFromSenderInstance(
+                $instance,
+                Moment::PREFIX,
+                $attribute->name,
+            );
+            foreach ($handlers as $handler) {
+                if ($attribute->isPre()) {
+                    $handler->dispatch($event, $attribute->queue);
+                }
             }
         }
 
@@ -51,16 +56,25 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
 
         foreach ($attributes as $attribute) {
             $attribute = $attribute->newInstance();
-            $handler = $this->getHandler(EventHandler::class, $attribute);
+            $handlers = $this->getHandlers(EventHandler::class, $attribute);
+            foreach ($handlers as $handler) {
+                if ($attribute->isPost() && !$instance->getMethod()->threwException()) {
+                    $event = \OpenClassrooms\ServiceProxy\Model\Event::createFromSenderInstance(
+                        $instance,
+                        Moment::SUFFIX,
+                        $attribute->name,
+                    );
+                    $handler->dispatch($event, $attribute->queue);
+                }
 
-            if ($attribute->isPost() && !$instance->getMethod()->threwException()) {
-                $instance->setContext(new Context(ContextType::SUFFIX, $attribute));
-                $handler->dispatch($instance);
-            }
-
-            if ($attribute->isOnException() && $instance->getMethod()->threwException()) {
-                $instance->setContext(new Context(ContextType::EXCEPTION, $attribute));
-                $handler->dispatch($instance);
+                if ($attribute->isOnException() && $instance->getMethod()->threwException()) {
+                    $event = \OpenClassrooms\ServiceProxy\Model\Event::createFromSenderInstance(
+                        $instance,
+                        Moment::EXCEPTION,
+                        $attribute->name,
+                    );
+                    $handler->dispatch($event, $attribute->queue);
+                }
             }
         }
 

@@ -18,8 +18,11 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
     {
         $annotation = $instance->getMethod()
             ->getAnnotation(Transaction::class);
-        $handler = $this->getHandler(TransactionHandler::class, $annotation);
-        $handler->begin();
+        $handlers = $this->getHandlers(TransactionHandler::class, $annotation);
+
+        foreach ($handlers as $handler) {
+            $handler->begin();
+        }
 
         return new Response();
     }
@@ -31,15 +34,18 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
     {
         $annotation = $instance->getMethod()
             ->getAnnotation(Transaction::class);
-        $handler = $this->getHandler(TransactionHandler::class, $annotation);
-        if ($instance->getMethod()->threwException()) {
-            $handler->rollback();
+        $handlers = $this->getHandlers(TransactionHandler::class, $annotation);
 
-            if ($annotation->hasMappedExceptions()) {
-                $this->handleMappedException($instance, $annotation);
+        foreach ($handlers as $handler) {
+            if ($instance->getMethod()->threwException()) {
+                $handler->rollback();
+
+                if ($annotation->hasMappedExceptions()) {
+                    $this->handleMappedException($instance, $annotation);
+                }
+            } else {
+                $handler->commit();
             }
-        } else {
-            $handler->commit();
         }
 
         return new Response();

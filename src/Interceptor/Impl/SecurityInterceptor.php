@@ -36,13 +36,15 @@ final class SecurityInterceptor extends AbstractInterceptor implements PrefixInt
             $role = $this->guessRoleName($instance);
             $expression = "is_granted('{$role}')";
         }
-        $handler = $this->getHandler(SecurityHandler::class, $attribute);
-        $this->resolveExpression(
-            $handler,
-            $expression,
-            $parameters,
-            $attribute
-        );
+        $handlers = $this->getHandlers(SecurityHandler::class, $attribute);
+        foreach ($handlers as $handler) {
+            $this->resolveExpression(
+                $handler,
+                $expression,
+                $parameters,
+                $attribute
+            );
+        }
 
         return new Response();
     }

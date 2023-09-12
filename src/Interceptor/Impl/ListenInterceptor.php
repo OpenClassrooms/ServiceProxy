@@ -15,10 +15,15 @@ final class ListenInterceptor extends AbstractInterceptor implements StartUpInte
 {
     public function startUp(Instance $instance): Response
     {
-        $attribute = $instance->getMethod()
-            ->getAttribute(Listen::class);
-        $handler = $this->getHandler(EventHandler::class, $attribute);
-        $handler->listen($instance);
+        $attributes = $instance->getMethod()
+            ->getAttributesInstances(Listen::class);
+
+        foreach ($attributes as $attribute) {
+            $handlers = $this->getHandlers(EventHandler::class, $attribute);
+            foreach ($handlers as $handler) {
+                $handler->listen($instance, $attribute->name, $attribute->priority);
+            }
+        }
 
         return new Response();
     }

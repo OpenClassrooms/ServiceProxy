@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\DependencyInjection\Compiler;
 
-use OpenClassrooms\ServiceProxy\Invoker\Impl\AggregateMethodInvoker;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use Symfony\Component\DependencyInjection\Compiler\Compiler;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;

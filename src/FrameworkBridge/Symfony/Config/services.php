@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-use OpenClassrooms\ServiceProxy\Configuration;
 use OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\Subscriber\ServiceProxySubscriber;
-use OpenClassrooms\ServiceProxy\Handler\Impl\Event\AggregateEventHandler;
 use OpenClassrooms\ServiceProxy\Invoker\Impl\AggregateMethodInvoker;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
+use OpenClassrooms\ServiceProxy\ProxyFactoryConfiguration;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\inline_service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
@@ -38,8 +37,7 @@ return static function (ContainerConfigurator $containerConfigurator) {
     $services->set(ProxyFactory::class)
         ->public()
         ->args([
-
-            inline_service(Configuration::class)
+            inline_service(ProxyFactoryConfiguration::class)
                 ->args([
                     '$proxiesDir' => param('openclassrooms.service_proxy.cache_dir'),
                     '$eval' => param('openclassrooms.service_proxy.eval'),
@@ -48,11 +46,6 @@ return static function (ContainerConfigurator $containerConfigurator) {
             tagged_iterator('openclassrooms.service_proxy.suffix_interceptor'),
         ])
     ;
-
-    $services->set(AggregateEventHandler::class)
-        ->args([
-            tagged_iterator('openclassrooms.service_proxy.event_handler'),
-        ]);
 
     $services->set(AggregateMethodInvoker::class)
         ->args([

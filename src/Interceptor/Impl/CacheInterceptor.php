@@ -62,7 +62,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             return new Response(null, false);
         }
 
-        $handler = $this->getHandler(CacheHandler::class, $attribute);
+        $handler = $this->getHandlers(CacheHandler::class, $attribute)[0];
 
         if ($handler->contains($cacheKey) === false) {
             self::$misses[] = $cacheKey;
@@ -91,7 +91,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             ->getResponse()
         ;
 
-        $handler = $this->getHandler(CacheHandler::class, $attribute);
+        $handler = $this->getHandlers(CacheHandler::class, $attribute)[0];
 
         $handler->save(
             $cacheKey,

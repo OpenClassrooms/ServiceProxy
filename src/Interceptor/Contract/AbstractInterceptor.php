@@ -44,37 +44,39 @@ abstract class AbstractInterceptor
      *
      * @param class-string<T> $handlerInterface
      *
-     * @return T
+     * @return T[]
      */
-    final public function getHandler(string $handlerInterface, Annotation $annotation): AnnotationHandler
+    final public function getHandlers(string $handlerInterface, Annotation $annotation): array
     {
+        $annotationClass = \get_class($annotation);
         $handlers = $this->handlers[$handlerInterface] ?? [];
-        if ($annotation->getHandler() === null) {
+        if (\count($annotation->getHandlers()) === 0) {
             if (\count($handlers) === 1) {
                 // @phpstan-ignore-next-line
-                return array_values($handlers)[0];
+                return array_values($handlers);
             }
             if (\count($handlers) > 1) {
-                foreach ($handlers as $handler) {
-                    if ($handler->isDefault()) {
-                        // @phpstan-ignore-next-line
-                        return $handler;
-                    }
-                }
+                // @phpstan-ignore-next-line
+                return array_values(
+                    array_filter($handlers, static fn (AnnotationHandler $handler) => $handler->isDefault())
+                );
             }
         }
 
-        $handlerName = $annotation->getHandler();
-        if (isset($handlers[$handlerName])) {
-            // @phpstan-ignore-next-line
-            return $handlers[$handlerName];
+        $foundHandlers = [];
+        foreach ($annotation->getHandlers() as $handlerName) {
+            if (!isset($handlers[$handlerName])) {
+                throw new HandlerNotFound("No handler '{$handlerName}' found for annotation {$annotationClass}");
+            }
+            $foundHandlers[$handlerName] = $handlers[$handlerName];
         }
 
-        $handlerName = $handlerName ?? 'default';
-        $annotationClass = \get_class($annotation);
-        throw new HandlerNotFound(
-            "No handler found for annotation {$annotationClass} with name {$handlerName}"
-        );
+        if (\count($foundHandlers) > 0) {
+            // @phpstan-ignore-next-line
+            return array_values($foundHandlers);
+        }
+
+        throw new HandlerNotFound("No handler found for annotation {$annotationClass}");
     }
 
     /**

@@ -14,8 +14,6 @@ final class SymfonyCacheHandler implements CacheHandler
 {
     use ConfigurableHandler;
 
-    private ?string $name;
-
     private ?int $defaultLifetime;
 
     private TagAwareAdapterInterface $cacheAdapter;

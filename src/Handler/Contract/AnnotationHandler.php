@@ -11,7 +11,7 @@ interface AnnotationHandler
     public function isDefault(): bool;
 
     /**
-     * @param array<string, string> $defaultHandlers
+     * @param array<string, string[]> $defaultHandlers
      */
     public function setDefaultHandlers(array $defaultHandlers): void;
 }

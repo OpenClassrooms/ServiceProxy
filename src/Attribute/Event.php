@@ -11,18 +11,20 @@ use Webmozart\Assert\Assert;
 final class Event extends Attribute
 {
     /**
-     * @param array<On> $dispatch
+     * @param array<On>          $dispatch
+     * @param array<string>|string|null $handler
+     * @param array<string>|string|null $transport
      */
     public function __construct(
-        ?string                 $handler = null,
-        ?string                 $transport = null,
+        array|string|null                 $handler = null,
+        array|string|null                 $transport = null,
         public readonly ?string $name = null,
         public readonly ?string  $queue = null,
         public readonly array   $dispatch = [On::POST],
     ) {
         parent::__construct();
         Assert::allIsInstanceOf($dispatch, On::class);
-        $this->setHandler(aliases: compact('handler', 'transport'));
+        $this->setHandlers(aliases: compact('handler', 'transport'));
     }
 
     public function isOnException(): bool

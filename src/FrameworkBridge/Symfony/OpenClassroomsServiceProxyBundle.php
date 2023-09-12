@@ -21,6 +21,5 @@ final class OpenClassroomsServiceProxyBundle extends Bundle
     {
         parent::build($container);
         $container->addCompilerPass(new ServiceProxyPass(), PassConfig::TYPE_AFTER_REMOVING);
-        // $container->addCompilerPass(new ServiceProxyRemovePass(), PassConfig::TYPE_REMOVE);
     }
 }

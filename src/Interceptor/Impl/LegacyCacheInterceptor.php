@@ -34,7 +34,7 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
             return new Response(null, false);
         }
 
-        $handler = $this->getHandler(CacheHandler::class, $annotation);
+        $handler = $this->getHandlers(CacheHandler::class, $annotation)[0];
 
         array_unshift($tags, $proxyId);
         $data = $handler->fetch(implode('|', $tags));
@@ -64,7 +64,7 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
             ->getResponse()
         ;
 
-        $handler = $this->getHandler(CacheHandler::class, $annotation);
+        $handler = $this->getHandlers(CacheHandler::class, $annotation)[0];
 
         $handler->save(
             $proxyId,

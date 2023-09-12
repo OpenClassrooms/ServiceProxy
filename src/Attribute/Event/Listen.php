@@ -9,13 +9,17 @@ use OpenClassrooms\ServiceProxy\Attribute\Attribute;
 #[\Attribute(\Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
 final class Listen extends Attribute
 {
+    /**
+     * @param array<string, string>|null $handler
+     * @param array<string, string>|null $transport
+     */
     public function __construct(
         public readonly string $name,
-        ?string                $handler = null,
-        ?string                $transport = null,
+        ?array                $handler = null,
+        ?array                $transport = null,
         public readonly int    $priority = 0,
     ) {
-        $this->setHandler(aliases: compact('handler', 'transport'));
+        $this->setHandlers(aliases: compact('handler', 'transport'));
         parent::__construct();
     }
 }

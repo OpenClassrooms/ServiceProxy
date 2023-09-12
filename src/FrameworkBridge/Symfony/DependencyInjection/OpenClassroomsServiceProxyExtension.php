@@ -14,6 +14,7 @@ use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Invoker\Contract\MethodInvoker;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
@@ -101,5 +102,19 @@ final class OpenClassroomsServiceProxyExtension extends Extension
             'openclassrooms.service_proxy.handler.defaults',
             (array) $config['default_handlers']
         );
+
+        $container->setParameter('openclassrooms.service_proxy.handlers', $config['handlers']);
+
+        foreach ($config['handlers'] as $handlerClass => $handler) {
+            $handlerConfigClass = $handlerClass . 'Config';
+            if (!class_exists($handlerConfigClass)) {
+                throw new \InvalidArgumentException(
+                    sprintf('The handler class "%s" does not exist.', $handlerConfigClass)
+                );
+            }
+            $def = new Definition($handlerConfigClass);
+            $def->setArguments($handler);
+            $container->setDefinition($handlerConfigClass, $def);
+        }
     }
 }

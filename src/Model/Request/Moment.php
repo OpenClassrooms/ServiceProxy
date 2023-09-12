@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Model\Request;
 
-enum ContextType: string
+enum Moment: string
 {
     case PREFIX = 'pre';
 

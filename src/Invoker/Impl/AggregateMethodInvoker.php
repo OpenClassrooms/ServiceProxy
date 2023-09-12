@@ -12,8 +12,9 @@ final class AggregateMethodInvoker
     /**
      * @param  iterable<MethodInvoker> $invokers
      */
-    public function __construct(private iterable $invokers)
-    {
+    public function __construct(
+        private iterable $invokers
+    ) {
     }
 
     public function invoke(Instance $instance, ?object $object = null): mixed
@@ -22,7 +23,10 @@ final class AggregateMethodInvoker
             $this->invokers = iterator_to_array($this->invokers);
         }
 
-        usort($this->invokers, static fn (MethodInvoker $a, MethodInvoker $b) => $a->getPriority()  <=> $b->getPriority());
+        usort(
+            $this->invokers,
+            static fn (MethodInvoker $a, MethodInvoker $b) => $a->getPriority() <=> $b->getPriority()
+        );
 
         foreach ($this->invokers as $invoker) {
             try {
@@ -32,7 +36,8 @@ final class AggregateMethodInvoker
             }
         }
 
-        $methodName = $instance->getReflection()->getName() . '::' . $instance->getMethod()->getName();
+        $methodName = $instance->getReflection()
+            ->getName() . '::' . $instance->getMethod()->getName();
         $message = "No invoker found for method {$methodName}";
         if ($object !== null) {
             $objectType = \get_class($object);

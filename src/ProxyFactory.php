@@ -20,7 +20,7 @@ final class ProxyFactory
 {
     private AnnotationReader $annotationReader;
 
-    private Configuration $configuration;
+    private ProxyFactoryConfiguration $configuration;
 
     /**
      * @var array<string, PrefixInterceptor[]|SuffixInterceptor[]>
@@ -34,9 +34,9 @@ final class ProxyFactory
      * @throws AnnotationException
      */
     public function __construct(
-        Configuration $configuration,
-        iterable $prefixInterceptors,
-        iterable $suffixInterceptors
+        ProxyFactoryConfiguration $configuration,
+        iterable                  $prefixInterceptors,
+        iterable                  $suffixInterceptors
     ) {
         $this->annotationReader = new AnnotationReader();
         $this->configuration = $configuration;

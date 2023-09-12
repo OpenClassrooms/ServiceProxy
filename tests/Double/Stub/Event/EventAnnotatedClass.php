@@ -67,8 +67,8 @@ class EventAnnotatedClass
         return 1;
     }
 
-    #[Event(dispatch: ['onException'])]
-    public function eventOnException(mixed $useCaseRequest): mixed
+    #[Event(dispatch: [Event\On::EXCEPTION])]
+    public function eventOnException(mixed $useCaseRequest): void
     {
         throw new \RuntimeException();
     }

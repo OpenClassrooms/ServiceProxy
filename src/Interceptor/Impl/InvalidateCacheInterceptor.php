@@ -23,7 +23,7 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
         $attribute = $instance->getMethod()
             ->getAttribute(InvalidateCache::class);
 
-        $handler = $this->getHandler(CacheHandler::class, $attribute);
+        $handler = $this->getHandlers(CacheHandler::class, $attribute)[0];
 
         $tags = $this->getTags($instance, $attribute);
 

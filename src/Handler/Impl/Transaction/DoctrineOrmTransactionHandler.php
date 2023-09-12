@@ -20,14 +20,11 @@ final class DoctrineOrmTransactionHandler implements TransactionHandler
      */
     private array $entityManagers;
 
-    private ?string $name;
-
-    public function __construct(ManagerRegistry $doctrineRegistry, string $name = null)
+    public function __construct(ManagerRegistry $doctrineRegistry)
     {
         /** @var array<string, EntityManager> $managers */
         $managers = $doctrineRegistry->getManagers();
         $this->entityManagers = $managers;
-        $this->name = $name;
     }
 
     public function begin(): bool

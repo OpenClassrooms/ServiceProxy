@@ -56,12 +56,12 @@ final class AbstractInterceptorTest extends TestCase
             new CacheHandlerMock(),
             new CacheHandlerMock('other', false),
         ]);
-        $handler = $interceptor->getHandler(
+        $handler = $interceptor->getHandlers(
             CacheHandler::class,
             new Cache([
                 'handler' => 'other',
             ])
-        );
+        )[0];
         $this->assertSame('other', $handler->getName());
     }
 
@@ -70,10 +70,10 @@ final class AbstractInterceptorTest extends TestCase
         $interceptor = new CacheInterceptor([
             new CacheHandlerMock('other', false),
         ]);
-        $handler = $interceptor->getHandler(
+        $handler = $interceptor->getHandlers(
             CacheHandler::class,
             new Cache()
-        );
+        )[0];
         $this->assertSame('other', $handler->getName());
     }
 }

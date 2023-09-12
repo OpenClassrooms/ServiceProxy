@@ -6,7 +6,6 @@ namespace OpenClassrooms\ServiceProxy\Model\Request;
 
 use Doctrine\Common\Annotations\AnnotationException;
 use Doctrine\Common\Annotations\AnnotationReader;
-use OpenClassrooms\ServiceProxy\Model\Event;
 
 final class Instance
 {
@@ -15,8 +14,6 @@ final class Instance
     private object $object;
 
     private \ReflectionObject $reflection;
-
-    private ?Context $context;
 
     private function __construct()
     {
@@ -84,11 +81,6 @@ final class Instance
         return $this;
     }
 
-    public function getContext(): ?Context
-    {
-        return $this->context;
-    }
-
     public function getObject(): object
     {
         return $this->object;
@@ -97,29 +89,5 @@ final class Instance
     public function getReflection(): \ReflectionObject
     {
         return $this->reflection;
-    }
-
-    public function getEvent(): Event
-    {
-        return new Event(
-            $this->getReflection()
-                ->getName(),
-            $this->getReflection()
-                ->getShortName(),
-            $this->getMethod()
-                ->getName(),
-            $this->getMethod()
-                ->getParameters(),
-            $this->getMethod()
-                ->getReturnedValue(),
-            $this->getMethod()
-                ->getException(),
-            $this->getContext()?->type ?? ContextType::PREFIX
-        );
-    }
-
-    public function setContext(Context $context): void
-    {
-        $this->context = $context;
     }
 }

@@ -22,7 +22,7 @@ final class SymfonySecurityHandler implements SecurityHandler
 
     public function getName(): string
     {
-        return 'symfony_authorization_checker';
+        return $this->name ?? 'symfony_authorization_checker';
     }
 
     public function checkAccess(string $attribute, mixed $subject = null): bool

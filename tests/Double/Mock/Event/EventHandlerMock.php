@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
+use OpenClassrooms\ServiceProxy\Model\Event;
 use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 
 final class EventHandlerMock implements EventHandler
@@ -27,9 +28,9 @@ final class EventHandlerMock implements EventHandler
         return 'array';
     }
 
-    public function dispatch(Instance $instance): void
+    public function dispatch(Event $event, ?string $queue = null): void
     {
-        $this->events[] = $instance->getEvent();
+        $this->events[] = $event;
     }
 
     public function isDefault(): bool
@@ -41,7 +42,7 @@ final class EventHandlerMock implements EventHandler
     {
     }
 
-    public function listen(Instance $instance): void
+    public function listen(Instance $instance, string $name, int $priority = 0): void
     {
     }
 }
