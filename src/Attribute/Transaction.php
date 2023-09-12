@@ -10,7 +10,7 @@ use OpenClassrooms\ServiceProxy\Handler\Contract\TransactionHandler;
 final class Transaction extends Attribute
 {
     /**
-     * @param array<class-string, class-string>
+     * @param array<class-string, class-string> $exceptions
      */
     public function __construct(
         public readonly array $exceptions
