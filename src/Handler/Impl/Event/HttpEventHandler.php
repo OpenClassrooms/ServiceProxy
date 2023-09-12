@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Handler\Impl\Event;
 
+use OpenClassrooms\ServiceProxy\Handler\Config\Event\HttpEventHandlerConfig;
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
 use OpenClassrooms\ServiceProxy\Handler\Impl\ConfigurableHandler;
 use OpenClassrooms\ServiceProxy\Model\Event;

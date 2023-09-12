@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\Messenger\Transport\Serialization\MessageSerializer;
 use OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\Subscriber\ServiceProxySubscriber;
 use OpenClassrooms\ServiceProxy\Invoker\Impl\AggregateMethodInvoker;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
@@ -52,6 +53,11 @@ return static function (ContainerConfigurator $containerConfigurator) {
             tagged_iterator('openclassrooms.service_proxy.method_invoker'),
         ])
     ;
+
+    $services->set(MessageSerializer::class)
+        ->autowire()
+        ->autoconfigure()
+        ;
 
     $services->set(ServiceProxySubscriber::class)
         ->public()

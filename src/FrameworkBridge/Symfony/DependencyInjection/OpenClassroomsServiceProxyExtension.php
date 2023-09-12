@@ -105,16 +105,23 @@ final class OpenClassroomsServiceProxyExtension extends Extension
 
         $container->setParameter('openclassrooms.service_proxy.handlers', $config['handlers']);
 
-        foreach ($config['handlers'] as $handlerClass => $handler) {
-            $handlerConfigClass = $handlerClass . 'Config';
+        foreach ($config['handlers'] as $handlerName => $handler) {
+            $parts = explode('_', preg_replace('/(?<!^)[A-Z]/', '_$0', $handlerName));
+            array_pop($parts);
+            $handlerType = array_pop($parts);
+            $handlerConfigClass = "OpenClassrooms\\ServiceProxy\\Handler\\Config\\{$handlerType}\\{$handlerName}Config";
             if (!class_exists($handlerConfigClass)) {
                 throw new \InvalidArgumentException(
-                    sprintf('The handler class "%s" does not exist.', $handlerConfigClass)
+                    sprintf('The handler config class "%s" does not exist.', $handlerConfigClass)
                 );
             }
-            $def = new Definition($handlerConfigClass);
-            $def->setArguments($handler);
-            $container->setDefinition($handlerConfigClass, $def);
+            $args = [];
+            foreach ($handler as $key => $value) {
+                $args['$' . $key] = $value;
+            }
+            $container->register($handlerConfigClass)
+                      ->setArguments($args)
+            ;
         }
     }
 }

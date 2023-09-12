@@ -25,7 +25,11 @@ final class Configuration implements ConfigurationInterface
         $cacheDirNode->defaultValue('%kernel.cache_dir%/openclassrooms_service_proxy')->end();
 
         $defaultHandlersNode = $children->arrayNode('default_handlers');
-        $defaultHandlersNode->prototype('array')->end();
+        $defaultHandlersNode->useAttributeAsKey('name')
+            ->arrayPrototype()
+            ->scalarPrototype()->end()
+            ->end();
+
         $defaultHandlersNode->defaultValue([
             'cache' => ['array'],
             'transaction' => ['doctrine_orm'],
@@ -44,7 +48,11 @@ final class Configuration implements ConfigurationInterface
         //     ->end();
 
         $handlersNode = $children->arrayNode('handlers');
-        $handlersNode->prototype('array')->end();
+        $handlersNode->useAttributeAsKey('name')
+                            ->arrayPrototype()
+                            ->scalarPrototype()->end()
+                            ->end()
+        ;
 
         $children->end();
 

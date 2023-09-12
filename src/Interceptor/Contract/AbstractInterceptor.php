@@ -33,7 +33,7 @@ abstract class AbstractInterceptor
     {
         $handlers = $this->indexHandlers($handlers);
 
-        $this->checkDuplicateDefaults($handlers);
+        // $this->checkDuplicateDefaults($handlers);
         $this->checkMultipleHandlersWithNoDefault($handlers);
 
         $this->handlers = $handlers;

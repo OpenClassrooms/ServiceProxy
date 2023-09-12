@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Handler\Impl\Event;
+namespace OpenClassrooms\ServiceProxy\Handler\Config\Event;
 
 final class HttpEventHandlerConfig
 {
