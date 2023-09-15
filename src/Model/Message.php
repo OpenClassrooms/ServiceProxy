@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Model;
 
+use OpenClassrooms\ServiceProxy\Attribute\Event\Transport;
+
 final class Message
 {
     /**
@@ -18,6 +20,6 @@ final class Message
 
     public function getName(): string
     {
-        return $this->body->name ?? $this->context->subject . '_' . $this->context->state;
+        return ($this->body->name ?? $this->context->subject . '_' . $this->context->state) . '.' . Transport::ASYNC->value;
     }
 }
