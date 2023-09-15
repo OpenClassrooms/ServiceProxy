@@ -71,13 +71,14 @@ final class ServiceProxySubscriber implements EventSubscriberInterface
     public function getInstances(): iterable
     {
         foreach ($this->proxies as $proxy) {
+            $object = $proxy;
             if ($proxy instanceof ValueHolderInterface) {
-                $proxy = $proxy->getWrappedValueHolderValue();
-                if ($proxy === null) {
+                $object = $proxy->getWrappedValueHolderValue();
+                if ($object === null) {
                     continue;
                 }
             }
-            $instanceRef = new \ReflectionObject($proxy);
+            $instanceRef = new \ReflectionObject($object);
             $methods = $instanceRef->getMethods(\ReflectionMethod::IS_PUBLIC);
             foreach ($methods as $methodRef) {
                 $methodAnnotations = $this->annotationReader->getMethodAnnotations($methodRef);
