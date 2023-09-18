@@ -41,7 +41,7 @@ final class SymfonyMessengerEventHandler implements EventHandler
 
     public function listen(Instance $instance, string $name, ?Transport $transport = null, int $priority = 0): void
     {
-        throw new \RuntimeException(self::class . ' does not support listen method.');
+        return;
     }
 
     public function getName(): string
