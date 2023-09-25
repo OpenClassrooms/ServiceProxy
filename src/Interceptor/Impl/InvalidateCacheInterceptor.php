@@ -49,13 +49,69 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
     private function getTags(Instance $instance, InvalidateCache $attribute): array
     {
         $parameters = $instance->getMethod()
-            ->getParameters();
+                               ->getParameters()
+        ;
 
         $tags = array_map(
             static fn (string $expression) => Expression::evaluateToString($expression, $parameters),
             $attribute->getTags()
         );
 
-        return array_filter($tags);
+        return array_values(
+            array_filter(
+                [...$tags, ...$this->guessObjectsTags($instance->getMethod()->getResponse())]
+            )
+        );
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function guessObjectsTags(mixed $objects): array
+    {
+        if (!is_iterable($objects)) {
+            $objects = (array) $objects;
+        }
+
+        $tags = [];
+        foreach ($objects as $object) {
+            if (!\is_object($object)) {
+                continue;
+            }
+
+            $ref = new \ReflectionClass($object);
+            $id = $this->getPropertyValue($ref, $object, 'id');
+            if ($id === false || $id === null) {
+                continue;
+            }
+            $tag = $this->getNormalizedNamespace($object) . '.' . $id;
+            $tags[$tag] = $tag;
+        }
+
+        return $tags;
+    }
+
+    /**
+     * @param \ReflectionClass<object> $ref
+     */
+    private function getPropertyValue(\ReflectionClass $ref, object $object, string $propertyName): mixed
+    {
+        $getter = 'get' . ucfirst($propertyName);
+        $refMethod = $ref->hasMethod($getter) ? $ref->getMethod($getter) : null;
+        if ($refMethod !== null && $refMethod->isPublic()) {
+            return $refMethod->invoke($object);
+        }
+        $propRef = $ref->getProperty($propertyName);
+        if (!$propRef->isInitialized($object)) {
+            return false;
+        }
+        $propRef->setAccessible(true);
+
+        return $propRef->getValue($object);
+    }
+
+    private function getNormalizedNamespace(object $object): string
+    {
+        return str_replace('\\', '.', \get_class($object));
     }
 }
