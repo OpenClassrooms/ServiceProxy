@@ -7,6 +7,7 @@ namespace OpenClassrooms\ServiceProxy\Interceptor\Impl;
 use OpenClassrooms\ServiceProxy\Attribute\Cache;
 use OpenClassrooms\ServiceProxy\ExpressionLanguage\ExpressionResolver;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
+use OpenClassrooms\ServiceProxy\Interceptor\Config\CacheInterceptorConfig;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
@@ -34,6 +35,14 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $this->expressionResolver = new ExpressionResolver();
         self::$hits ??= [];
         self::$misses ??= [];
+    }
+
+
+    public function __construct(
+        private readonly CacheInterceptorConfig $config,
+        iterable                                $handlers = [],
+    ) {
+        parent::__construct($handlers);
     }
 
     /**
@@ -152,7 +161,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
         $identifier = array_reduce(
             $this->getTags($instance, $attribute),
-            static fn (string $identifier, string $tag) => $identifier .= '.' . $tag,
+            static fn (string $identifier, string $tag) => $identifier . '.' . $tag,
             $identifier
         );
 
@@ -213,6 +222,76 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             $attribute->getTags()
         );
 
-        return array_filter($tags);
+        $autoTags = $this->guessObjectsTags(
+            $instance->getMethod()->getResponse(),
+            $this->config->autoTagsExcludedClasses
+        );
+
+        return array_values(array_filter([...$tags, ...$autoTags]));
+    }
+
+    /**
+     * @param array<class-string> $excludedClasses
+     * @return array<string, string>
+     */
+    private function guessObjectsTags(mixed $object, array $excludedClasses = []): array
+    {
+        if (!\is_object($object)) {
+            return [];
+        }
+
+        foreach ($excludedClasses as $excludedClass) {
+            if ($object instanceof $excludedClass) {
+                return [];
+            }
+        }
+
+        $ref = new \ReflectionClass($object);
+
+        $tags = [];
+        foreach ($ref->getProperties() as $propRef) {
+            if (!$propRef->isInitialized($object)) {
+                continue;
+            }
+            $getter = 'get' . ucfirst($propRef->getName());
+            if ($propRef->getName() === 'id' || $ref->hasMethod($getter)) {
+                $tag =
+                    str_replace('\\', '.', \get_class($object))
+                    .
+                    '.'
+                    . $this->getPropertyValue($ref, $object, 'id');
+                if (isset($tags[$tag])) {
+                    return $tags;
+                }
+                $tags[$tag] = $tag;
+                continue;
+            }
+            $subObject = $this->getPropertyValue($ref, $object, $propRef->getName());
+            if (\is_iterable($subObject)) {
+                foreach ($subObject as $item) {
+                    $tags = [...$tags, ... $this->guessObjectsTags($item, $excludedClasses)];
+                }
+            } else {
+                $tags = [...$tags, ... $this->guessObjectsTags($subObject, $excludedClasses)];
+            }
+        }
+
+        return $tags;
+    }
+
+    /**
+     * @param \ReflectionClass<object> $ref
+     */
+    private function getPropertyValue(\ReflectionClass $ref, object $object, string $propertyName): mixed
+    {
+        $getter = 'get' . ucfirst($propertyName);
+        $refMethod = $ref->hasMethod($getter) ? $ref->getMethod($getter) : null;
+        if ($refMethod !== null && $refMethod->isPublic()) {
+            return $refMethod->invoke($object);
+        }
+        $propRef = $ref->getProperty($propertyName);
+        $propRef->setAccessible(true);
+
+        return $propRef->getValue($object);
     }
 }
