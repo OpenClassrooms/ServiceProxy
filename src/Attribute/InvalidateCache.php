@@ -9,16 +9,15 @@ final class InvalidateCache extends Attribute
 {
     /**
      * @param array<string>|string|null $handler
-     * @param array<string>|string|null $pool
      * @param array<int, string> $tags
+     * @param array<int, string> $pools
      */
     public function __construct(
-        array|string|null      $handler = null,
-        array|string|null      $pool = null,
+        protected array|string|null      $handler = null,
+        private readonly array $pools = [],
         private readonly array $tags = [],
     ) {
         parent::__construct();
-        $this->setHandlers(aliases: compact('handler', 'pool'));
     }
 
     /**
@@ -27,5 +26,13 @@ final class InvalidateCache extends Attribute
     public function getTags(): array
     {
         return $this->tags;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getPools(): array
+    {
+        return $this->pools;
     }
 }

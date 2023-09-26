@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\Messenger\Transport\Serialization\MessageSerializer;
 use OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\Subscriber\ServiceProxySubscriber;
+use OpenClassrooms\ServiceProxy\Handler\Impl\Cache\SymfonyCacheHandler;
 use OpenClassrooms\ServiceProxy\Invoker\Impl\AggregateMethodInvoker;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\ProxyFactoryConfiguration;
@@ -34,6 +35,11 @@ return static function (ContainerConfigurator $containerConfigurator) {
         'OpenClassrooms\\ServiceProxy\\Invoker\\Impl\\',
         \dirname(__DIR__, 4) . '/src/Invoker/Impl/*'
     );
+
+    $services->set(SymfonyCacheHandler::class)
+        ->arg('$pools', tagged_iterator('openclassrooms.cache_pool', 'service_id'))
+        ->arg('$name', 'symfony_cache')
+    ;
 
     $services->set(ProxyFactory::class)
         ->public()

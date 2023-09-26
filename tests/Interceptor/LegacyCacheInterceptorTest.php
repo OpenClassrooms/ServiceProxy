@@ -46,7 +46,7 @@ final class LegacyCacheInterceptorTest extends TestCase
     public function testTagsInvalidationThrowException(): void
     {
         $this->expectException(\BadMethodCallException::class);
-        $this->cacheHandlerMock->invalidateTags(['foo']);
+        $this->cacheHandlerMock->invalidateTags(['default'], ['foo']);
     }
 
     public function testOnExceptionDontSave(): void
@@ -58,6 +58,7 @@ final class LegacyCacheInterceptorTest extends TestCase
         } catch (\Exception $e) {
             $this->assertFalse(
                 $this->cacheHandlerMock->contains(
+                    'default',
                     CacheAnnotatedClass::class . '::cacheMethodWithException'
                 )
             );
@@ -71,6 +72,7 @@ final class LegacyCacheInterceptorTest extends TestCase
         $this->assertEquals(
             CacheAnnotatedClass::DATA,
             $this->cacheHandlerMock->fetch(
+                'default',
                 md5(CacheAnnotatedClass::class . '::annotatedMethod')
             )
         );
@@ -80,6 +82,7 @@ final class LegacyCacheInterceptorTest extends TestCase
     {
         $inCacheData = 'InCacheData';
         $this->cacheHandlerMock->save(
+            ['default'],
             md5(CacheAnnotatedClass::class . '::annotatedMethod'),
             $inCacheData
         );
@@ -91,6 +94,7 @@ final class LegacyCacheInterceptorTest extends TestCase
     {
         $inCacheData = 'InCacheData';
         $this->cacheHandlerMock->save(
+            ['default'],
             md5(CacheAnnotatedClass::class . '::cacheWithNamespace'),
             $inCacheData
         );
@@ -109,14 +113,14 @@ final class LegacyCacheInterceptorTest extends TestCase
     {
         $data = $this->proxy->cacheWithId();
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
-        $this->assertEquals(CacheAnnotatedClass::DATA, $this->cacheHandlerMock->fetch('test'));
+        $this->assertEquals(CacheAnnotatedClass::DATA, $this->cacheHandlerMock->fetch('default', 'test'));
     }
 
     public function testWithIdAndParametersReturnData(): void
     {
         $data = $this->proxy->cacheWithIdAndParameters(new ParameterClassStub(), 'param 2');
         $this->assertEquals(CacheAnnotatedClass::DATA, $data);
-        $this->assertEquals(CacheAnnotatedClass::DATA, $this->cacheHandlerMock->fetch('test1'));
+        $this->assertEquals(CacheAnnotatedClass::DATA, $this->cacheHandlerMock->fetch('default', 'test1'));
     }
 
     public function testWithNamespaceReturnData(): void
@@ -127,7 +131,8 @@ final class LegacyCacheInterceptorTest extends TestCase
         $this->assertEquals(
             CacheAnnotatedClass::DATA,
             $this->cacheHandlerMock->fetch(
-                $this->cacheHandlerMock->fetch(md5('test-namespace')) .
+                'default',
+                $this->cacheHandlerMock->fetch('default', md5('test-namespace')) .
                 md5(CacheAnnotatedClass::class . '::cacheWithNamespace')
             )
         );
@@ -141,7 +146,8 @@ final class LegacyCacheInterceptorTest extends TestCase
         $this->assertEquals(
             CacheAnnotatedClass::DATA,
             $this->cacheHandlerMock->fetch(
-                $this->cacheHandlerMock->fetch(md5('test-namespace')) .
+                'default',
+                $this->cacheHandlerMock->fetch('default', md5('test-namespace')) .
                 'toto'
             )
         );
@@ -155,7 +161,8 @@ final class LegacyCacheInterceptorTest extends TestCase
         $this->assertEquals(
             CacheAnnotatedClass::DATA,
             $this->cacheHandlerMock->fetch(
-                $this->cacheHandlerMock->fetch(md5('test-namespace1')) .
+                'default',
+                $this->cacheHandlerMock->fetch('default', md5('test-namespace1')) .
                 md5(
                     CacheAnnotatedClass::class . '::cacheWithNamespaceAndParameters'
                     . '::' . serialize(new ParameterClassStub()) . '::' . serialize('param 2')

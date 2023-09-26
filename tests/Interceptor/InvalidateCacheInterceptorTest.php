@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
+use OpenClassrooms\ServiceProxy\Interceptor\Config\CacheInterceptorConfig;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\CacheInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\InvalidateCacheInterceptor;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
@@ -29,7 +30,7 @@ final class InvalidateCacheInterceptorTest extends TestCase
     protected function setUp(): void
     {
         $this->cacheHandlerMock = new CacheHandlerMock();
-        $this->cacheInterceptor = new CacheInterceptor([$this->cacheHandlerMock]);
+        $this->cacheInterceptor = new CacheInterceptor(new CacheInterceptorConfig(), [$this->cacheHandlerMock]);
         $this->invalidateCacheInterceptor = new InvalidateCacheInterceptor([$this->cacheHandlerMock]);
 
         $this->proxyFactory = $this->getProxyFactory([

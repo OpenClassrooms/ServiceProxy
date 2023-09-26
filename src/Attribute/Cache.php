@@ -9,22 +9,21 @@ final class Cache extends Attribute
 {
     /**
      * @param array<string>|string|null $handler
-     * @param array<string>|string|null $pool
      * @param array<int, string> $tags
+     * @param array<int, string> $pools
      */
     public function __construct(
-        array|string|null      $handler = null,
-        array|string|null      $pool = null,
-        private readonly ?int  $lifetime = null,
+        protected array|string|null $handler = null,
+        private readonly array $pools = [],
+        private readonly ?int  $ttl = null,
         private readonly array $tags = [],
     ) {
         parent::__construct();
-        $this->setHandlers(aliases: compact('handler', 'pool'));
     }
 
-    public function getLifetime(): ?int
+    public function getTtl(): ?int
     {
-        return $this->lifetime;
+        return $this->ttl;
     }
 
     /**
@@ -33,5 +32,13 @@ final class Cache extends Attribute
     public function getTags(): array
     {
         return $this->tags;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getPools(): array
+    {
+        return $this->pools;
     }
 }

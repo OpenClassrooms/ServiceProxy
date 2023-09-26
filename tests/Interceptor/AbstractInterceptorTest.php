@@ -9,6 +9,7 @@ use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Handler\Exception\DuplicatedHandler;
 use OpenClassrooms\ServiceProxy\Handler\Exception\HandlerNotFound;
 use OpenClassrooms\ServiceProxy\Handler\Exception\MissingDefaultHandler;
+use OpenClassrooms\ServiceProxy\Interceptor\Config\CacheInterceptorConfig;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\CacheInterceptor;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ClassWithCacheAttributes;
@@ -21,9 +22,10 @@ final class AbstractInterceptorTest extends TestCase
 
     public function testWithNotFoundHandlerThrowException(): void
     {
+        $config = new CacheInterceptorConfig();
         $this->expectException(HandlerNotFound::class);
         $this->getProxyFactory(
-            [new CacheInterceptor([new CacheHandlerMock()])]
+            [new CacheInterceptor($config, [new CacheHandlerMock()])]
         )->createProxy(new ClassWithCacheAttributes())
             ->invalidHandler();
     }
@@ -31,13 +33,13 @@ final class AbstractInterceptorTest extends TestCase
     public function testWithMultipleHandlersWithTheSameNameThrowException(): void
     {
         $this->expectException(DuplicatedHandler::class);
-        new CacheInterceptor([new CacheHandlerMock(), new CacheHandlerMock()]);
+        new CacheInterceptor(new CacheInterceptorConfig(), [new CacheHandlerMock(), new CacheHandlerMock()]);
     }
 
     public function testWithMultipleHandlersNoDefaultThrowException(): void
     {
         $this->expectException(MissingDefaultHandler::class);
-        new CacheInterceptor([
+        new CacheInterceptor(new CacheInterceptorConfig(), [
             new CacheHandlerMock('other', false),
             new CacheHandlerMock('other2', false),
         ]);
@@ -45,7 +47,7 @@ final class AbstractInterceptorTest extends TestCase
 
     public function testWithMultipleHandlersWithDifferentNameDoNotThrowException(): void
     {
-        $interceptor = new CacheInterceptor([
+        $interceptor = new CacheInterceptor(new CacheInterceptorConfig(), [
             new CacheHandlerMock(),
             new CacheHandlerMock('other', false),
         ]);
@@ -60,7 +62,7 @@ final class AbstractInterceptorTest extends TestCase
 
     public function testWithOneHandlerNoDefaultReturnFirst(): void
     {
-        $interceptor = new CacheInterceptor([
+        $interceptor = new CacheInterceptor(new CacheInterceptorConfig(), [
             new CacheHandlerMock('other', false),
         ]);
         $handler = $interceptor->getHandlers(
