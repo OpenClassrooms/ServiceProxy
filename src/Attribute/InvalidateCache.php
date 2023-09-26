@@ -8,15 +8,16 @@ namespace OpenClassrooms\ServiceProxy\Attribute;
 final class InvalidateCache extends Attribute
 {
     /**
+     * @param array<string>|string|null $handler
      * @param array<int, string> $tags
+     * @param array<int, string> $pools
      */
     public function __construct(
-        ?string                $handler = null,
-        ?string                $pool = null,
+        protected array|string|null      $handler = null,
+        private readonly array $pools = [],
         private readonly array $tags = [],
     ) {
         parent::__construct();
-        $this->setHandler(aliases: compact('handler', 'pool'));
     }
 
     /**
@@ -25,5 +26,13 @@ final class InvalidateCache extends Attribute
     public function getTags(): array
     {
         return $this->tags;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getPools(): array
+    {
+        return $this->pools;
     }
 }

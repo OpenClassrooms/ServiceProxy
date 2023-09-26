@@ -45,7 +45,7 @@ class ClassWithCacheAttributes
         return self::DATA;
     }
 
-    #[Cache(lifetime: 60)]
+    #[Cache(ttl: 60)]
     public function methodWithLifetime(): string
     {
         return self::DATA;
@@ -57,19 +57,19 @@ class ClassWithCacheAttributes
         return self::DATA;
     }
 
-    #[Cache(pool: 'toto')]
+    #[Cache(pools: ['toto'])]
     public function invalidPool(): string
     {
         return self::DATA;
     }
 
-    #[Cache(handler: 'foo', pool: 'bar')]
+    #[Cache(handler: 'array', pools: ['default'])]
     public function bothHandlerAndPool(): string
     {
         return self::DATA;
     }
 
-    #[Cache(pool: 'array')]
+    #[Cache(pools: ['default'])]
     public function methodWithPool(): string
     {
         return self::DATA;

@@ -14,14 +14,7 @@ use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
 
 final class InvalidateCacheInterceptor extends AbstractInterceptor implements SuffixInterceptor
 {
-    private ExpressionResolver $expressionResolver;
-
-    public function __construct(iterable $handlers = [])
-    {
-        parent::__construct($handlers);
-
-        $this->expressionResolver = new ExpressionResolver();
-    }
+    private string $defaultPoolName = 'default';
 
     public function suffix(Instance $instance): Response
     {
@@ -32,11 +25,12 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
         $attribute = $instance->getMethod()
             ->getAttribute(InvalidateCache::class);
 
-        $handler = $this->getHandler(CacheHandler::class, $attribute);
+        $handler = $this->getHandlers(CacheHandler::class, $attribute)[0];
+        $pools = \count($attribute->getPools()) === 0 ? [$this->defaultPoolName] : $attribute->getPools();
 
         $tags = $this->getTags($instance, $attribute);
 
-        $handler->invalidateTags($tags);
+        $handler->invalidateTags($pools, $tags);
 
         return new Response();
     }
@@ -58,7 +52,7 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
     private function getTags(Instance $instance, InvalidateCache $attribute): array
     {
         $parameters = $instance->getMethod()
-                               ->getParameters()
+            ->getParameters()
         ;
 
         $tags = array_map(

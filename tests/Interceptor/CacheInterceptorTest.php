@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
 use OpenClassrooms\ServiceProxy\Handler\Exception\HandlerNotFound;
+use OpenClassrooms\ServiceProxy\Interceptor\Config\CacheInterceptorConfig;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\CacheInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
@@ -36,8 +37,9 @@ final class CacheInterceptorTest extends TestCase
 
     protected function setUp(): void
     {
+        $config = new CacheInterceptorConfig();
         $this->cacheHandlerMock = new CacheHandlerMock();
-        $this->cacheInterceptor = new CacheInterceptor([$this->cacheHandlerMock]);
+        $this->cacheInterceptor = new CacheInterceptor($config, [$this->cacheHandlerMock]);
         $this->proxyFactory = $this->getProxyFactory([
             $this->cacheInterceptor,
         ]);
@@ -218,14 +220,14 @@ final class CacheInterceptorTest extends TestCase
         $this->assertEmpty($this->cacheInterceptor->getHits());
         $this->assertNotEmpty($this->cacheInterceptor->getMisses());
 
-        $this->cacheHandlerMock->invalidateTags(['wrong_tag']);
+        $this->cacheHandlerMock->invalidateTags(['default'], ['wrong_tag']);
 
         $proxy->methodWithTaggedCache();
 
         $this->assertNotEmpty($this->cacheInterceptor->getHits());
         $this->assertEmpty($this->cacheInterceptor->getMisses());
 
-        $this->cacheHandlerMock->invalidateTags(['my_tag', 'another_tag']);
+        $this->cacheHandlerMock->invalidateTags(['default'], ['my_tag', 'another_tag']);
 
         $proxy->methodWithTaggedCache();
 
@@ -246,7 +248,7 @@ final class CacheInterceptorTest extends TestCase
         $this->assertNotEmpty($this->cacheInterceptor->getHits());
         $this->assertEmpty($this->cacheInterceptor->getMisses());
 
-        $this->cacheHandlerMock->invalidateTags(['my_tag1']);
+        $this->cacheHandlerMock->invalidateTags(['default'], ['my_tag1']);
 
         $proxy->methodWithResolvedTag(new ParameterClassStub());
 
@@ -263,12 +265,12 @@ final class CacheInterceptorTest extends TestCase
 
     public function testInvalidPoolThrowsException(): void
     {
-        $this->expectException(HandlerNotFound::class);
+        $this->expectException(\InvalidArgumentException::class);
         $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
         $proxy->invalidPool();
     }
 
-    public function testPoolIsAnAliasForHandler(): void
+    public function testPool(): void
     {
         $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
 
@@ -277,11 +279,10 @@ final class CacheInterceptorTest extends TestCase
         $this->assertNotEmpty($this->cacheInterceptor->getMisses());
     }
 
-    public function testBothHandlerAndPoolThrowsException(): void
+    public function testBothHandlerAndPool(): void
     {
-        $this->expectException(\RuntimeException::class);
         $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
-        $proxy->bothHandlerAndPool();
+        $this->assertEquals(ClassWithCacheAttributes::DATA, $proxy->bothHandlerAndPool());
     }
 
     private function writeProxy(
