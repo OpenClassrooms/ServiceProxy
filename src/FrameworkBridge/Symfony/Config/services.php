@@ -38,7 +38,6 @@ return static function (ContainerConfigurator $containerConfigurator) {
 
     $services->set(SymfonyCacheHandler::class)
         ->arg('$pools', tagged_iterator('openclassrooms.cache_pool', 'service_id'))
-        ->arg('$name', 'symfony_cache')
     ;
 
     $services->set(ProxyFactory::class)

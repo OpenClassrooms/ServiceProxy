@@ -220,14 +220,14 @@ final class CacheInterceptorTest extends TestCase
         $this->assertEmpty($this->cacheInterceptor->getHits());
         $this->assertNotEmpty($this->cacheInterceptor->getMisses());
 
-        $this->cacheHandlerMock->invalidateTags(['default'], ['wrong_tag']);
+        $this->cacheHandlerMock->invalidateTags('default', ['wrong_tag']);
 
         $proxy->methodWithTaggedCache();
 
         $this->assertNotEmpty($this->cacheInterceptor->getHits());
         $this->assertEmpty($this->cacheInterceptor->getMisses());
 
-        $this->cacheHandlerMock->invalidateTags(['default'], ['my_tag', 'another_tag']);
+        $this->cacheHandlerMock->invalidateTags('default', ['my_tag', 'another_tag']);
 
         $proxy->methodWithTaggedCache();
 
@@ -248,7 +248,7 @@ final class CacheInterceptorTest extends TestCase
         $this->assertNotEmpty($this->cacheInterceptor->getHits());
         $this->assertEmpty($this->cacheInterceptor->getMisses());
 
-        $this->cacheHandlerMock->invalidateTags(['default'], ['my_tag1']);
+        $this->cacheHandlerMock->invalidateTags('default', ['my_tag1']);
 
         $proxy->methodWithResolvedTag(new ParameterClassStub());
 

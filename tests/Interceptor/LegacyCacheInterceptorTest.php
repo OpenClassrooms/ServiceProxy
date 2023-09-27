@@ -46,7 +46,7 @@ final class LegacyCacheInterceptorTest extends TestCase
     public function testTagsInvalidationThrowException(): void
     {
         $this->expectException(\BadMethodCallException::class);
-        $this->cacheHandlerMock->invalidateTags(['default'], ['foo']);
+        $this->cacheHandlerMock->invalidateTags('default', ['foo']);
     }
 
     public function testOnExceptionDontSave(): void
@@ -82,7 +82,7 @@ final class LegacyCacheInterceptorTest extends TestCase
     {
         $inCacheData = 'InCacheData';
         $this->cacheHandlerMock->save(
-            ['default'],
+            'default',
             md5(CacheAnnotatedClass::class . '::annotatedMethod'),
             $inCacheData
         );
@@ -94,7 +94,7 @@ final class LegacyCacheInterceptorTest extends TestCase
     {
         $inCacheData = 'InCacheData';
         $this->cacheHandlerMock->save(
-            ['default'],
+            'default',
             md5(CacheAnnotatedClass::class . '::cacheWithNamespace'),
             $inCacheData
         );

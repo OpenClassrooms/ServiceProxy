@@ -26,11 +26,13 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
             ->getAttribute(InvalidateCache::class);
 
         $handler = $this->getHandlers(CacheHandler::class, $attribute)[0];
-        $pools = \count($attribute->getPools()) === 0 ? [$this->defaultPoolName] : $attribute->getPools();
+        $pools = \count($attribute->pools) === 0 ? [$this->defaultPoolName] : $attribute->pools;
 
         $tags = $this->getTags($instance, $attribute);
 
-        $handler->invalidateTags($pools, $tags);
+        foreach ($pools as $pool) {
+            $handler->invalidateTags($pool, $tags);
+        }
 
         return new Response();
     }
@@ -56,8 +58,8 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
         ;
 
         $tags = array_map(
-            fn (string $expression) => $this->expressionResolver->resolve($expression, $parameters),
-            $attribute->getTags()
+            static fn (string $expression) => Expression::evaluateToString($expression, $parameters),
+            $attribute->tags
         );
 
         return array_values(
