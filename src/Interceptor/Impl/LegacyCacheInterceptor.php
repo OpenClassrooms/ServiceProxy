@@ -67,7 +67,7 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
         $handler = $this->getHandlers(CacheHandler::class, $annotation)[0];
 
         $handler->save(
-            ['default'],
+            'default',
             $proxyId,
             $data,
             $annotation->getLifetime(),

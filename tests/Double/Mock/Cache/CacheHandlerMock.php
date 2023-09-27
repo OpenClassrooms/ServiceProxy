@@ -34,11 +34,11 @@ final class CacheHandlerMock implements CacheHandler
         return $this->wrappedHandler->fetch($poolName, $id);
     }
 
-    public function save(array $pools, string $id, $data, ?int $lifeTime = null, array $tags = []): void
+    public function save(string $poolName, string $id, $data, ?int $lifeTime = null, array $tags = []): void
     {
         self::$lifeTime = $lifeTime;
 
-        $this->wrappedHandler->save($pools, $id, $data, $lifeTime, $tags);
+        $this->wrappedHandler->save($poolName, $id, $data, $lifeTime, $tags);
     }
 
     public function contains(string $poolName, string $id): bool
@@ -51,9 +51,9 @@ final class CacheHandlerMock implements CacheHandler
         return $this->default;
     }
 
-    public function invalidateTags(array $pools, array $tags): void
+    public function invalidateTags(string $poolName, array $tags): void
     {
-        $this->wrappedHandler->invalidateTags($pools, $tags);
+        $this->wrappedHandler->invalidateTags($poolName, $tags);
     }
 
     public function getName(): string

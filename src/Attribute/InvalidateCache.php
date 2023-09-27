@@ -14,25 +14,9 @@ final class InvalidateCache extends Attribute
      */
     public function __construct(
         protected array|string|null      $handler = null,
-        private readonly array $pools = [],
-        private readonly array $tags = [],
+        public readonly array $pools = [],
+        public readonly array $tags = [],
     ) {
         parent::__construct();
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    public function getTags(): array
-    {
-        return $this->tags;
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    public function getPools(): array
-    {
-        return $this->pools;
     }
 }

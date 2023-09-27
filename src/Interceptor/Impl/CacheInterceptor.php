@@ -73,7 +73,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         }
 
         $handler = $this->getHandlers(CacheHandler::class, $attribute)[0];
-        $pools = \count($attribute->getPools()) === 0 ? [$this->defaultPoolName] : $attribute->getPools();
+        $pools = \count($attribute->pools) === 0 ? [$this->defaultPoolName] : $attribute->pools;
 
         $missedPools = [];
 
@@ -86,12 +86,12 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
             $data = $handler->fetch($pool, $cacheKey);
 
-            if (\count($missedPools) > 0) {
+            foreach ($missedPools as $missedPool) {
                 $handler->save(
-                    $missedPools,
+                    $missedPool,
                     $cacheKey,
                     $data,
-                    $attribute->getTtl() ?? $this->config->defaultTtl,
+                    $attribute->ttl ?? $this->config->defaultTtl,
                     $this->getTags($instance, $attribute)
                 );
             }
@@ -123,15 +123,17 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         ;
 
         $handler = $this->getHandlers(CacheHandler::class, $attribute)[0];
-        $pools = \count($attribute->getPools()) === 0 ? [$this->defaultPoolName] : $attribute->getPools();
+        $pools = \count($attribute->pools) === 0 ? [$this->defaultPoolName] : $attribute->pools;
 
-        $handler->save(
-            $pools,
-            $cacheKey,
-            $data,
-            $attribute->getTtl() ?? $this->config->defaultTtl,
-            $this->getTags($instance, $attribute)
-        );
+        foreach ($pools as $pool) {
+            $handler->save(
+                $pool,
+                $cacheKey,
+                $data,
+                $attribute->ttl ?? $this->config->defaultTtl,
+                $this->getTags($instance, $attribute)
+            );
+        }
 
         return new Response($data);
     }
@@ -232,7 +234,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
         $tags = array_map(
             static fn (string $expression) => Expression::evaluateToString($expression, $parameters),
-            $attribute->getTags()
+            $attribute->tags
         );
 
         if ($instance->getMethod()->threwException()) {

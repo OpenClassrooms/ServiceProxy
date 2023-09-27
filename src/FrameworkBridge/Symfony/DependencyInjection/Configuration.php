@@ -57,12 +57,7 @@ final class Configuration implements ConfigurationInterface
         $interceptorsNode = $children->arrayNode('interceptors');
         $interceptorsNode->useAttributeAsKey('name')
             ->arrayPrototype()
-            ->children()
-            ->arrayNode('autoTagsExcludedClasses')
-            ->scalarPrototype()
-            ->end()
-            ->end()
-            ->scalarNode('defaultTtl')->isRequired()->end()
+            ->variablePrototype()
             ->end()
         ;
 

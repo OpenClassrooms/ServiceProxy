@@ -14,31 +14,10 @@ final class Cache extends Attribute
      */
     public function __construct(
         protected array|string|null $handler = null,
-        private readonly array $pools = [],
-        private readonly ?int  $ttl = null,
-        private readonly array $tags = [],
+        public readonly array $pools = [],
+        public readonly ?int  $ttl = null,
+        public readonly array $tags = [],
     ) {
         parent::__construct();
-    }
-
-    public function getTtl(): ?int
-    {
-        return $this->ttl;
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    public function getTags(): array
-    {
-        return $this->tags;
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    public function getPools(): array
-    {
-        return $this->pools;
     }
 }
