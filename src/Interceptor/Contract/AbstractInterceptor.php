@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Interceptor\Contract;
 
 use OpenClassrooms\ServiceProxy\Annotation\Annotation;
-use OpenClassrooms\ServiceProxy\Handler\Contract\AnnotationHandler;
+use OpenClassrooms\ServiceProxy\Attribute\Attribute;
+use OpenClassrooms\ServiceProxy\Handler\Contract\AttributeHandler;
 use OpenClassrooms\ServiceProxy\Handler\Exception\DuplicatedDefaultHandler;
 use OpenClassrooms\ServiceProxy\Handler\Exception\DuplicatedHandler;
 use OpenClassrooms\ServiceProxy\Handler\Exception\HandlerNotFound;
@@ -14,12 +15,12 @@ use OpenClassrooms\ServiceProxy\Handler\Exception\MissingDefaultHandler;
 abstract class AbstractInterceptor
 {
     /**
-     * @var array<class-string<AnnotationHandler>, array<string, AnnotationHandler>>
+     * @var array<class-string<AttributeHandler>, array<string, AttributeHandler>>
      */
     private array $handlers;
 
     /**
-     * @param AnnotationHandler[] $handlers
+     * @param AttributeHandler[] $handlers
      */
     public function __construct(iterable $handlers = [])
     {
@@ -27,7 +28,7 @@ abstract class AbstractInterceptor
     }
 
     /**
-     * @param AnnotationHandler[] $handlers
+     * @param AttributeHandler[] $handlers
      */
     final public function setHandlers(iterable $handlers): void
     {
@@ -40,16 +41,16 @@ abstract class AbstractInterceptor
     }
 
     /**
-     * @template T of AnnotationHandler
+     * @template T of AttributeHandler
      *
      * @param class-string<T> $handlerInterface
      *
      * @return T
      */
-    final public function getHandler(string $handlerInterface, Annotation $annotation): AnnotationHandler
+    final public function getHandler(string $handlerInterface, Annotation|Attribute $attribute): AttributeHandler
     {
         $handlers = $this->handlers[$handlerInterface] ?? [];
-        if ($annotation->getHandler() === null) {
+        if ($attribute->getHandler() === null) {
             if (\count($handlers) === 1) {
                 // @phpstan-ignore-next-line
                 return array_values($handlers)[0];
@@ -64,23 +65,24 @@ abstract class AbstractInterceptor
             }
         }
 
-        $handlerName = $annotation->getHandler();
+        $handlerName = $attribute->getHandler();
         if (isset($handlers[$handlerName])) {
             // @phpstan-ignore-next-line
             return $handlers[$handlerName];
         }
 
         $handlerName = $handlerName ?? 'default';
-        $annotationClass = \get_class($annotation);
+        $attributeClass = \get_class($attribute);
+        $type = $attribute instanceof Attribute ? "attribute" : "annotation";
         throw new HandlerNotFound(
-            "No handler found for annotation {$annotationClass} with name {$handlerName}"
+            "No handler found for {$type} {$attributeClass} with name {$handlerName}"
         );
     }
 
     /**
-     * @param AnnotationHandler[] $handlers
+     * @param AttributeHandler[] $handlers
      *
-     * @return array<class-string<AnnotationHandler>, array<string, AnnotationHandler>>
+     * @return array<class-string<AttributeHandler>, array<string, AttributeHandler>>
      */
     private function indexHandlers(iterable $handlers): array
     {
@@ -100,24 +102,24 @@ abstract class AbstractInterceptor
     }
 
     /**
-     * @return class-string<AnnotationHandler>
+     * @return class-string<AttributeHandler>
      */
-    private function getHandlerInterface(AnnotationHandler $handler): string
+    private function getHandlerInterface(AttributeHandler $handler): string
     {
         $interfaces = class_implements($handler);
         foreach ($interfaces as $interface) {
-            if (is_subclass_of($interface, AnnotationHandler::class)) {
+            if (is_subclass_of($interface, AttributeHandler::class)) {
                 return $interface;
             }
         }
 
         throw new \InvalidArgumentException(
-            'All handlers must implement AnnotationHandler interface.'
+            'All handlers must implement AttributeHandler interface.'
         );
     }
 
     /**
-     * @param array<class-string<AnnotationHandler>, array<string, AnnotationHandler>> $handlers
+     * @param array<class-string<AttributeHandler>, array<string, AttributeHandler>> $handlers
      */
     private function checkDuplicateDefaults(array $handlers): void
     {
@@ -135,7 +137,7 @@ abstract class AbstractInterceptor
     }
 
     /**
-     * @param array<class-string<AnnotationHandler>, array<string, AnnotationHandler>> $handlers
+     * @param array<class-string<AttributeHandler>, array<string, AttributeHandler>> $handlers
      */
     private function checkMultipleHandlersWithNoDefault(array $handlers): void
     {

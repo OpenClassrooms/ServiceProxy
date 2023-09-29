@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Annotation;
 
 use OpenClassrooms\ServiceProxy\Annotation\Exception\InvalidCacheIdException;
-use OpenClassrooms\ServiceProxy\Handler\Contract\AnnotationHandler;
+use OpenClassrooms\ServiceProxy\Handler\Contract\AttributeHandler;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 
 /**
@@ -96,7 +96,7 @@ final class Cache extends Annotation
     }
 
     /**
-     * @return class-string<AnnotationHandler>
+     * @return class-string<AttributeHandler>
      */
     public function getHandlerClass(): string
     {

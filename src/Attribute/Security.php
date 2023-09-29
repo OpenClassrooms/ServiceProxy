@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Attribute;
 
-use OpenClassrooms\ServiceProxy\Handler\Contract\AnnotationHandler;
+use OpenClassrooms\ServiceProxy\Handler\Contract\AttributeHandler;
 use OpenClassrooms\ServiceProxy\Handler\Contract\SecurityHandler;
 
 #[\Attribute(\Attribute::TARGET_METHOD)]
@@ -23,7 +23,7 @@ final class Security extends Attribute
     }
 
     /**
-     * @return class-string<AnnotationHandler>
+     * @return class-string<AttributeHandler>
      */
     public function getHandlerClass(): string
     {

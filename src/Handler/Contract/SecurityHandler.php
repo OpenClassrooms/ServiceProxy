@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Handler\Contract;
 
-interface SecurityHandler extends AnnotationHandler
+interface SecurityHandler extends AttributeHandler
 {
     /**
      * @throws \Exception

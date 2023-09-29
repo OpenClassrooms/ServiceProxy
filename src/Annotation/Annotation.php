@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Annotation;
 
-use OpenClassrooms\ServiceProxy\Handler\Contract\AnnotationHandler;
+use OpenClassrooms\ServiceProxy\Handler\Contract\AttributeHandler;
 
 abstract class Annotation
 {
@@ -72,7 +72,7 @@ abstract class Annotation
     }
 
     /**
-     * @return class-string<AnnotationHandler>
+     * @return class-string<AttributeHandler>
      */
     abstract public function getHandlerClass(): string;
 

@@ -73,7 +73,7 @@ You can create your own interceptors, or use the built-in ones:
 Handlers are used by interceptors to manage the infrastructure code.
 To be able to use built-in interceptors, you need to implement the built-in handlers contracts.
 
-- All handles need to implement `OpenClassrooms\ServiceProxy\Handler\Contract\AnnotationHandler`.
+- All handles need to implement `OpenClassrooms\ServiceProxy\Handler\Contract\AttributeHandler`.
 - Each handler must have a unique name, you can use the `getName` method to return it.
 - Each handler must return true if it's the default handler or false if not, you can use the `isDefault` method to return it.
 - You can't have two handlers with the same name by annotation.

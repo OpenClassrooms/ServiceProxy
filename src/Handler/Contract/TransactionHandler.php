@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Handler\Contract;
 
-interface TransactionHandler extends AnnotationHandler
+interface TransactionHandler extends AttributeHandler
 {
     public function begin(): bool;
 

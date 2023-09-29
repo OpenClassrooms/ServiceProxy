@@ -9,7 +9,7 @@ use OpenClassrooms\ServiceProxy\Annotation\Exception\InvalidEventNameException;
 /**
  * @template T of object
  */
-interface EventHandler extends AnnotationHandler
+interface EventHandler extends AttributeHandler
 {
     /**
      * @param array<string, mixed> $parameters

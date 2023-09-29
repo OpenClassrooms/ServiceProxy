@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\DependencyInjection;
 
-use OpenClassrooms\ServiceProxy\Handler\Contract\AnnotationHandler;
+use OpenClassrooms\ServiceProxy\Handler\Contract\AttributeHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\Interceptable;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
@@ -25,7 +25,7 @@ final class OpenClassroomsServiceProxyExtension extends Extension
         $configs = $this->processConfiguration(new Configuration(), $configs);
         $this->setParameters($configs, $container);
 
-        $container->registerForAutoconfiguration(AnnotationHandler::class)
+        $container->registerForAutoconfiguration(AttributeHandler::class)
             ->addTag('openclassrooms.service_proxy.annotation_handler')
             ->addMethodCall(
                 'setDefaultHandlers',

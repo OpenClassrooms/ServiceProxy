@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Handler\Contract;
 
-interface CacheHandler extends AnnotationHandler
+interface CacheHandler extends AttributeHandler
 {
     /**
      * @return mixed

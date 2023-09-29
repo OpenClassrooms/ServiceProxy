@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Handler\Contract;
 
-interface AnnotationHandler
+interface AttributeHandler
 {
     public function getName(): string;
 
