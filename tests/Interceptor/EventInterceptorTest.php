@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
-use Doctrine\Common\Annotations\AnnotationException;
 use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\EventInterceptor;
 use OpenClassrooms\ServiceProxy\Model\Event;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event\EventHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\ClassImplementingUseCaseInterface;
-use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\EventAnnotatedClass;
-use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\InvalidMethodEventAnnotatedClass;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\ClassWithEventAttributes;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\ClassWithInvalidEventAttributes;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
 use PHPUnit\Framework\TestCase;
 
@@ -21,7 +20,7 @@ final class EventInterceptorTest extends TestCase
 
     private EventHandlerMock $handler;
 
-    private EventAnnotatedClass $proxy;
+    private ClassWithEventAttributes $proxy;
 
     private ProxyFactory $proxyFactory;
 
@@ -35,13 +34,16 @@ final class EventInterceptorTest extends TestCase
                 ),
             ]
         );
-        $this->proxy = $this->proxyFactory->createProxy(new EventAnnotatedClass());
+        $this->proxy = $this->proxyFactory->createProxy(new ClassWithEventAttributes());
     }
 
     public function testInvalidMethodEventThrowException(): void
     {
-        $this->expectException(AnnotationException::class);
-        $this->proxyFactory->createProxy(new InvalidMethodEventAnnotatedClass());
+        $this->expectException(\InvalidArgumentException::class);
+
+        $proxy = $this->proxyFactory->createProxy(new ClassWithInvalidEventAttributes());
+
+        $proxy->eventWithWrongMethods('whatever');
     }
 
     public function testOnExceptionEventSendException(): void
@@ -51,7 +53,7 @@ final class EventInterceptorTest extends TestCase
         } catch (\Exception $e) {
             $this->assertEventsCount(1);
             $this->assertEvent(
-                'use_case.exception.event_annotated_class',
+                'use_case.exception.class_with_event_attributes',
                 [
                     'parameters' => [
                         'useCaseRequest' => 'whatever',
@@ -105,11 +107,11 @@ final class EventInterceptorTest extends TestCase
             1
         );
         $this->assertEvent(
-            'use_case.pre.event_annotated_class',
+            'use_case.pre.class_with_event_attributes',
             $dataWithEmptyResponse
         );
         $this->assertEvent(
-            'use_case.post.event_annotated_class',
+            'use_case.post.class_with_event_attributes',
             $data
         );
     }
@@ -142,7 +144,7 @@ final class EventInterceptorTest extends TestCase
     {
         yield 'default' => [
             'annotatedMethod',
-            'use_case.post.event_annotated_class',
+            'use_case.post.class_with_event_attributes',
             1,
         ];
 
@@ -154,13 +156,13 @@ final class EventInterceptorTest extends TestCase
 
         yield 'pre event' => [
             'eventPre',
-            'use_case.pre.event_annotated_class',
+            'use_case.pre.class_with_event_attributes',
             null,
         ];
 
         yield 'post event' => [
             'eventPost',
-            'use_case.post.event_annotated_class',
+            'use_case.post.class_with_event_attributes',
             1,
         ];
 
@@ -172,7 +174,7 @@ final class EventInterceptorTest extends TestCase
 
         yield 'prefixed event' => [
             'prefixedEvent',
-            'toto.post.event_annotated_class',
+            'toto.post.class_with_event_attributes',
             1,
         ];
 
@@ -184,13 +186,13 @@ final class EventInterceptorTest extends TestCase
 
         yield 'empty prefix' => [
             'eventEmptyPrefix',
-            'use_case.post.event_annotated_class',
+            'post.class_with_event_attributes',
             1,
         ];
 
         yield 'included method name' => [
             'EventWithMethodName',
-            'use_case.post.event_with_method_name.event_annotated_class',
+            'use_case.post.event_with_method_name.class_with_event_attributes',
             1,
         ];
     }

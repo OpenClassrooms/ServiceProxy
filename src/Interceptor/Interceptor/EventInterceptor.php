@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Interceptor\Interceptor;
 
-use OpenClassrooms\ServiceProxy\Annotation\Event;
+use OpenClassrooms\ServiceProxy\Attribute\Event;
 use OpenClassrooms\ServiceProxy\Annotation\Exception\InvalidEventNameException;
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
@@ -15,25 +15,27 @@ use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
 
 final class EventInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
+    const GENERIC_POST_EXECUTE_EVENT_NAME = 'use_case.post.execute';
+
     /**
      * @throws InvalidEventNameException
      */
     public function prefix(Instance $instance): Response
     {
-        $annotations = $instance->getMethod()
-            ->getAnnotations(Event::class);
+        $attributes = $instance->getMethod()
+            ->getAttributes(Event::class);
 
-        foreach ($annotations as $annotation) {
-            $handler = $this->getHandler(EventHandler::class, $annotation);
-            if ($annotation->hasMethod(Event::PRE_METHOD)) {
-                $event = $handler->make(
-                    $this->getEventName($instance, $annotation, Event::PRE_METHOD),
-                    $instance->getReflection()
-                        ->getShortName(),
-                    $instance->getMethod()
-                        ->getParameters()
-                );
-                $handler->send($event);
+        $attributesExecuted = [];
+        foreach ($attributes as $attribute) {
+            $instantiatedAttribute = $attribute->newInstance();
+            $handler = $this->getHandler(EventHandler::class, $instantiatedAttribute);
+            if ($instantiatedAttribute->hasMethod(Event::PRE_METHOD)) {
+                $eventName = $this->getEventName($instance, $instantiatedAttribute, Event::PRE_METHOD);
+                if (in_array($eventName, $attributesExecuted, true)) {
+                    continue;
+                }
+                $attributesExecuted[] = $eventName;
+                $this->sendPreExecuteEvent($handler, $eventName, $instance);
             }
         }
 
@@ -45,41 +47,36 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
      */
     public function suffix(Instance $instance): Response
     {
-        $annotations = $instance->getMethod()
-            ->getAnnotations(Event::class);
+        $attributes = $instance->getMethod()
+            ->getAttributes(Event::class);
 
-        foreach ($annotations as $annotation) {
-            $handler = $this->getHandler(EventHandler::class, $annotation);
+        $attributesExecuted = [];
+        foreach ($attributes as $attribute) {
+            $instantiatedAttribute = $attribute->newInstance();
+            $handler = $this->getHandler(EventHandler::class, $instantiatedAttribute);
 
-            if ($annotation->hasMethod(Event::POST_METHOD) && !$instance->getMethod()->threwException()) {
-                $event = $handler->make(
-                    $this->getEventName($instance, $annotation, Event::POST_METHOD),
-                    $instance->getReflection()
-                        ->getShortName(),
-                    $instance->getMethod()
-                        ->getParameters(),
-                    $instance->getMethod()
-                        ->getReturnedValue(),
-                );
-                $handler->send($event);
+            if ($instantiatedAttribute->hasMethod(Event::POST_METHOD) && !$instance->getMethod()->threwException()) {
+                $eventName = $this->getEventName($instance, $instantiatedAttribute, Event::POST_METHOD);
+                if (\in_array($eventName, $attributesExecuted, true)) {
+                    continue;
+                }
+                $attributesExecuted[] = $eventName;
+                $this->sendPostExecuteEvent($handler, $eventName, $instance);
             }
 
-            if ($annotation->hasMethod(Event::ON_EXCEPTION_METHOD) && $instance->getMethod()->threwException()) {
-                $event = $handler->make(
-                    $this->getEventName($instance, $annotation, Event::ON_EXCEPTION_METHOD),
-                    $instance->getReflection()
-                        ->getShortName(),
-                    $instance->getMethod()
-                        ->getParameters(),
-                    null,
-                    $instance->getMethod()
-                        ->getException()
-                );
-                $handler->send($event);
+            if ($instantiatedAttribute->hasMethod(Event::ON_EXCEPTION_METHOD) && $instance->getMethod()->threwException()) {
+                $eventName = $this->getEventName($instance, $instantiatedAttribute, Event::ON_EXCEPTION_METHOD);
+                if (in_array($eventName, $attributesExecuted, true)) {
+                    continue;
+                }
+                $attributesExecuted[] = $eventName;
+                $this->sendOnExceptionEvent($handler, $eventName, $instance);
             }
 
             if ($this->isInstanceImplementInterfaceUseCase($instance)) {
-                $this->sendPostExecutionGenericEvent($instance, $handler);
+                $eventName = self::GENERIC_POST_EXECUTE_EVENT_NAME;
+                $attributesExecuted[] = $eventName;
+                $this->sendPostExecuteEvent($handler, $eventName, $instance);
             }
         }
 
@@ -89,7 +86,7 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
     public function supportsPrefix(Instance $instance): bool
     {
         return $instance->getMethod()
-            ->hasAnnotation(Event::class);
+            ->hasAttribute(Event::class);
     }
 
     public function supportsSuffix(Instance $instance): bool
@@ -107,44 +104,26 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
         return 10;
     }
 
-    private function getEventName(Instance $instance, Event $annotation, string $type): string
+    private function getEventName(Instance $instance, Event $attribute, string $type): string
     {
-        $name = $annotation->getName();
+        $name = $attribute->name;
         if ($name !== null) {
             return $name;
         }
 
         $name = $instance->getReflection()
             ->getShortName();
-        if (!$annotation->isUseClassNameOnly()) {
+        if (!$attribute->useClassNameOnly) {
             $name = $instance->getMethod()
                 ->getName() . '.' . $name;
         }
-        $name = mb_strtolower((string) preg_replace('/(?<=\\w)(?=[A-Z])/', '_$1', $name));
 
-        $prefix = $annotation->getDefaultPrefix();
+        $name = $this->camelCaseToSnakeCase($name);
+
         $type = $type === Event::ON_EXCEPTION_METHOD ? 'exception' : $type;
+        $prefix = $attribute->defaultPrefix;
 
-        return "{$prefix}.{$type}.{$name}";
-    }
-
-    /**
-     * @param EventHandler<Event> $handler
-     *
-     * @throws InvalidEventNameException
-     */
-    private function sendPostExecutionGenericEvent(Instance $instance, EventHandler $handler): void
-    {
-        $event = $handler->make(
-            'use_case.post.execute',
-            $instance->getReflection()
-                ->getShortName(),
-            $instance->getMethod()
-                ->getParameters(),
-            $instance->getMethod()
-                ->getReturnedValue(),
-        );
-        $handler->send($event);
+        return (!\in_array($prefix, [null, '', false], true) ? "$prefix." : '') . "$type.$name";
     }
 
     private function isInstanceImplementInterfaceUseCase(Instance $instance): bool
@@ -156,5 +135,51 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
         );
 
         return \count($useCaseInstance) === 1;
+    }
+
+    private function sendPostExecuteEvent(EventHandler $handler, string $eventName, Instance $instance): void
+    {
+        $event = $handler->make(
+            $eventName,
+            $instance->getReflection()
+                ->getShortName(),
+            $instance->getMethod()
+                ->getParameters(),
+            $instance->getMethod()
+                ->getReturnedValue(),
+        );
+        $handler->send($event);
+    }
+
+    private function sendPreExecuteEvent(EventHandler $handler, string $eventName, Instance $instance): void
+    {
+        $event = $handler->make(
+            $eventName,
+            $instance->getReflection()
+                ->getShortName(),
+            $instance->getMethod()
+                ->getParameters()
+        );
+        $handler->send($event);
+    }
+
+    private function sendOnExceptionEvent(EventHandler $handler, string $eventName, Instance $instance): void
+    {
+        $event = $handler->make(
+            $eventName,
+            $instance->getReflection()
+                ->getShortName(),
+            $instance->getMethod()
+                ->getParameters(),
+            null,
+            $instance->getMethod()
+                ->getException()
+        );
+        $handler->send($event);
+    }
+
+    private function camelCaseToSnakeCase(string $name): string|array|null|false
+    {
+        return mb_strtolower((string) preg_replace('/(?<=\\w)(?=[A-Z])/', '_$1', $name));
     }
 }

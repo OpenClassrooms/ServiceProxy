@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event;
 
-use OpenClassrooms\ServiceProxy\Annotation\Event;
+use OpenClassrooms\ServiceProxy\Attribute\Event;
 
-class InvalidMethodEventAnnotatedClass
+class ClassWithInvalidEventAttributes
 {
-    /**
-     * @Event(methods="toto")
-     */
+    #[Event(methods: 'invalid')]
     public function eventWithWrongMethods($useCaseRequest): int
     {
         return 1;
