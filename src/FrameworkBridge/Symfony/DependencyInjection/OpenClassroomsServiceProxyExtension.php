@@ -122,7 +122,7 @@ final class OpenClassroomsServiceProxyExtension extends Extension
                 $args = $this->prefixKeys($element);
                 $configClass = $this->getConfigClass($name, $type, $domain);
                 $container->register($configClass)
-                          ->setArguments($args)
+                    ->setArguments($args)
                 ;
             }
         }
@@ -139,7 +139,7 @@ final class OpenClassroomsServiceProxyExtension extends Extension
     {
         $type = ucfirst($type);
         if ($domain !== null) {
-            $domain = "\\{$domain}";
+            $domain = "{$domain}\\";
         }
 
         $configClasses = [

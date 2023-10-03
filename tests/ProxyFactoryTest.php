@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests;
 
+use OpenClassrooms\ServiceProxy\Interceptor\Config\CacheInterceptorConfig;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\CacheInterceptor;
@@ -30,7 +31,7 @@ final class ProxyFactoryTest extends TestCase
     {
         $this->factory = $this->getProxyFactory(
             [
-                new CacheInterceptor([new CacheHandlerMock()]),
+                new CacheInterceptor(new CacheInterceptorConfig(), [new CacheHandlerMock()]),
                 new EventInterceptor([new EventHandlerMock()]),
                 new TransactionInterceptor([new TransactionHandlerMock()]),
                 new SecurityInterceptor([new SecurityHandlerMock()]),

@@ -6,59 +6,74 @@ namespace OpenClassrooms\ServiceProxy\Handler\Impl\Cache;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Handler\Impl\ConfigurableHandler;
-use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\Cache\Adapter\TagAwareAdapter;
-use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
 
 final class SymfonyCacheHandler implements CacheHandler
 {
     use ConfigurableHandler;
 
-    private ?int $defaultLifetime;
+    /**
+     * @var iterable<string, TagAwareAdapter>
+     */
+    private iterable $pools;
 
-    private TagAwareAdapterInterface $cacheAdapter;
-
-    public function __construct(
-        ?TagAwareAdapterInterface $cacheAdapter = null,
-        ?string $name = null,
-        ?int $defaultLifetime = null
-    ) {
-        $this->cacheAdapter = $cacheAdapter ?? new TagAwareAdapter(new ArrayAdapter());
-        $this->name = $name;
-        $this->defaultLifetime = $defaultLifetime;
+    /**
+     * @param iterable<string, TagAwareAdapter> $pools
+     */
+    public function __construct(iterable $pools = [])
+    {
+        $this->pools = $pools;
     }
 
-    public function fetch(string $id)
+    public function fetch(string $poolName, string $id): mixed
     {
-        return $this->cacheAdapter
-            ->getItem($id)
-            ->get()
-        ;
+        $pool = $this->getPool($poolName);
+
+        return $pool->getItem($id)->get();
     }
 
-    public function save(string $id, $data, ?int $lifeTime = null, array $tags = []): void
+    public function save(string $poolName, string $id, $data, ?int $ttl = null, array $tags = []): void
     {
-        $item = $this->cacheAdapter->getItem($id)
+        $pool = $this->getPool($poolName);
+
+        $item = $pool->getItem($id)
             ->set($data)
-            ->expiresAfter($lifeTime ?? $this->defaultLifetime)
+            ->expiresAfter($ttl)
             ->tag($tags)
         ;
 
-        $this->cacheAdapter->save($item);
+        $pool->save($item);
     }
 
-    public function contains(string $id): bool
+    public function contains(string $poolName, string $id): bool
     {
-        return $this->cacheAdapter->hasItem($id);
+        return $this->getPool($poolName)->hasItem($id);
     }
 
-    public function invalidateTags(array $tags): void
+    public function invalidateTags(string $poolName, array $tags): void
     {
-        $this->cacheAdapter->invalidateTags($tags);
+        $this->getPool($poolName)->invalidateTags($tags);
     }
 
     public function getName(): string
     {
-        return $this->name ?? 'array';
+        return 'symfony_cache';
+    }
+
+    private function getPool(string $poolName): TagAwareAdapter
+    {
+        $existingPools = [...$this->pools];
+
+        if (!isset($existingPools[$poolName])) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    'No cache pool found for "%s". Available pools are: "%s".',
+                    $poolName,
+                    implode('", "', array_keys($existingPools))
+                )
+            );
+        }
+
+        return $existingPools[$poolName];
     }
 }

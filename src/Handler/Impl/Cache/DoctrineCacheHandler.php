@@ -24,7 +24,7 @@ final class DoctrineCacheHandler implements CacheHandler
         $this->name = $name;
     }
 
-    public function fetch(string $id)
+    public function fetch(string $poolName, string $id)
     {
         $tags = explode('|', $id);
         $id = array_shift($tags);
@@ -32,17 +32,17 @@ final class DoctrineCacheHandler implements CacheHandler
         return $this->cacheProvider->fetchWithNamespace($id, $tags[0] ?? null);
     }
 
-    public function save(string $id, $data, ?int $lifeTime = null, array $tags = []): void
+    public function save(string $poolName, string $id, $data, ?int $lifeTime = null, array $tags = []): void
     {
         $this->cacheProvider->saveWithNamespace($id, $data, $tags[0] ?? null, $lifeTime);
     }
 
-    public function contains(string $id): bool
+    public function contains(string $poolName, string $id): bool
     {
         return $this->cacheProvider->contains($id);
     }
 
-    public function invalidateTags(array $tags): void
+    public function invalidateTags(string $poolName, array $tags): void
     {
         throw new \BadMethodCallException('Cache provider does not support tags invalidation');
     }

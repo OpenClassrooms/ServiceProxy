@@ -54,6 +54,13 @@ final class Configuration implements ConfigurationInterface
             ->end()
         ;
 
+        $interceptorsNode = $children->arrayNode('interceptors');
+        $interceptorsNode->useAttributeAsKey('name')
+            ->arrayPrototype()
+            ->variablePrototype()
+            ->end()
+        ;
+
         $children->end();
 
         return $treeBuilder;

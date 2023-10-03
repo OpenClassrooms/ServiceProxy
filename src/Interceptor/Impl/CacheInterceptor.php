@@ -16,16 +16,17 @@ use OpenClassrooms\ServiceProxy\Util\Expression;
 
 final class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
+    private const DEFAULT_POOL_NAME = 'default';
+
     /**
-     * @var string[]
+     * @var string[][]
      */
     private static array $hits = [];
 
     /**
-     * @var string[]
+     * @var string[][]
      */
     private static array $misses = [];
-
 
     public function __construct(
         private readonly CacheInterceptorConfig $config,
@@ -35,19 +36,19 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     }
 
     /**
-     * @return string[]
+     * @return array<int, string>
      */
-    public static function getHits(): array
+    public static function getHits(?string $poolName = self::DEFAULT_POOL_NAME): array
     {
-        return self::$hits;
+        return self::$hits[$poolName] ?? [];
     }
 
     /**
-     * @return string[]
+     * @return array<int, string>
      */
-    public static function getMisses(): array
+    public static function getMisses(?string $poolName = self::DEFAULT_POOL_NAME): array
     {
-        return self::$misses;
+        return self::$misses[$poolName] ?? [];
     }
 
     public function prefix(Instance $instance): Response
@@ -65,23 +66,50 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             ->getReturnType()
         ;
 
+        $pools = \count($attribute->pools) === 0 ? [self::DEFAULT_POOL_NAME] : $attribute->pools;
+
         if ($returnType instanceof \ReflectionNamedType && $returnType->getName() === 'void') {
-            self::$misses[] = $cacheKey;
+            self::$misses = array_combine(
+                $pools,
+                [array_fill(0, \count($pools), $cacheKey)]
+            );
 
             return new Response(null, false);
         }
 
         $handler = $this->getHandlers(CacheHandler::class, $attribute)[0];
 
-        if ($handler->contains($cacheKey) === false) {
-            self::$misses[] = $cacheKey;
+        $missedPools = [];
 
-            return new Response(null, false);
+        foreach ($pools as $pool) {
+            if (!$handler->contains($pool, $cacheKey)) {
+                $missedPools[] = $pool;
+
+                self::$misses[$pool] = self::$misses[$pool] ?? [];
+                self::$misses[$pool][] = $cacheKey;
+
+                continue;
+            }
+
+            $data = $handler->fetch($pool, $cacheKey);
+
+            self::$hits[$pool] = self::$hits[$pool] ?? [];
+            self::$hits[$pool][] = $cacheKey;
+
+            foreach ($missedPools as $missedPool) {
+                $handler->save(
+                    $missedPool,
+                    $cacheKey,
+                    $data,
+                    $attribute->ttl ?? $this->config->defaultTtl,
+                    $this->getTags($instance, $attribute)
+                );
+            }
+
+            return new Response($data, true);
         }
 
-        self::$hits[] = $cacheKey;
-
-        return new Response($handler->fetch($cacheKey), true);
+        return new Response(null, false);
     }
 
     public function suffix(Instance $instance): Response
@@ -101,13 +129,17 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         ;
 
         $handler = $this->getHandlers(CacheHandler::class, $attribute)[0];
+        $pools = \count($attribute->pools) === 0 ? [self::DEFAULT_POOL_NAME] : $attribute->pools;
 
-        $handler->save(
-            $cacheKey,
-            $data,
-            $attribute->getLifetime(),
-            $this->getTags($instance, $attribute)
-        );
+        foreach ($pools as $pool) {
+            $handler->save(
+                $pool,
+                $cacheKey,
+                $data,
+                $attribute->ttl ?? $this->config->defaultTtl,
+                $this->getTags($instance, $attribute)
+            );
+        }
 
         return new Response($data);
     }
@@ -208,8 +240,12 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
         $tags = array_map(
             static fn (string $expression) => Expression::evaluateToString($expression, $parameters),
-            $attribute->getTags()
+            $attribute->tags
         );
+
+        if ($instance->getMethod()->threwException()) {
+            return $tags;
+        }
 
         $autoTags = $this->guessObjectsTags(
             $instance->getMethod()->getResponse(),
@@ -256,12 +292,12 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
                 continue;
             }
             $subObject = $this->getPropertyValue($ref, $object, $propRef->getName());
-            if (\is_iterable($subObject)) {
+            if (is_iterable($subObject)) {
                 foreach ($subObject as $item) {
-                    $tags = [...$tags, ... $this->guessObjectsTags($item, $excludedClasses)];
+                    $tags = [...$tags, ...$this->guessObjectsTags($item, $excludedClasses)];
                 }
             } else {
-                $tags = [...$tags, ... $this->guessObjectsTags($subObject, $excludedClasses)];
+                $tags = [...$tags, ...$this->guessObjectsTags($subObject, $excludedClasses)];
             }
         }
 

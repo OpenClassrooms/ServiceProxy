@@ -30,26 +30,26 @@ final class DoctrineCacheHandlerMock implements CacheHandler
         $this->wrappedHandler = new DoctrineCacheHandler($cacheProvider, $name);
     }
 
-    public function fetch(string $id)
+    public function fetch(string $poolName, string $id)
     {
-        return $this->wrappedHandler->fetch($id);
+        return $this->wrappedHandler->fetch($poolName, $id);
     }
 
-    public function save(string $id, $data, ?int $lifeTime = null, array $tags = []): void
+    public function save(string $poolName, string $id, $data, ?int $lifeTime = null, array $tags = []): void
     {
         self::$lifeTime = $lifeTime;
 
-        $this->wrappedHandler->save($id, $data, $lifeTime, $tags);
+        $this->wrappedHandler->save($poolName, $id, $data, $lifeTime, $tags);
     }
 
-    public function contains(string $id, array $tags = []): bool
+    public function contains(string $poolName, string $id, array $tags = []): bool
     {
-        return $this->wrappedHandler->contains($id);
+        return $this->wrappedHandler->contains($poolName, $id);
     }
 
-    public function invalidateTags(array $tags): void
+    public function invalidateTags(string $poolName, array $tags): void
     {
-        $this->wrappedHandler->invalidateTags($tags);
+        $this->wrappedHandler->invalidateTags($poolName, $tags);
     }
 
     public function isDefault(): bool
