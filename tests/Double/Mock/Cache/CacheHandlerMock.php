@@ -26,6 +26,8 @@ final class CacheHandlerMock implements CacheHandler
 
         $this->wrappedHandler = new SymfonyCacheHandler([
             'default' => new TagAwareAdapter(new ArrayAdapter()),
+            'foo' => new TagAwareAdapter(new ArrayAdapter()),
+            'bar' => new TagAwareAdapter(new ArrayAdapter()),
         ], $name);
     }
 

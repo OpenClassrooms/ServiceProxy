@@ -86,4 +86,10 @@ class ClassWithCacheAttributes
     {
         return self::DATA;
     }
+
+    #[Cache(pools: ['foo', 'bar'])]
+    public function methodWithMultiplePools(): string
+    {
+        return self::DATA;
+    }
 }

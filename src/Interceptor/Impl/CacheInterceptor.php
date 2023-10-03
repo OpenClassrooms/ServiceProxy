@@ -16,17 +16,17 @@ use OpenClassrooms\ServiceProxy\Util\Expression;
 
 final class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
+    private const DEFAULT_POOL_NAME = 'default';
+
     /**
-     * @var string[]
+     * @var string[][]
      */
     private static array $hits = [];
 
     /**
-     * @var string[]
+     * @var string[][]
      */
     private static array $misses = [];
-
-    private string $defaultPoolName = 'default';
 
     public function __construct(
         private readonly CacheInterceptorConfig $config,
@@ -36,19 +36,19 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     }
 
     /**
-     * @return string[]
+     * @return array<int, string>
      */
-    public static function getHits(): array
+    public static function getHits(?string $poolName = self::DEFAULT_POOL_NAME): array
     {
-        return self::$hits;
+        return self::$hits[$poolName] ?? [];
     }
 
     /**
-     * @return string[]
+     * @return array<int, string>
      */
-    public static function getMisses(): array
+    public static function getMisses(?string $poolName = self::DEFAULT_POOL_NAME): array
     {
-        return self::$misses;
+        return self::$misses[$poolName] ?? [];
     }
 
     public function prefix(Instance $instance): Response
@@ -66,14 +66,18 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             ->getReturnType()
         ;
 
+        $pools = \count($attribute->pools) === 0 ? [self::DEFAULT_POOL_NAME] : $attribute->pools;
+
         if ($returnType instanceof \ReflectionNamedType && $returnType->getName() === 'void') {
-            self::$misses[] = $cacheKey;
+            self::$misses = array_combine(
+                $pools,
+                [array_fill(0, \count($pools), $cacheKey)]
+            );
 
             return new Response(null, false);
         }
 
         $handler = $this->getHandlers(CacheHandler::class, $attribute)[0];
-        $pools = \count($attribute->pools) === 0 ? [$this->defaultPoolName] : $attribute->pools;
 
         $missedPools = [];
 
@@ -81,10 +85,16 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             if (!$handler->contains($pool, $cacheKey)) {
                 $missedPools[] = $pool;
 
+                self::$misses[$pool] = self::$misses[$pool] ?? [];
+                self::$misses[$pool][] = $cacheKey;
+
                 continue;
             }
 
             $data = $handler->fetch($pool, $cacheKey);
+
+            self::$hits[$pool] = self::$hits[$pool] ?? [];
+            self::$hits[$pool][] = $cacheKey;
 
             foreach ($missedPools as $missedPool) {
                 $handler->save(
@@ -96,12 +106,8 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
                 );
             }
 
-            self::$hits[] = $cacheKey;
-
             return new Response($data, true);
         }
-
-        self::$misses[] = $cacheKey;
 
         return new Response(null, false);
     }
@@ -123,7 +129,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         ;
 
         $handler = $this->getHandlers(CacheHandler::class, $attribute)[0];
-        $pools = \count($attribute->pools) === 0 ? [$this->defaultPoolName] : $attribute->pools;
+        $pools = \count($attribute->pools) === 0 ? [self::DEFAULT_POOL_NAME] : $attribute->pools;
 
         foreach ($pools as $pool) {
             $handler->save(
