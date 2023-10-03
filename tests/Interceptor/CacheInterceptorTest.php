@@ -256,14 +256,14 @@ final class CacheInterceptorTest extends TestCase
         $this->assertNotEmpty($this->cacheInterceptor->getMisses());
     }
 
-    public function testInvalidHandlerThrowsException(): void
+    public function testUnknownHandlerThrowsException(): void
     {
         $this->expectException(HandlerNotFound::class);
         $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
         $proxy->invalidHandler();
     }
 
-    public function testInvalidPoolThrowsException(): void
+    public function testUnknownPoolThrowsException(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
@@ -283,6 +283,36 @@ final class CacheInterceptorTest extends TestCase
     {
         $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
         $this->assertEquals(ClassWithCacheAttributes::DATA, $proxy->bothHandlerAndPool());
+    }
+
+    public function testMethodWithMultiplePools(): void
+    {
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy->methodWithMultiplePools();
+
+        $this->assertEmpty($this->cacheInterceptor->getHits('foo'));
+        $this->assertNotEmpty($this->cacheInterceptor->getMisses('foo'));
+
+        $this->assertEmpty($this->cacheInterceptor->getHits('bar'));
+        $this->assertNotEmpty($this->cacheInterceptor->getMisses('bar'));
+
+        $result = $proxy->methodWithMultiplePools();
+
+        $this->assertNotEmpty($this->cacheInterceptor->getHits('foo'));
+        $this->assertEmpty($this->cacheInterceptor->getMisses('foo'));
+
+        $this->assertEmpty($this->cacheInterceptor->getHits('bar'));
+        $this->assertEmpty($this->cacheInterceptor->getMisses('bar'));
+
+        $this->assertEquals(ClassWithCacheAttributes::DATA, $result);
+    }
+
+    public function testMethodWithNoPoolUsesDefaultPool(): void
+    {
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy->methodWithAttribute();
+
+        $this->assertNotEmpty($this->cacheInterceptor->getMisses('default'));
     }
 
     private function writeProxy(

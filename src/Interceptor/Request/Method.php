@@ -150,11 +150,7 @@ final class Method
 
     public function getResponse(): mixed
     {
-        if (!isset($this->definedValues['response'])) {
-            throw new \LogicException('The response is not defined at this point.');
-        }
-
-        return $this->response;
+        return $this->response ?? null;
     }
 
     public function threwException(): bool

@@ -40,7 +40,7 @@ final class AbstractInterceptorTest extends TestCase
     public function testWithMultipleDefaultHandlersThrowException(): void
     {
         $this->expectException(DuplicatedDefaultHandler::class);
-        new CacheInterceptor([new CacheHandlerMock(), new CacheHandlerMock('other')]);
+        new CacheInterceptor(new CacheInterceptorConfig(), [new CacheHandlerMock(), new CacheHandlerMock('other')]);
     }
 
     public function testWithMultipleHandlersNoDefaultThrowException(): void

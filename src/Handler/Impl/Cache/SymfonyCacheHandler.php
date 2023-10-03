@@ -29,7 +29,8 @@ final class SymfonyCacheHandler implements CacheHandler
     {
         $pool = $this->getPool($poolName);
 
-        return $pool->getItem($id)->get();
+        return $pool->getItem($id)
+            ->get();
     }
 
     public function save(string $poolName, string $id, $data, ?int $ttl = null, array $tags = []): void
@@ -47,12 +48,14 @@ final class SymfonyCacheHandler implements CacheHandler
 
     public function contains(string $poolName, string $id): bool
     {
-        return $this->getPool($poolName)->hasItem($id);
+        return $this->getPool($poolName)
+            ->hasItem($id);
     }
 
     public function invalidateTags(string $poolName, array $tags): void
     {
-        $this->getPool($poolName)->invalidateTags($tags);
+        $this->getPool($poolName)
+            ->invalidateTags($tags);
     }
 
     public function getName(): string

@@ -16,6 +16,15 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
 {
     private string $defaultPoolName = 'default';
 
+    private ExpressionResolver $expressionResolver;
+
+    public function __construct(iterable $handlers = [])
+    {
+        parent::__construct($handlers);
+
+        $this->expressionResolver = new ExpressionResolver();
+    }
+
     public function suffix(Instance $instance): Response
     {
         if ($instance->getMethod()->threwException()) {
@@ -25,7 +34,7 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
         $attribute = $instance->getMethod()
             ->getAttribute(InvalidateCache::class);
 
-        $handler = $this->getHandlers(CacheHandler::class, $attribute)[0];
+        $handler = $this->getHandler(CacheHandler::class, $attribute);
         $pools = \count($attribute->pools) === 0 ? [$this->defaultPoolName] : $attribute->pools;
 
         $tags = $this->getTags($instance, $attribute);
@@ -58,7 +67,7 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
         ;
 
         $tags = array_map(
-            static fn (string $expression) => Expression::evaluateToString($expression, $parameters),
+            fn (string $expression) => $this->expressionResolver->resolve($expression, $parameters),
             $attribute->tags
         );
 
