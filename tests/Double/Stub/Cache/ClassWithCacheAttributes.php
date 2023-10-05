@@ -23,6 +23,12 @@ class ClassWithCacheAttributes
     }
 
     #[Cache]
+    public function methodWithAttributeReturningObject(): Stub
+    {
+        return new Stub();
+    }
+
+    #[Cache]
     public function methodWithVoidReturn(): void
     {
         $doSomething = static function () {
@@ -92,4 +98,11 @@ class ClassWithCacheAttributes
     {
         return self::DATA;
     }
+}
+
+class Stub
+{
+    public const ID = 12;
+
+    private $id = self::ID;
 }
