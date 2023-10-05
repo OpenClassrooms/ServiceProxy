@@ -102,7 +102,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
                     $cacheKey,
                     $data,
                     $attribute->ttl ?? $this->config->defaultTtl,
-                    $this->getTags($instance, $attribute)
+                    $this->getTags($instance, $attribute, $data)
                 );
             }
 
@@ -137,7 +137,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
                 $cacheKey,
                 $data,
                 $attribute->ttl ?? $this->config->defaultTtl,
-                $this->getTags($instance, $attribute)
+                $this->getTags($instance, $attribute, $data)
             );
         }
 
@@ -233,7 +233,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     /**
      * @return array<int, string>
      */
-    private function getTags(Instance $instance, Cache $attribute): array
+    private function getTags(Instance $instance, Cache $attribute, mixed $response = null): array
     {
         $parameters = $instance->getMethod()
             ->getParameters();
@@ -243,16 +243,17 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             $attribute->tags
         );
 
-        if ($instance->getMethod()->threwException()) {
-            return $tags;
+        if ($response !== null) {
+            $tags = array_values(array_filter([
+                ...$tags,
+                ...$this->guessObjectsTags(
+                    $response,
+                    $this->config->autoTagsExcludedClasses
+                ),
+            ]));
         }
 
-        $autoTags = $this->guessObjectsTags(
-            $instance->getMethod()->getResponse(),
-            $this->config->autoTagsExcludedClasses
-        );
-
-        return array_values(array_filter([...$tags, ...$autoTags]));
+        return $tags;
     }
 
     /**
