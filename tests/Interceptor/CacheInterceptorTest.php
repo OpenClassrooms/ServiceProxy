@@ -256,6 +256,38 @@ final class CacheInterceptorTest extends TestCase
         $this->assertNotEmpty($this->cacheInterceptor->getMisses());
     }
 
+    public function testMethodIsCachedWithTagsBuiltFromResponse(): void
+    {
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy->methodWithAttributeReturningObject();
+
+        $this->assertEmpty($this->cacheInterceptor::getHits());
+        $this->assertNotEmpty($this->cacheInterceptor::getMisses());
+
+        $result = $proxy->methodWithAttributeReturningObject();
+
+        $this->assertInstanceOf(
+            \OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\Stub::class,
+            $result
+        );
+        $this->assertNotEmpty($this->cacheInterceptor::getHits());
+        $this->assertEmpty($this->cacheInterceptor::getMisses());
+
+        $tagToInvalidate =
+            str_replace('\\', '.', \OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\Stub::class)
+            .
+            '.'
+            .
+            \OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\Stub::ID;
+
+        $this->cacheHandlerMock->invalidateTags('default', [$tagToInvalidate]);
+
+        $result = $proxy->methodWithAttributeReturningObject();
+
+        $this->assertEmpty($this->cacheInterceptor::getHits());
+        $this->assertNotEmpty($this->cacheInterceptor::getMisses());
+    }
+
     public function testUnknownHandlerThrowsException(): void
     {
         $this->expectException(HandlerNotFound::class);
