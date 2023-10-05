@@ -18,6 +18,8 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 {
     private const DEFAULT_POOL_NAME = 'default';
 
+    private const AUTO_TAG_PROPERTY_NAME = 'id';
+
     /**
      * @var string[][]
      */
@@ -289,13 +291,13 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             if (!$propRef->isInitialized($object)) {
                 continue;
             }
-            $getter = 'get' . ucfirst($propRef->getName());
-            if ($propRef->getName() === 'id' || $ref->hasMethod($getter)) {
+            $getter = 'get' . ucfirst(self::AUTO_TAG_PROPERTY_NAME);
+            if ($propRef->getName() === self::AUTO_TAG_PROPERTY_NAME || $ref->hasMethod($getter)) {
                 $tag =
                     str_replace('\\', '.', \get_class($object))
                     .
                     '.'
-                    . $this->getPropertyValue($ref, $object, 'id');
+                    . $this->getPropertyValue($ref, $object, self::AUTO_TAG_PROPERTY_NAME);
                 if (isset($tags[$tag])) {
                     return $tags;
                 }
