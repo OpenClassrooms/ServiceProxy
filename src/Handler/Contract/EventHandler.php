@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Handler\Contract;
 
-use OpenClassrooms\ServiceProxy\Annotation\Exception\InvalidEventNameException;
-
 /**
  * @template T of object
  */
@@ -16,7 +14,6 @@ interface EventHandler extends AttributeHandler
      * @param mixed $response
      *
      * @return T
-     * @throws InvalidEventNameException
      */
     public function make(
         string $eventName,

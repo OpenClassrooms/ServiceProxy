@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Interceptor\Interceptor;
 
-use OpenClassrooms\ServiceProxy\Annotation\Exception\InvalidEventNameException;
 use OpenClassrooms\ServiceProxy\Attribute\Event;
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
@@ -17,9 +16,6 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
 {
     public const GENERIC_POST_EXECUTE_EVENT_NAME = 'use_case.post.execute';
 
-    /**
-     * @throws InvalidEventNameException
-     */
     public function prefix(Instance $instance): Response
     {
         $attributes = $instance->getMethod()
@@ -42,9 +38,6 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
         return new Response();
     }
 
-    /**
-     * @throws InvalidEventNameException
-     */
     public function suffix(Instance $instance): Response
     {
         $attributes = $instance->getMethod()
