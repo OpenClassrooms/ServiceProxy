@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Interceptor\Interceptor;
 
 use OpenClassrooms\ServiceProxy\Attribute\Event;
+use OpenClassrooms\ServiceProxy\Attribute\EventMethodEnum;
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
@@ -25,8 +26,8 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
         foreach ($attributes as $attribute) {
             $instantiatedAttribute = $attribute->newInstance();
             $handler = $this->getHandler(EventHandler::class, $instantiatedAttribute);
-            if ($instantiatedAttribute->hasMethod(Event::PRE_METHOD)) {
-                $eventName = $this->getEventName($instance, $instantiatedAttribute, Event::PRE_METHOD);
+            if ($instantiatedAttribute->hasMethod(EventMethodEnum::pre)) {
+                $eventName = $this->getEventName($instance, $instantiatedAttribute, EventMethodEnum::pre);
                 if (\in_array($eventName, $attributesExecuted, true)) {
                     continue;
                 }
@@ -48,8 +49,8 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
             $instantiatedAttribute = $attribute->newInstance();
             $handler = $this->getHandler(EventHandler::class, $instantiatedAttribute);
 
-            if ($instantiatedAttribute->hasMethod(Event::POST_METHOD) && !$instance->getMethod()->threwException()) {
-                $eventName = $this->getEventName($instance, $instantiatedAttribute, Event::POST_METHOD);
+            if ($instantiatedAttribute->hasMethod(EventMethodEnum::post) && !$instance->getMethod()->threwException()) {
+                $eventName = $this->getEventName($instance, $instantiatedAttribute, EventMethodEnum::post);
                 if (\in_array($eventName, $attributesExecuted, true)) {
                     continue;
                 }
@@ -57,10 +58,11 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
                 $this->sendPostExecuteEvent($handler, $eventName, $instance);
             }
 
-            if ($instantiatedAttribute->hasMethod(
-                Event::ON_EXCEPTION_METHOD
-            ) && $instance->getMethod()->threwException()) {
-                $eventName = $this->getEventName($instance, $instantiatedAttribute, Event::ON_EXCEPTION_METHOD);
+            if ($instantiatedAttribute->hasMethod(EventMethodEnum::onException) &&
+                $instance->getMethod()
+                    ->threwException()
+            ) {
+                $eventName = $this->getEventName($instance, $instantiatedAttribute, EventMethodEnum::onException);
                 if (\in_array($eventName, $attributesExecuted, true)) {
                     continue;
                 }
@@ -99,7 +101,7 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
         return 10;
     }
 
-    private function getEventName(Instance $instance, Event $attribute, string $type): string
+    private function getEventName(Instance $instance, Event $attribute, EventMethodEnum $eventMethod): string
     {
         $name = $attribute->name;
         if ($name !== null) {
@@ -115,10 +117,10 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
 
         $name = $this->camelCaseToSnakeCase($name);
 
-        $type = $type === Event::ON_EXCEPTION_METHOD ? 'exception' : $type;
+        $eventMethod = $eventMethod->name === EventMethodEnum::onException->name ? 'exception' : $eventMethod->name;
         $prefix = $attribute->defaultPrefix;
 
-        return (!\in_array($prefix, [null, '', false], true) ? "{$prefix}." : '') . "{$type}.{$name}";
+        return (!\in_array($prefix, [null, '', false], true) ? "{$prefix}." : '') . "{$eventMethod}.{$name}";
     }
 
     private function isInstanceImplementInterfaceUseCase(Instance $instance): bool
