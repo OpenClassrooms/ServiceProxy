@@ -134,6 +134,9 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
         return \count($useCaseInstance) === 1;
     }
 
+    /**
+     * @param EventHandler<Event> $handler
+     */
     private function sendPostExecuteEvent(EventHandler $handler, string $eventName, Instance $instance): void
     {
         $event = $handler->make(
@@ -148,6 +151,9 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
         $handler->send($event);
     }
 
+    /**
+     * @param EventHandler<Event> $handler
+     */
     private function sendPreExecuteEvent(EventHandler $handler, string $eventName, Instance $instance): void
     {
         $event = $handler->make(
@@ -160,6 +166,9 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
         $handler->send($event);
     }
 
+    /**
+     * @param EventHandler<Event> $handler
+     */
     private function sendOnExceptionEvent(EventHandler $handler, string $eventName, Instance $instance): void
     {
         $event = $handler->make(
