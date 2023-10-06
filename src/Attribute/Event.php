@@ -27,7 +27,7 @@ final class Event extends Attribute
     private const DEFAULT_PREFIX = 'use_case';
 
     /**
-     * @var string|array<string, 'pre'|'post'|'onException'> $methods
+     * @var string|array<string, 'pre'|'post'|'onException'>
      */
     private string|array $methods;
 
@@ -51,6 +51,14 @@ final class Event extends Attribute
     }
 
     /**
+     * @return class-string<AttributeHandler>
+     */
+    public function getHandlerClass(): string
+    {
+        return EventHandler::class;
+    }
+
+    /**
      * @param string|array<string, 'pre'|'post'|'onException'> $methods
      */
     private function setMethods(string|array $methods): void
@@ -69,13 +77,5 @@ final class Event extends Attribute
         }
 
         $this->methods = $methods;
-    }
-
-    /**
-     * @return class-string<AttributeHandler>
-     */
-    public function getHandlerClass(): string
-    {
-        return EventHandler::class;
     }
 }

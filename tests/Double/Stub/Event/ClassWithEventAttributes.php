@@ -82,36 +82,36 @@ class ClassWithEventAttributes
         return 1;
     }
 
-     #[Event(methods:'pre', name:'first_event')]
-     #[Event(methods:'post', name:'first_event')]
-     #[Event(methods:'post', name:'first_event')]
-     #[Event(methods:'post', name:'second_event')]
-     #[Event(methods:'pre,post,onException', name:'third_event')]
-     #[Event(methods:'pre,post,onException')]
+    #[Event(methods: 'pre', name: 'first_event')]
+    #[Event(methods: 'post', name: 'first_event')]
+    #[Event(methods: 'post', name: 'first_event')]
+    #[Event(methods: 'post', name: 'second_event')]
+    #[Event(methods: 'pre,post,onException', name: 'third_event')]
+    #[Event(methods: 'pre,post,onException')]
     public function multiEvents($useCaseRequest): int
     {
         return 1;
     }
 
-    #[Event(defaultPrefix:'toto')]
+    #[Event(defaultPrefix: 'toto')]
     public function prefixedEvent($useCaseRequest): int
     {
         return 1;
     }
 
-    #[Event(defaultPrefix:'toto', name:'first_event')]
+    #[Event(defaultPrefix: 'toto', name: 'first_event')]
     public function namedEventWithPrefix($useCaseRequest): int
     {
         return 1;
     }
 
-    #[Event(defaultPrefix:'')]
+    #[Event(defaultPrefix: '')]
     public function eventEmptyPrefix($useCaseRequest): int
     {
         return 1;
     }
 
-    #[Event(useClassNameOnly:false)]
+    #[Event(useClassNameOnly: false)]
     public function EventWithMethodName($useCaseRequest): int
     {
         return 1;

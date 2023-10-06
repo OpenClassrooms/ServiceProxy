@@ -73,7 +73,7 @@ abstract class AbstractInterceptor
 
         $handlerName = $handlerName ?? 'default';
         $attributeClass = \get_class($attribute);
-        $type = $attribute instanceof Attribute ? "attribute" : "annotation";
+        $type = $attribute instanceof Attribute ? 'attribute' : 'annotation';
         throw new HandlerNotFound(
             "No handler found for {$type} {$attributeClass} with name {$handlerName}"
         );
