@@ -184,7 +184,7 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
         $handler->send($event);
     }
 
-    private function camelCaseToSnakeCase(string $name): string|array|null|false
+    private function camelCaseToSnakeCase(string $name): string
     {
         return mb_strtolower((string) preg_replace('/(?<=\\w)(?=[A-Z])/', '_$1', $name));
     }
