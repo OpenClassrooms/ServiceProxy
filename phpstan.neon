@@ -14,7 +14,6 @@ parameters:
         - '/Method .+ has parameter .+ with a nullable type declaration./'
         - '/Language construct isset\(\) should not be used./'
         - '/.+ is not allowed to extend ".+"./'
-        - '/Short ternary operator is not allowed.+/'
         - '/Method .+OpenClassroomsServiceProxyBundle.+ has a parameter \$container/'
         - '/Method .+ServiceProxyPass.+ has a parameter \$container/'
 
