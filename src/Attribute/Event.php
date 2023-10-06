@@ -11,17 +11,17 @@ use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
 final class Event extends Attribute
 {
     /**
-     * @var string|array<string, 'pre'|'post'|'onException'>
+     * @var array<string>
      */
-    private string|array $methods;
+    private array $methods;
 
     /**
-     * @param string|array<string, 'pre'|'post'|'onException'> $methods
+     * @param string|array<string> $methods
      */
     public function __construct(
         string|array $methods = ['post'],
         public readonly ?string $name = null,
-        public readonly ?string $defaultPrefix = self::DEFAULT_PREFIX,
+        public readonly ?string $defaultPrefix = 'use_case',
         public readonly bool $useClassNameOnly = true,
     ) {
         parent::__construct();
@@ -43,7 +43,7 @@ final class Event extends Attribute
     }
 
     /**
-     * @param string|array<string, 'pre'|'post'|'onException'> $methods
+     * @param string|array<string> $methods
      */
     private function setMethods(string|array $methods): void
     {
