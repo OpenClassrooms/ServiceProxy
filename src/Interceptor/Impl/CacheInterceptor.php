@@ -192,18 +192,55 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             $identifier
         );
 
-        $identifier .= $this->getMethodCode($method->getReflection());
+        $identifier .= $attribute->ttl;
+        $identifier .= $this->getMethodInnerCode($method->getReflection());
+        $identifier .= $method->getReflection()->getReturnType() !== null
+            ? $this->getResponseInnerCode($method->getReflection()->getReturnType())
+            : '';
 
         return hash('xxh3', $identifier);
     }
 
-    private function getMethodCode(\ReflectionMethod $reflectionMethod): string
+    private function getMethodInnerCode(\ReflectionMethod $method): string
     {
-        $methodName = $reflectionMethod->getName();
-        $filename = $reflectionMethod->getFileName();
+        return $this->getCode($method);
+    }
+
+    private function getResponseInnerCode(\ReflectionType $returnType): string
+    {
+        if (!$returnType instanceof \ReflectionNamedType) {
+            return '';
+        }
+
+        if ($returnType->getName() === 'void') {
+            return $returnType->getName();
+        }
+
+        if ($returnType->isBuiltin()) {
+            return $returnType->getName();
+        }
+
+        $returnClassName = $returnType->getName();
+
+        if (!class_exists($returnClassName)) {
+            return '';
+        }
+
+        $returnClass = new \ReflectionClass($returnClassName);
+
+        return $this->getCode($returnClass);
+    }
+
+    /**
+     * @param \ReflectionMethod|\ReflectionClass<object> $reflection
+     */
+    private function getCode(\ReflectionMethod|\ReflectionClass $reflection): string
+    {
+        $name = $reflection->getName();
+        $filename = $reflection->getFileName();
 
         if ($filename === false) {
-            throw new \RuntimeException("Method {$methodName} seems to be an internal method.");
+            throw new \RuntimeException("Method {$name} seems to be an internal method.");
         }
 
         $file = file($filename);
@@ -212,16 +249,16 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             throw new \LogicException("Unable to open file {$filename}.");
         }
 
-        $startLine = $reflectionMethod->getStartLine();
+        $startLine = $reflection->getStartLine();
 
         if ($startLine === false) {
-            throw new \LogicException("Unable to find {$methodName} start line.");
+            throw new \LogicException("Unable to find {$name} start line.");
         }
 
-        $endLine = $reflectionMethod->getEndLine();
+        $endLine = $reflection->getEndLine();
 
         if ($endLine === false) {
-            throw new \LogicException("Unable to find {$methodName} end line.");
+            throw new \LogicException("Unable to find {$name} end line.");
         }
 
         $length = $endLine - $startLine;
@@ -230,7 +267,11 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $code = preg_replace('/\s+/', '', implode('', $code));
 
         if ($code === null) {
-            throw new \RuntimeException("An error occurd while cleaning {$methodName} method's code.");
+            throw new \RuntimeException(sprintf(
+                'An error occured while cleaning %s %s\'s code.',
+                $name,
+                $reflection instanceof \ReflectionMethod ? 'method' : 'class',
+            ));
         }
 
         return $code;

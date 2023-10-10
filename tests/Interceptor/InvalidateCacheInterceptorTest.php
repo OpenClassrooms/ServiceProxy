@@ -71,4 +71,39 @@ final class InvalidateCacheInterceptorTest extends TestCase
             $this->assertNotEmpty($this->cacheInterceptor->getHits());
         }
     }
+
+    public function testCacheInvalidationThrowExceptionIfNoTagCanBeGuessed(): void
+    {
+        $this->expectException(\RuntimeException::class);
+
+        $this->proxy->methodWithInvalidateCacheButNoTagNorResponseObject();
+    }
+
+    public function testCacheInvalidationGuessesTags(): void
+    {
+        $this->proxy->methodWithCacheButNoTag();
+        $this->assertEmpty($this->cacheInterceptor->getHits());
+
+        $this->proxy->methodWithCacheButNoTag();
+        $this->assertNotEmpty($this->cacheInterceptor->getHits());
+
+        $this->proxy->methodWithInvalidateCacheButNoTag();
+
+        $this->proxy->methodWithCacheButNoTag();
+        $this->assertEmpty($this->cacheInterceptor->getHits());
+    }
+
+    public function testGuessedTagsCanBeManuallyInvalidated(): void
+    {
+        $this->proxy->methodWithCacheButNoTag();
+        $this->assertEmpty($this->cacheInterceptor->getHits());
+
+        $this->proxy->methodWithCacheButNoTag();
+        $this->assertNotEmpty($this->cacheInterceptor->getHits());
+
+        $this->proxy->methodWithInvalidateCacheAndExplicitTag();
+
+        $this->proxy->methodWithCacheButNoTag();
+        $this->assertEmpty($this->cacheInterceptor->getHits());
+    }
 }

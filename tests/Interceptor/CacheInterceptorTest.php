@@ -12,6 +12,7 @@ use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ClassWithCacheAttributes;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\LegacyCacheAnnotatedClass;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ResponseStub;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\ParameterClassStub;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
 use PHPUnit\Framework\TestCase;
@@ -266,19 +267,11 @@ final class CacheInterceptorTest extends TestCase
 
         $result = $proxy->methodWithAttributeReturningObject();
 
-        $this->assertInstanceOf(
-            \OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\Stub::class,
-            $result
-        );
+        $this->assertInstanceOf(ResponseStub::class, $result);
         $this->assertNotEmpty($this->cacheInterceptor::getHits());
         $this->assertEmpty($this->cacheInterceptor::getMisses());
 
-        $tagToInvalidate =
-            str_replace('\\', '.', \OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\Stub::class)
-            .
-            '.'
-            .
-            \OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\Stub::ID;
+        $tagToInvalidate = str_replace('\\', '.', ResponseStub::class) . '.' . ResponseStub::ID;
 
         $this->cacheHandlerMock->invalidateTags('default', [$tagToInvalidate]);
 
