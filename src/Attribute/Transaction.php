@@ -10,9 +10,11 @@ use OpenClassrooms\ServiceProxy\Handler\Contract\TransactionHandler;
 final class Transaction extends Attribute
 {
     /**
+     * @param string[] $entityManagers
      * @param array<class-string, class-string> $exceptions
      */
     public function __construct(
+        public array $entityManagers = ['default'],
         public readonly array $exceptions = []
     ) {
         parent::__construct();

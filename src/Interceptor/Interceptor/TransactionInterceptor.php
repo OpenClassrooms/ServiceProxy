@@ -19,7 +19,7 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
         $attribute = $instance->getMethod()
             ->getAttribute(Transaction::class);
         $handler = $this->getHandler(TransactionHandler::class, $attribute);
-        $handler->begin();
+        $handler->begin($attribute->entityManagers);
 
         return new Response();
     }
@@ -33,13 +33,13 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
             ->getAttribute(Transaction::class);
         $handler = $this->getHandler(TransactionHandler::class, $attribute);
         if ($instance->getMethod()->threwException()) {
-            $handler->rollback();
+            $handler->rollback($attribute->entityManagers);
 
             if ($attribute->hasMappedExceptions()) {
                 $this->handleMappedException($instance, $attribute);
             }
         } else {
-            $handler->commit();
+            $handler->commit($attribute->entityManagers);
         }
 
         return new Response();
