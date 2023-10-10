@@ -23,9 +23,9 @@ class ClassWithCacheAttributes
     }
 
     #[Cache]
-    public function methodWithAttributeReturningObject(): Stub
+    public function methodWithAttributeReturningObject(): ResponseStub
     {
-        return new Stub();
+        return new ResponseStub();
     }
 
     #[Cache]
@@ -98,11 +98,4 @@ class ClassWithCacheAttributes
     {
         return self::DATA;
     }
-}
-
-class Stub
-{
-    public const ID = 12;
-
-    private $id = self::ID;
 }
