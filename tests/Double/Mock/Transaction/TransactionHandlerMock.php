@@ -17,19 +17,19 @@ final class TransactionHandlerMock implements TransactionHandler
         return 'array';
     }
 
-    public function begin(): bool
+    public function begin(array $entityManagers): bool
     {
         return true;
     }
 
-    public function commit(): bool
+    public function commit(array $entityManagers): bool
     {
         $this->committed = true;
 
         return true;
     }
 
-    public function rollback(): bool
+    public function rollback(array $entityManagers): bool
     {
         $this->rollBacked = true;
 

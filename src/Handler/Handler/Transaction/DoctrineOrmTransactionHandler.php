@@ -20,19 +20,22 @@ final class DoctrineOrmTransactionHandler implements TransactionHandler
      */
     private array $entityManagers;
 
-    private ?string $name;
-
-    public function __construct(ManagerRegistry $doctrineRegistry, string $name = null)
+    public function __construct(ManagerRegistry $doctrineRegistry)
     {
         /** @var array<string, EntityManager> $managers */
         $managers = $doctrineRegistry->getManagers();
         $this->entityManagers = $managers;
-        $this->name = $name;
     }
 
-    public function begin(): bool
+    /**
+     * @param string[] $entityManagers
+     */
+    public function begin(array $entityManagers): bool
     {
-        foreach ($this->entityManagers as $entityManager) {
+        foreach ($this->entityManagers as $name => $entityManager) {
+            if (!\in_array($name, $entityManagers, true)) {
+                continue;
+            }
             $entityManager->beginTransaction();
         }
 
@@ -40,12 +43,17 @@ final class DoctrineOrmTransactionHandler implements TransactionHandler
     }
 
     /**
+     * @param string[] $entityManagers
+     *
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    public function commit(): bool
+    public function commit(array $entityManagers): bool
     {
-        foreach ($this->entityManagers as $entityManager) {
+        foreach ($this->entityManagers as $name => $entityManager) {
+            if (!\in_array($name, $entityManagers, true)) {
+                continue;
+            }
             $entityManager->flush();
             if ($entityManager->getConnection()->isTransactionActive()) {
                 $entityManager->commit();
@@ -55,9 +63,15 @@ final class DoctrineOrmTransactionHandler implements TransactionHandler
         return true;
     }
 
-    public function rollback(): bool
+    /**
+     * @param string[] $entityManagers
+     */
+    public function rollback(array $entityManagers): bool
     {
-        foreach ($this->entityManagers as $entityManager) {
+        foreach ($this->entityManagers as $name => $entityManager) {
+            if (!\in_array($name, $entityManagers, true)) {
+                continue;
+            }
             if ($entityManager->getConnection()->isTransactionActive()) {
                 $entityManager->rollback();
             }
@@ -68,6 +82,6 @@ final class DoctrineOrmTransactionHandler implements TransactionHandler
 
     public function getName(): string
     {
-        return $this->name ?? 'doctrine_orm';
+        return 'doctrine_orm';
     }
 }

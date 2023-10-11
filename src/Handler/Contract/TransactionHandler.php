@@ -6,9 +6,18 @@ namespace OpenClassrooms\ServiceProxy\Handler\Contract;
 
 interface TransactionHandler extends AnnotationHandler
 {
-    public function begin(): bool;
+    /**
+     * @param string[] $entityManagers
+     */
+    public function begin(array $entityManagers): bool;
 
-    public function commit(): bool;
+    /**
+     * @param string[] $entityManagers
+     */
+    public function commit(array $entityManagers): bool;
 
-    public function rollback(): bool;
+    /**
+     * @param string[] $entityManagers
+     */
+    public function rollback(array $entityManagers): bool;
 }
