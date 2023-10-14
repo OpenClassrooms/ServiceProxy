@@ -28,6 +28,15 @@ class ClassWithCacheAttributes
         return new ResponseStub();
     }
 
+    /**
+     * @return \OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ResponseStub
+     */
+    #[Cache]
+    public function methodWithAttributeAndPhpDoc()
+    {
+        return new ResponseStub();
+    }
+
     #[Cache]
     public function methodWithVoidReturn(): void
     {

@@ -13,6 +13,13 @@ use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 use OpenClassrooms\ServiceProxy\Model\Response\Response;
 use OpenClassrooms\ServiceProxy\Util\Expression;
+use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
+use PHPStan\PhpDocParser\Ast\Type\UnionTypeNode;
+use PHPStan\PhpDocParser\Lexer\Lexer;
+use PHPStan\PhpDocParser\Parser\ConstExprParser;
+use PHPStan\PhpDocParser\Parser\PhpDocParser;
+use PHPStan\PhpDocParser\Parser\TokenIterator;
+use PHPStan\PhpDocParser\Parser\TypeParser;
 
 final class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
@@ -30,11 +37,22 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
      */
     private static array $misses = [];
 
+    private PhpDocParser $phpDocParser;
+
+    private Lexer $lexer;
+
     public function __construct(
         private readonly CacheInterceptorConfig $config,
         iterable                                $handlers = [],
     ) {
         parent::__construct($handlers);
+
+        $this->lexer = new Lexer();
+
+        $constExprParser = new ConstExprParser();
+        $typeParser = new TypeParser($constExprParser);
+
+        $this->phpDocParser = new PhpDocParser($typeParser, $constExprParser);
     }
 
     /**
@@ -190,9 +208,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
         $identifier .= $attribute->ttl;
         $identifier .= $this->getMethodInnerCode($method->getReflection());
-        $identifier .= $method->getReflection()->getReturnType() !== null
-            ? $this->getResponseInnerCode($method->getReflection()->getReturnType())
-            : '';
+        $identifier .= $this->getResponseInnerCode($method->getReflection());
 
         return hash('xxh3', $identifier);
     }
@@ -202,29 +218,86 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         return $this->getCode($method);
     }
 
-    private function getResponseInnerCode(\ReflectionType $returnType): string
+    private function getResponseInnerCode(\ReflectionMethod $method): string
     {
-        if (!$returnType instanceof \ReflectionNamedType) {
-            return '';
+        $returnClassnames = array_filter(
+            $this->getReturnClassnames($method),
+            static fn (string $returnClassname) => class_exists($returnClassname)
+        );
+
+        return array_reduce(
+            $returnClassnames,
+            fn (string $responseCode, string  $returnClassname)
+                => $responseCode . $this->getCode(new \ReflectionClass($returnClassname)),
+            ''
+        );
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function getReturnClassnames(\ReflectionMethod $method): array
+    {
+        if ($method->getReturnType() !== null) {
+            return $this->getReturnClassnamesFromReturnType($method->getReturnType());
         }
 
-        if ($returnType->getName() === 'void') {
-            return $returnType->getName();
+        if ($method->getDocComment() !== false) {
+            return $this->getReturnClassnamesFromPhpDoc($method->getDocComment());
         }
 
-        if ($returnType->isBuiltin()) {
-            return $returnType->getName();
+        return [];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function getReturnClassnamesFromReturnType(\ReflectionType $returnType): array
+    {
+        if ($returnType instanceof \ReflectionNamedType) {
+            return [$returnType->getName()];
         }
 
-        $returnClassName = $returnType->getName();
-
-        if (!class_exists($returnClassName)) {
-            return '';
+        if ($returnType instanceof \ReflectionUnionType) {
+            return array_map(
+                static fn (\ReflectionNamedType $type) => $type->getName(),
+                $returnType->getTypes()
+            );
         }
 
-        $returnClass = new \ReflectionClass($returnClassName);
+        return [];
+    }
 
-        return $this->getCode($returnClass);
+    /**
+     * @return array<int, string>
+     */
+    private function getReturnClassnamesFromPhpDoc(string $docComment): array
+    {
+        $tokens = new TokenIterator($this->lexer->tokenize($docComment));
+
+        $phpDocNode = $this->phpDocParser->parse($tokens);
+        $returnTags = $phpDocNode->getReturnTagValues();
+
+        if (\count($returnTags) === 0) {
+            return [];
+        }
+
+        $returnTag = $returnTags[0];
+
+        if ($returnTag->type instanceof IdentifierTypeNode) {
+            return [$returnTag->type->name];
+        }
+
+        if ($returnTag->type instanceof UnionTypeNode) {
+            return array_filter(
+                array_map(
+                    static fn ($type) => $type instanceof IdentifierTypeNode ? $type->name : '',
+                    $returnTag->type->types
+                )
+            );
+        }
+
+        return [];
     }
 
     /**
