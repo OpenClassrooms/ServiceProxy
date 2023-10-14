@@ -281,6 +281,20 @@ final class CacheInterceptorTest extends TestCase
         $this->assertNotEmpty($this->cacheInterceptor::getMisses());
     }
 
+    public function testMethodWithPhpDoc(): void
+    {
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy->methodWithAttributeAndPhpDoc();
+
+        $this->assertEmpty($this->cacheInterceptor::getHits());
+        $this->assertNotEmpty($this->cacheInterceptor::getMisses());
+
+        $proxy->methodWithAttributeAndPhpDoc();
+
+        $this->assertNotEmpty($this->cacheInterceptor::getHits());
+        $this->assertEmpty($this->cacheInterceptor::getMisses());
+    }
+
     public function testUnknownHandlerThrowsException(): void
     {
         $this->expectException(HandlerNotFound::class);
