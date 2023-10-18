@@ -45,4 +45,8 @@ final class SecurityHandlerMock implements SecurityHandler
         }
         return new \RuntimeException($message);
     }
+
+    public function setDefaultHandlers(array $defaultHandlers): void
+    {
+    }
 }

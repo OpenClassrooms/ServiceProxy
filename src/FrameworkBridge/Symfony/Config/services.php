@@ -18,13 +18,13 @@ return static function (ContainerConfigurator $containerConfigurator) {
     ;
 
     $services->load(
-        'OpenClassrooms\\ServiceProxy\\Handler\\Handler\\',
-        \dirname(__DIR__, 4) . '/src/Handler/Handler/*'
+        'OpenClassrooms\\ServiceProxy\\Handler\\Impl\\',
+        \dirname(__DIR__, 4) . '/src/Handler/Impl/*'
     );
 
     $services->load(
-        'OpenClassrooms\\ServiceProxy\\Interceptor\\Interceptor\\',
-        \dirname(__DIR__, 4) . '/src/Interceptor/Interceptor/*'
+        'OpenClassrooms\\ServiceProxy\\Interceptor\\Impl\\',
+        \dirname(__DIR__, 4) . '/src/Interceptor/Impl/*'
     );
 
     $services->set(ProxyFactory::class)

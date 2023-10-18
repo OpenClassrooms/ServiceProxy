@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
-use OpenClassrooms\ServiceProxy\Handler\Handler\Event\SymfonyDispatcherEventHandler;
+use OpenClassrooms\ServiceProxy\Handler\Impl\Event\SymfonyEventDispatcherEventHandler;
 use OpenClassrooms\ServiceProxy\Model\Event;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpKernel\Debug\TraceableEventDispatcher;
@@ -26,7 +26,7 @@ final class EventHandlerMock implements EventHandler
             new Stopwatch()
         );
 
-        $this->decoratedEventHandler = new SymfonyDispatcherEventHandler(
+        $this->decoratedEventHandler = new SymfonyEventDispatcherEventHandler(
             $this->eventDispatcher
         );
     }
@@ -100,5 +100,9 @@ final class EventHandlerMock implements EventHandler
     public function isDefault(): bool
     {
         return true;
+    }
+
+    public function setDefaultHandlers(array $defaultHandlers): void
+    {
     }
 }

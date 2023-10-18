@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Handler\Handler\Event;
+namespace OpenClassrooms\ServiceProxy\Handler\Impl\Event;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
-use OpenClassrooms\ServiceProxy\Handler\Handler\ConfigurableHandler;
+use OpenClassrooms\ServiceProxy\Handler\Impl\ConfigurableHandler;
 use OpenClassrooms\ServiceProxy\Model\Event;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @implements EventHandler<Event>
  */
-final class SymfonyDispatcherEventHandler implements EventHandler
+final class SymfonyEventDispatcherEventHandler implements EventHandler
 {
     use ConfigurableHandler;
 

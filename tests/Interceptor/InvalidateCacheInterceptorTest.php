@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
-use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\CacheInterceptor;
-use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\InvalidateCacheInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Impl\CacheInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Impl\InvalidateCacheInterceptor;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ClassWithInvalidateCacheAttributes;

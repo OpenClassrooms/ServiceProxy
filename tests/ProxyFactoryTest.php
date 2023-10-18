@@ -6,10 +6,10 @@ namespace OpenClassrooms\ServiceProxy\Tests;
 
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
-use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\CacheInterceptor;
-use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\EventInterceptor;
-use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\SecurityInterceptor;
-use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\TransactionInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Impl\CacheInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Impl\EventInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Impl\SecurityInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Impl\TransactionInterceptor;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event\EventHandlerMock;

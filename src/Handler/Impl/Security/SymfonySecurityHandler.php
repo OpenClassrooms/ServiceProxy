@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Handler\Handler\Security;
+namespace OpenClassrooms\ServiceProxy\Handler\Impl\Security;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\SecurityHandler;
-use OpenClassrooms\ServiceProxy\Handler\Handler\ConfigurableHandler;
+use OpenClassrooms\ServiceProxy\Handler\Impl\ConfigurableHandler;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 

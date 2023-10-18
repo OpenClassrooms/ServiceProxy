@@ -2,21 +2,28 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Handler\Handler;
+namespace OpenClassrooms\ServiceProxy\Handler\Impl;
 
 trait ConfigurableHandler
 {
     /**
-     * @var array<string, string>
+     * @var array<string, string[]>
      */
     protected array $defaultHandlers = [];
 
+    private ?string $name = null;
+
     /**
-     * @param array<string, string> $defaultHandlers
+     * @param array<string, string[]> $defaultHandlers
      */
     public function setDefaultHandlers(array $defaultHandlers): void
     {
         $this->defaultHandlers = $defaultHandlers;
+    }
+
+    public function setName(string $name): void
+    {
+        $this->name = $name;
     }
 
     abstract public function getName(): string;
@@ -39,6 +46,6 @@ trait ConfigurableHandler
     {
         $typeDefault = $this->defaultHandlers[$this->getType()] ?? null;
 
-        return $typeDefault === $this->getName();
+        return \in_array($this->getName(), $typeDefault ?? [], true);
     }
 }

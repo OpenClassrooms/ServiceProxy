@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Handler\Handler\Cache;
+namespace OpenClassrooms\ServiceProxy\Handler\Impl\Cache;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
-use OpenClassrooms\ServiceProxy\Handler\Handler\ConfigurableHandler;
+use OpenClassrooms\ServiceProxy\Handler\Impl\ConfigurableHandler;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
@@ -13,8 +13,6 @@ use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
 final class SymfonyCacheHandler implements CacheHandler
 {
     use ConfigurableHandler;
-
-    private ?string $name;
 
     private ?int $defaultLifetime;
 

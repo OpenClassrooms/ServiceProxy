@@ -148,7 +148,6 @@ final class ProxyFactory
     private function orderByPriority(iterable $interceptors, string $type): array
     {
         if (!\is_array($interceptors)) {
-            /** @noinspection PhpParamsInspection */
             $interceptors = iterator_to_array($interceptors);
         }
         usort(

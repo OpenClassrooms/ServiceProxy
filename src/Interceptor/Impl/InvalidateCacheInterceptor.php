@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Interceptor\Interceptor;
+namespace OpenClassrooms\ServiceProxy\Interceptor\Impl;
 
 use OpenClassrooms\ServiceProxy\Attribute\InvalidateCache;
 use OpenClassrooms\ServiceProxy\ExpressionLanguage\ExpressionResolver;
