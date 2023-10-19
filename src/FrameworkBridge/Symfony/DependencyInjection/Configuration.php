@@ -22,12 +22,14 @@ final class Configuration implements ConfigurationInterface
 
         $cacheDirNode = $children->scalarNode('cache_dir');
         $cacheDirNode->cannotBeEmpty();
-        $cacheDirNode->defaultValue('%kernel.cache_dir%/openclassrooms_service_proxy')->end();
+        $cacheDirNode->defaultValue('%kernel.cache_dir%/openclassrooms_service_proxy')
+            ->end();
 
         $defaultHandlersNode = $children->arrayNode('default_handlers');
         $defaultHandlersNode->useAttributeAsKey('name')
             ->arrayPrototype()
-            ->scalarPrototype()->end()
+            ->scalarPrototype()
+            ->end()
             ->end();
 
         $defaultHandlersNode->defaultValue([
@@ -38,7 +40,8 @@ final class Configuration implements ConfigurationInterface
         ])->end();
 
         $productionEnvsNode = $children->arrayNode('production_environments');
-        $productionEnvsNode->prototype('scalar')->end();
+        $productionEnvsNode->prototype('scalar')
+            ->end();
         $productionEnvsNode->defaultValue(['prod'])->end();
 
         // $evalNode = $children->arrayNode('use_eval');
@@ -50,7 +53,8 @@ final class Configuration implements ConfigurationInterface
         $handlersNode = $children->arrayNode('handlers');
         $handlersNode->useAttributeAsKey('name')
             ->arrayPrototype()
-            ->scalarPrototype()->end()
+            ->scalarPrototype()
+            ->end()
             ->end()
         ;
 
