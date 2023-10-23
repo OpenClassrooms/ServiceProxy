@@ -8,6 +8,7 @@ use OpenClassrooms\ServiceProxy\Interceptor\Config\CacheInterceptorConfig;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\CacheInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\InvalidateCacheInterceptor;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
+use OpenClassrooms\ServiceProxy\Tests\CacheTrait;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ClassWithInvalidateCacheAttributes;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
@@ -15,7 +16,10 @@ use PHPUnit\Framework\TestCase;
 
 final class InvalidateCacheInterceptorTest extends TestCase
 {
-    use ProxyTestTrait;
+    use ProxyTestTrait, CacheTrait {
+        ProxyTestTrait::tearDown as protected proxyTearDown;
+        CacheTrait::tearDown as protected cacheTearDown;
+    }
 
     private CacheInterceptor $cacheInterceptor;
 
@@ -29,7 +33,7 @@ final class InvalidateCacheInterceptorTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->cacheHandlerMock = new CacheHandlerMock();
+        $this->cacheHandlerMock = $this->getCacheHandlerMock();
         $this->cacheInterceptor = new CacheInterceptor(new CacheInterceptorConfig(), [$this->cacheHandlerMock]);
         $this->invalidateCacheInterceptor = new InvalidateCacheInterceptor([$this->cacheHandlerMock]);
 
@@ -39,6 +43,12 @@ final class InvalidateCacheInterceptorTest extends TestCase
         ]);
 
         $this->proxy = $this->proxyFactory->createProxy(new ClassWithInvalidateCacheAttributes());
+    }
+
+    protected function tearDown(): void
+    {
+        $this->proxyTearDown();
+        $this->cacheTearDown();
     }
 
     public function testInCacheCanBeInvalidated(): void
@@ -104,6 +114,19 @@ final class InvalidateCacheInterceptorTest extends TestCase
         $this->proxy->methodWithInvalidateCacheAndExplicitTag();
 
         $this->proxy->methodWithCacheButNoTag();
+        $this->assertEmpty($this->cacheInterceptor->getHits());
+    }
+
+    public function testCacheInvalidationWithTagsFromSubResources(): void
+    {
+        $this->proxy->methodWithCachedEmbeddedResponse();
+        $this->assertEmpty($this->cacheInterceptor->getHits());
+
+        $this->proxy->methodWithCachedEmbeddedResponse();
+        $this->assertNotEmpty($this->cacheInterceptor->getHits());
+
+        $this->proxy->methodInvalidatingSubResource();
+        $this->proxy->methodWithCachedEmbeddedResponse();
         $this->assertEmpty($this->cacheInterceptor->getHits());
     }
 }

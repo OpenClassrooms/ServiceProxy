@@ -11,6 +11,7 @@ use OpenClassrooms\ServiceProxy\Interceptor\Config\CacheInterceptorConfig;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Exception\InternalCodeRetrievalException;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ReturnTagValueNode;
@@ -233,15 +234,25 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
     private function getResponseTypesInnerCode(\ReflectionMethod $method): string
     {
-        $returnClassnames = array_filter(
-            $this->getReturnClassnames($method),
-            static fn (string $returnClassname) => class_exists($returnClassname)
-        );
-
         return array_reduce(
-            $returnClassnames,
-            fn (string $responseCode, string  $returnClassname)
-                => $responseCode . $this->getCode(new \ReflectionClass($returnClassname)),
+            $this->getReturnClassnames($method),
+            function (string $code, string $returnClassname): string {
+                if (\in_array($returnClassname, Type::$builtinTypes, true)) {
+                    return $code . '.' . $returnClassname;
+                }
+
+                if (!class_exists($returnClassname)) {
+                    return $code;
+                }
+
+                try {
+                    $returnClassCode = $this->getCode(new \ReflectionClass($returnClassname));
+                } catch (InternalCodeRetrievalException $internalCodeException) {
+                    return $code . '.' . $returnClassname;
+                }
+
+                return $code . '.' . $returnClassname . '.' . $returnClassCode;
+            },
             ''
         );
     }
@@ -336,7 +347,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $filename = $reflection->getFileName();
 
         if ($filename === false) {
-            throw new \RuntimeException("Method {$name} seems to be an internal method.");
+            throw new InternalCodeRetrievalException($name);
         }
 
         $file = file($filename);

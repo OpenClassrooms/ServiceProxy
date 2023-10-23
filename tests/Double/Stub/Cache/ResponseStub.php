@@ -9,4 +9,9 @@ class ResponseStub
     public const ID = 12;
 
     private $id = self::ID;
+
+    public function __construct(
+        private ?EmbeddedResponseStub $embeddedResponseStub = null
+    ) {
+    }
 }

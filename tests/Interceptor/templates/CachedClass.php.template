@@ -7,6 +7,9 @@ namespace __NAMESPACE__;
 class __CLASS_NAME__
 {
     __METHOD_ATTRIBUTE__
+    /**
+     __METHOD_PHPDOC__
+     */
     public function __METHOD_NAME__(__METHOD_ARGS__)__METHOD_RETURN_TYPE__
     {
         __METHOD_BODY__

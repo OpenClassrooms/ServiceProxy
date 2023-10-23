@@ -52,4 +52,16 @@ class ClassWithInvalidateCacheAttributes
     {
         return new ResponseStub();
     }
+
+    #[Cache]
+    public function methodWithCachedEmbeddedResponse(): ResponseStub
+    {
+        return new ResponseStub(new EmbeddedResponseStub());
+    }
+
+    #[InvalidateCache]
+    public function methodInvalidatingSubResource(): EmbeddedResponseStub
+    {
+        return new EmbeddedResponseStub();
+    }
 }

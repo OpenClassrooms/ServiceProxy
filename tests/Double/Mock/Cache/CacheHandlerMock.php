@@ -6,7 +6,7 @@ namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Handler\Impl\Cache\SymfonyCacheHandler;
-use Symfony\Component\Cache\Adapter\ArrayAdapter;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 
 final class CacheHandlerMock implements CacheHandler
@@ -19,15 +19,15 @@ final class CacheHandlerMock implements CacheHandler
 
     private CacheHandler $wrappedHandler;
 
-    public function __construct(?string $name = null, bool $default = true)
+    public function __construct(?string $name = null, bool $default = true, ?string $directory = null)
     {
         $this->name = $name ?? 'array';
         $this->default = $default;
 
         $this->wrappedHandler = new SymfonyCacheHandler([
-            'default' => new TagAwareAdapter(new ArrayAdapter()),
-            'foo' => new TagAwareAdapter(new ArrayAdapter()),
-            'bar' => new TagAwareAdapter(new ArrayAdapter()),
+            'default' => new TagAwareAdapter(new FilesystemAdapter('', 0, $directory)),
+            'foo' => new TagAwareAdapter(new FilesystemAdapter('', 0, $directory)),
+            'bar' => new TagAwareAdapter(new FilesystemAdapter('', 0, $directory)),
         ], $name);
     }
 
