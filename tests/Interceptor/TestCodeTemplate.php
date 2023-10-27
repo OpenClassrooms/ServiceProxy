@@ -8,7 +8,7 @@ use OpenClassrooms\ServiceProxy\Configuration;
 use OpenClassrooms\ServiceProxy\Interceptor\Config\CacheInterceptorConfig;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\CacheInterceptor;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
-use OpenClassrooms\ServiceProxy\Tests\CacheTrait;
+use OpenClassrooms\ServiceProxy\Tests\CacheTestTrait;
 use Symfony\Component\Filesystem\Filesystem;
 
 if (empty($argv[1])) {
@@ -22,7 +22,7 @@ $fs->remove($cacheDir);
 
 $config = new CacheInterceptorConfig();
 $cacheHandlerMock = (new class() {
-    use CacheTrait;
+    use CacheTestTrait;
 })->getCacheHandlerMock();
 $cacheInterceptor = new CacheInterceptor($config, [$cacheHandlerMock]);
 

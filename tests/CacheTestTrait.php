@@ -7,7 +7,7 @@ namespace OpenClassrooms\ServiceProxy\Tests;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
 use Symfony\Component\Filesystem\Filesystem;
 
-trait CacheTrait
+trait CacheTestTrait
 {
     protected static string $tmpDir = __DIR__ . '/tmp';
 
@@ -45,6 +45,7 @@ trait CacheTrait
         ?string $methodArgs = '',
         ?string $methodReturnType = '',
         array $methodPhpDoc = [],
+        array $classProperties = [],
         string $methodBody = ''
     ): void {
         $namespace = __NAMESPACE__ . str_replace('/', '\\', str_replace(__DIR__, '', self::$tmpDir));
@@ -63,6 +64,12 @@ trait CacheTrait
             : implode("\n", array_map(static fn (string $statement) => '* ' . $statement, $methodPhpDoc))
         ;
         $content = str_replace('__METHOD_PHPDOC__', $phpDoc, $content);
+
+        $properties = empty($classProperties)
+            ? ''
+            : implode("\n", array_map(static fn (string $statement) => $statement . ';', $classProperties))
+        ;
+        $content = str_replace('__CLASS_PROPERTIES__', $properties, $content);
 
         $filePath = self::$tmpDir . '/' . $className . '.php';
 

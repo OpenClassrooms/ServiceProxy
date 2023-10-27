@@ -14,12 +14,12 @@ use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Exception\InternalCodeRetrievalException;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
-use PHPStan\PhpDocParser\Ast\PhpDoc\ReturnTagValueNode;
 use PHPStan\PhpDocParser\Lexer\Lexer;
 use PHPStan\PhpDocParser\Parser\ConstExprParser;
 use PHPStan\PhpDocParser\Parser\PhpDocParser;
 use PHPStan\PhpDocParser\Parser\TokenIterator;
 use PHPStan\PhpDocParser\Parser\TypeParser;
+use Symfony\Component\PropertyInfo\PhpStan\NameScope;
 use Symfony\Component\PropertyInfo\PhpStan\NameScopeFactory;
 use Symfony\Component\PropertyInfo\Type;
 use Symfony\Component\PropertyInfo\Util\PhpStanTypeHelper;
@@ -49,6 +49,11 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     private PhpStanTypeHelper $typeHelper;
 
     private NameScopeFactory $nameScopeFactory;
+
+    /**
+     * @var array<class-name, NameScope>
+     */
+    private $resolvedNameScopes = [];
 
     public function __construct(
         private readonly CacheInterceptorConfig $config,
@@ -234,14 +239,20 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
     private function getResponseTypesInnerCode(\ReflectionMethod $method): string
     {
+        $returnedClassnames = $this->getClassnamesFromReflector($method);
+
+        foreach ($returnedClassnames as $className) {
+            $returnedClassnames = $this->mergeEmbeddedClassnames($className, $returnedClassnames);
+        }
+
         return array_reduce(
-            $this->getReturnClassnames($method),
+            $returnedClassnames,
             function (string $code, string $returnClassname): string {
                 if (\in_array($returnClassname, Type::$builtinTypes, true)) {
                     return $code . '.' . $returnClassname;
                 }
 
-                if (!class_exists($returnClassname)) {
+                if (!class_exists($returnClassname) && !interface_exists($returnClassname)) {
                     return $code;
                 }
 
@@ -258,42 +269,93 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     }
 
     /**
-     * @return array<int, string>
+     * @param string[] $registeredClassnames
+     *
+     * @return string[]
      */
-    private function getReturnClassnames(\ReflectionMethod $method): array
+    private function mergeEmbeddedClassnames(string $className, array $registeredClassnames = []): array
     {
-        $returnClassnames = [];
-
-        if ($method->getReturnType() !== null) {
-            $returnClassnames = array_merge(
-                $returnClassnames,
-                $this->getReturnClassnamesFromReturnType($method->getReturnType())
-            );
+        if (!class_exists($className) && !interface_exists($className)) {
+            return $registeredClassnames;
         }
 
-        if ($method->getDocComment() !== false) {
-            $returnClassnames = array_merge(
-                $returnClassnames,
-                $this->getReturnClassnamesFromPhpDoc($method->class, $method->getDocComment())
+        $ref = new \ReflectionClass($className);
+
+        $itemsToInspects = array_merge(
+            $ref->getMethods(\ReflectionMethod::IS_PUBLIC),
+            $ref->getProperties(\ReflectionProperty::IS_PUBLIC)
+        );
+
+        foreach ($itemsToInspects as $item) {
+            $newTypes = $this->getClassnamesFromReflector($item);
+
+            $newTypes = array_filter(
+                $newTypes,
+                static fn (string $propertyType) => (class_exists($propertyType) || interface_exists(
+                    $propertyType
+                )) && !\in_array(
+                    $propertyType,
+                    $registeredClassnames,
+                    true
+                )
             );
+
+            $registeredClassnames = array_merge($registeredClassnames, $newTypes);
+
+            foreach ($newTypes as $type) {
+                $registeredClassnames = $this->mergeEmbeddedClassnames($type, $registeredClassnames);
+            }
         }
 
-        return array_unique($returnClassnames);
+        return $registeredClassnames;
     }
 
     /**
      * @return array<int, string>
      */
-    private function getReturnClassnamesFromReturnType(\ReflectionType $returnType): array
-    {
-        if ($returnType instanceof \ReflectionNamedType) {
-            return [$returnType->getName()];
+    private function getClassnamesFromReflector(
+        \ReflectionMethod|\ReflectionProperty $reflector
+    ): array {
+        $type = $reflector instanceof \ReflectionMethod
+            ? $reflector->getReturnType()
+            : $reflector->getType();
+
+        $docComment = $reflector->getDocComment() !== false
+            ? $reflector->getDocComment()
+            : null;
+
+        $classnames = [];
+
+        if ($type !== null) {
+            $classnames = array_merge(
+                $classnames,
+                $this->getClassnamesFromReflectionType($type)
+            );
         }
 
-        if ($returnType instanceof \ReflectionUnionType) {
+        if ($docComment !== null) {
+            $classnames = array_merge(
+                $classnames,
+                $this->getReturnAndVarTagsClassnamesFromPhpDoc($reflector->class, $docComment)
+            );
+        }
+
+        return array_unique($classnames);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function getClassnamesFromReflectionType(\ReflectionType $type): array
+    {
+        if ($type instanceof \ReflectionNamedType) {
+            return [$type->getName()];
+        }
+
+        if ($type instanceof \ReflectionUnionType) {
             return array_map(
                 static fn (\ReflectionNamedType $type) => $type->getName(),
-                $returnType->getTypes()
+                $type->getTypes()
             );
         }
 
@@ -303,20 +365,21 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     /**
      * @return array<int, string>
      */
-    private function getReturnClassnamesFromPhpDoc(string $classContext, string $docComment): array
+    private function getReturnAndVarTagsClassnamesFromPhpDoc(string $classContext, string $docComment): array
     {
+        $classNames = [];
+        $nameScope = $this->getNameScope($classContext);
         $tokens = new TokenIterator($this->lexer->tokenize($docComment));
 
         $phpDocNode = $this->phpDocParser->parse($tokens);
-        $classNames = [];
 
-        foreach ($phpDocNode->getTagsByName('@return') as $returnTag) {
-            if (!$returnTag->value instanceof ReturnTagValueNode) {
-                continue;
-            }
+        $tagValues = array_merge(
+            $phpDocNode->getReturnTagValues(),
+            $phpDocNode->getVarTagValues()
+        );
 
-            $nameScope = $this->nameScopeFactory->create($classContext);
-            foreach ($this->typeHelper->getTypes($returnTag->value, $nameScope) as $type) {
+        foreach ($tagValues as $value) {
+            foreach ($this->typeHelper->getTypes($value, $nameScope) as $type) {
                 if (\in_array($type->getClassName(), ['self', 'static', 'parent'], true)) {
                     continue;
                 }
@@ -473,5 +536,14 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $propRef->setAccessible(true);
 
         return $propRef->getValue($object);
+    }
+
+    private function getNameScope(string $className): NameScope
+    {
+        if (!isset($this->resolvedNameScopes[$className])) {
+            $this->resolvedNameScopes[$className] = $this->nameScopeFactory->create($className);
+        }
+
+        return $this->resolvedNameScopes[$className];
     }
 }

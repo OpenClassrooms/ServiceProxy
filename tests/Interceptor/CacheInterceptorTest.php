@@ -9,7 +9,7 @@ use OpenClassrooms\ServiceProxy\Interceptor\Config\CacheInterceptorConfig;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\CacheInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
-use OpenClassrooms\ServiceProxy\Tests\CacheTrait;
+use OpenClassrooms\ServiceProxy\Tests\CacheTestTrait;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ClassWithCacheAttributes;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\LegacyCacheAnnotatedClass;
@@ -20,9 +20,9 @@ use PHPUnit\Framework\TestCase;
 
 final class CacheInterceptorTest extends TestCase
 {
-    use ProxyTestTrait, CacheTrait {
+    use ProxyTestTrait, CacheTestTrait {
         ProxyTestTrait::tearDown as protected proxyTearDown;
-        CacheTrait::tearDown as protected cacheTearDown;
+        CacheTestTrait::tearDown as protected cacheTearDown;
     }
 
     private CacheInterceptor $cacheInterceptor;
@@ -526,5 +526,244 @@ final class CacheInterceptorTest extends TestCase
 
         $this->executeAndAssertCacheMiss('WrittenClass');
         $this->executeAndAssertCacheHit('WrittenClass');
+    }
+
+    public function testResponseCodeUpdateInvalidatesCache(): void
+    {
+        $this->writeClass(
+            className: 'CachedResponse',
+            methodName: 'getName',
+            methodBody: 'return "FOO";',
+        );
+
+        $this->writeClass(
+            className: 'ClassWithCache',
+            methodName: 'execute',
+            methodAttribute: '#[\OpenClassrooms\ServiceProxy\Attribute\Cache]',
+            methodBody: 'return new \OpenClassrooms\ServiceProxy\Tests\tmp\CachedResponse;',
+            methodReturnType: '\OpenClassrooms\ServiceProxy\Tests\tmp\CachedResponse',
+        );
+
+        $this->executeAndAssertCacheMiss('ClassWithCache');
+        $this->executeAndAssertCacheHit('ClassWithCache');
+
+        $this->writeClass(
+            className: 'CachedResponse',
+            methodName: 'getName',
+            methodBody: 'return "BAR";',
+        );
+
+        $this->executeAndAssertCacheMiss('ClassWithCache');
+        $this->executeAndAssertCacheHit('ClassWithCache');
+    }
+
+    public function testResponsePropertiesUpdateInvalidatesCache(): void
+    {
+        $this->writeClass(
+            className: 'Response',
+            methodName: 'getName',
+            methodBody: 'return "FOO";',
+            classProperties: [
+                'public \OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ResponseStub $property',
+            ],
+        );
+
+        $this->writeClass(
+            className: 'ClassWithCache',
+            methodName: 'execute',
+            methodAttribute: '#[\OpenClassrooms\ServiceProxy\Attribute\Cache]',
+            methodBody: 'return new \OpenClassrooms\ServiceProxy\Tests\tmp\Response;',
+            methodReturnType: '\OpenClassrooms\ServiceProxy\Tests\tmp\Response',
+        );
+
+        $this->executeAndAssertCacheMiss('ClassWithCache');
+        $this->executeAndAssertCacheHit('ClassWithCache');
+
+        // change response property type should invalidate the cache
+
+        $this->writeClass(
+            className: 'ResponseSubObject',
+            methodName: 'getName',
+            methodBody: 'return "FOO";',
+        );
+
+        $this->writeClass(
+            className: 'Response',
+            methodName: 'getName',
+            methodBody: 'return "FOO";',
+            classProperties: [
+                'public \OpenClassrooms\ServiceProxy\Tests\tmp\ResponseSubObject $property',
+            ],
+        );
+
+        $this->executeAndAssertCacheMiss('ClassWithCache');
+        $this->executeAndAssertCacheHit('ClassWithCache');
+
+        // update class response sub object code should invalidate the cache
+
+        $this->writeClass(
+            className: 'ResponseSubObject',
+            methodName: 'getName',
+            methodBody: 'return "BAR";',
+        );
+
+        $this->executeAndAssertCacheMiss('ClassWithCache');
+        $this->executeAndAssertCacheHit('ClassWithCache');
+    }
+
+    public function testResponseInnerPropertyPhpDocUpdateInvalidatesCache(): void
+    {
+        $this->writeClass(
+            className: 'CachedResponse',
+            methodName: 'getName',
+            methodBody: 'return "FOO";',
+            classProperties: [
+                '/** @var \OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ResponseStub **/
+                public $property',
+            ],
+        );
+
+        $this->writeClass(
+            className: 'ClassWithCache',
+            methodName: 'execute',
+            methodAttribute: '#[\OpenClassrooms\ServiceProxy\Attribute\Cache]',
+            methodBody: 'return new \OpenClassrooms\ServiceProxy\Tests\tmp\CachedResponse;',
+            methodReturnType: '\OpenClassrooms\ServiceProxy\Tests\tmp\CachedResponse',
+        );
+
+        $this->executeAndAssertCacheMiss('ClassWithCache');
+        $this->executeAndAssertCacheHit('ClassWithCache');
+
+        // change response property type should invalidate the cache
+
+        $this->writeClass(
+            className: 'ResponseSubObject',
+            methodName: 'getName',
+            methodBody: 'return "FOO";',
+        );
+
+        $this->writeClass(
+            className: 'CachedResponse',
+            methodName: 'getName',
+            methodBody: 'return "FOO";',
+            classProperties: [
+                '/** @var \OpenClassrooms\ServiceProxy\Tests\tmp\ResponseSubObject **/
+                public string $name',
+            ],
+        );
+
+        $this->executeAndAssertCacheMiss('ClassWithCache');
+        $this->executeAndAssertCacheHit('ClassWithCache');
+
+        // change response code should invalidate the cache
+
+        $this->writeClass(
+            className: 'ResponseSubObject',
+            methodName: 'getName',
+            methodBody: 'return "BAR";',
+        );
+
+        $this->executeAndAssertCacheMiss('ClassWithCache');
+        $this->executeAndAssertCacheHit('ClassWithCache');
+    }
+
+    public function testResponseInnerMethodReturnTypeUpdateInvalidatesCache(): void
+    {
+        $this->writeClass(
+            className: 'CachedResponse',
+            methodName: 'getStub',
+            methodBody: 'return new \OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ResponseStub();',
+            methodReturnType: '\OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ResponseStub',
+        );
+
+        $this->writeClass(
+            className: 'ClassWithCache',
+            methodName: 'execute',
+            methodAttribute: '#[\OpenClassrooms\ServiceProxy\Attribute\Cache]',
+            methodBody: 'return new \OpenClassrooms\ServiceProxy\Tests\tmp\CachedResponse;',
+            methodReturnType: '\OpenClassrooms\ServiceProxy\Tests\tmp\CachedResponse',
+        );
+
+        $this->executeAndAssertCacheMiss('ClassWithCache');
+        $this->executeAndAssertCacheHit('ClassWithCache');
+
+        // change response return type type should invalidate the cache
+
+        $this->writeClass(
+            className: 'ResponseSubObject',
+            methodName: 'getName',
+            methodBody: 'return "FOO";',
+        );
+
+        $this->writeClass(
+            className: 'CachedResponse',
+            methodName: 'getName',
+            methodBody: 'return new \OpenClassrooms\ServiceProxy\Tests\tmp\ResponseSubObject();',
+            methodReturnType: '\OpenClassrooms\ServiceProxy\Tests\tmp\ResponseSubObject',
+        );
+
+        $this->executeAndAssertCacheMiss('ClassWithCache');
+        $this->executeAndAssertCacheHit('ClassWithCache');
+
+        // change response code should invalidate the cache
+
+        $this->writeClass(
+            className: 'ResponseSubObject',
+            methodName: 'getName',
+            methodBody: 'return "BAR";',
+        );
+
+        $this->executeAndAssertCacheMiss('ClassWithCache');
+        $this->executeAndAssertCacheHit('ClassWithCache');
+    }
+
+    public function testResponseInnerMethodPhpDocUpdateInvalidatesCache(): void
+    {
+        $this->writeClass(
+            className: 'CachedResponse',
+            methodName: 'getStub',
+            methodBody: 'return new \OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ResponseStub();',
+            methodPhpDoc: ['@return \OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ResponseStub'],
+        );
+
+        $this->writeClass(
+            className: 'ClassWithCache',
+            methodName: 'execute',
+            methodAttribute: '#[\OpenClassrooms\ServiceProxy\Attribute\Cache]',
+            methodBody: 'return new \OpenClassrooms\ServiceProxy\Tests\tmp\CachedResponse;',
+            methodReturnType: '\OpenClassrooms\ServiceProxy\Tests\tmp\CachedResponse',
+        );
+
+        $this->executeAndAssertCacheMiss('ClassWithCache');
+        $this->executeAndAssertCacheHit('ClassWithCache');
+
+        // change response return type type should invalidate the cache
+
+        $this->writeClass(
+            className: 'ResponseSubObject',
+            methodName: 'getName',
+            methodBody: 'return "FOO";',
+        );
+
+        $this->writeClass(
+            className: 'CachedResponse',
+            methodName: 'getName',
+            methodBody: 'return new \OpenClassrooms\ServiceProxy\Tests\tmp\ResponseSubObject();',
+            methodPhpDoc: ['@return \OpenClassrooms\ServiceProxy\Tests\tmp\ResponseSubObject'],
+        );
+
+        $this->executeAndAssertCacheMiss('ClassWithCache');
+        $this->executeAndAssertCacheHit('ClassWithCache');
+
+        // change response code should invalidate the cache
+
+        $this->writeClass(
+            className: 'ResponseSubObject',
+            methodName: 'getName',
+            methodBody: 'return "BAR";',
+        );
+
+        $this->executeAndAssertCacheMiss('ClassWithCache');
+        $this->executeAndAssertCacheHit('ClassWithCache');
     }
 }

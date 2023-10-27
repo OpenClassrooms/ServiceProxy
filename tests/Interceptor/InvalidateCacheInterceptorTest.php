@@ -8,7 +8,7 @@ use OpenClassrooms\ServiceProxy\Interceptor\Config\CacheInterceptorConfig;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\CacheInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\InvalidateCacheInterceptor;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
-use OpenClassrooms\ServiceProxy\Tests\CacheTrait;
+use OpenClassrooms\ServiceProxy\Tests\CacheTestTrait;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ClassWithInvalidateCacheAttributes;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
@@ -16,9 +16,9 @@ use PHPUnit\Framework\TestCase;
 
 final class InvalidateCacheInterceptorTest extends TestCase
 {
-    use ProxyTestTrait, CacheTrait {
+    use ProxyTestTrait, CacheTestTrait {
         ProxyTestTrait::tearDown as protected proxyTearDown;
-        CacheTrait::tearDown as protected cacheTearDown;
+        CacheTestTrait::tearDown as protected cacheTearDown;
     }
 
     private CacheInterceptor $cacheInterceptor;

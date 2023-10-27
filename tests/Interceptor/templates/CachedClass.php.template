@@ -6,6 +6,8 @@ namespace __NAMESPACE__;
 
 class __CLASS_NAME__
 {
+    __CLASS_PROPERTIES__
+
     __METHOD_ATTRIBUTE__
     /**
      __METHOD_PHPDOC__
