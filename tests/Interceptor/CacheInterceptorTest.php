@@ -20,9 +20,12 @@ use PHPUnit\Framework\TestCase;
 
 final class CacheInterceptorTest extends TestCase
 {
-    use ProxyTestTrait, CacheTestTrait {
-        ProxyTestTrait::tearDown as protected proxyTearDown;
+    use CacheTestTrait {
         CacheTestTrait::tearDown as protected cacheTearDown;
+    }
+
+    use ProxyTestTrait {
+        ProxyTestTrait::tearDown as protected proxyTearDown;
     }
 
     private CacheInterceptor $cacheInterceptor;
@@ -426,7 +429,7 @@ final class CacheInterceptorTest extends TestCase
         $this->executeAndAssertCacheHit('WrittenClass');
     }
 
-    public function testUnknownReturnTypeDoesNotInvalidateCache(): void
+    public function testUnknownReturnTypeDoesInvalidateCache(): void
     {
         $this->writeClass(
             className: 'WrittenClass',
@@ -447,7 +450,7 @@ final class CacheInterceptorTest extends TestCase
             methodReturnType: '\Symfony\Component\HttpFoundation\Response|UnknownClass',
         );
 
-        $this->executeAndAssertCacheHit('WrittenClass');
+        $this->executeAndAssertCacheMiss('WrittenClass');
     }
 
     public function testPhpDocReturnTypeInvalidatesCache(): void

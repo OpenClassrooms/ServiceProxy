@@ -51,9 +51,9 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     private NameScopeFactory $nameScopeFactory;
 
     /**
-     * @var array<class-name, NameScope>
+     * @var array<class-string, NameScope>
      */
-    private $resolvedNameScopes = [];
+    private array $resolvedNameScopes = [];
 
     public function __construct(
         private readonly CacheInterceptorConfig $config,
@@ -88,6 +88,25 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     public static function getMisses(?string $poolName = self::DEFAULT_POOL_NAME): array
     {
         return self::$misses[$poolName] ?? [];
+    }
+
+    private function getTypeInnerCode(string $type, string $code): string
+    {
+        if (\in_array($type, Type::$builtinTypes, true)) {
+            return $code . '.' . $type;
+        }
+
+        if (!class_exists($type) && !interface_exists($type)) {
+            return $code . '.' . $type;
+        }
+
+        try {
+            $returnClassCode = $this->getInnerCode(new \ReflectionClass($type));
+        } catch (InternalCodeRetrievalException) {
+            $returnClassCode = '';
+        }
+
+        return $code . '.' . $type . '.' . $returnClassCode;
     }
 
     public function prefix(Instance $instance): Response
@@ -206,147 +225,126 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
     private function buildCacheKey(Instance $instance, Cache $attribute): string
     {
-        $method = $instance->getMethod();
-
-        $parameters = $method->getParameters();
-
-        $identifier = $instance->getReflection()
-            ->getName() . '.' . $method->getName();
-
-        if (\count($parameters) > 0) {
-            foreach ($parameters as $parameterName => $parameterValue) {
-                $identifier .= '.' . $parameterName . '.' . hash('xxh3', serialize($parameterValue));
-            }
-        }
-
-        $identifier = array_reduce(
-            $this->getTags($instance, $attribute),
-            static fn (string $identifier, string $tag) => $identifier . '.' . $tag,
-            $identifier
+        $identifier = implode(
+            '.',
+            [
+                $instance->getReflection()->getName(),
+                $instance->getMethod()->getName(),
+                $this->getParametersHash($instance->getMethod()->getParameters()),
+                ...$this->getTags($instance, $attribute),
+                $attribute->ttl,
+                $this->getInnerCode($instance->getMethod()->getReflection()),
+                $this->getTypesInnerCode($instance->getMethod()->getReflection()),
+            ],
         );
-
-        $identifier .= $attribute->ttl;
-        $identifier .= $this->getMethodInnerCode($method->getReflection());
-        $identifier .= $this->getResponseTypesInnerCode($method->getReflection());
 
         return hash('xxh3', $identifier);
     }
 
-    private function getMethodInnerCode(\ReflectionMethod $method): string
+    private function getTypesInnerCode(\ReflectionMethod $method): string
     {
-        return $this->getCode($method);
-    }
+        $returnedTypes = $this->getTypes($method);
 
-    private function getResponseTypesInnerCode(\ReflectionMethod $method): string
-    {
-        $returnedClassnames = $this->getClassnamesFromReflector($method);
-
-        foreach ($returnedClassnames as $className) {
-            $returnedClassnames = $this->mergeEmbeddedClassnames($className, $returnedClassnames);
+        foreach ($returnedTypes as $type) {
+            $returnedTypes = $this->getClassMembersTypes($type, $returnedTypes);
         }
 
         return array_reduce(
-            $returnedClassnames,
-            function (string $code, string $returnClassname): string {
-                if (\in_array($returnClassname, Type::$builtinTypes, true)) {
-                    return $code . '.' . $returnClassname;
-                }
-
-                if (!class_exists($returnClassname) && !interface_exists($returnClassname)) {
-                    return $code;
-                }
-
-                try {
-                    $returnClassCode = $this->getCode(new \ReflectionClass($returnClassname));
-                } catch (InternalCodeRetrievalException $internalCodeException) {
-                    return $code . '.' . $returnClassname;
-                }
-
-                return $code . '.' . $returnClassname . '.' . $returnClassCode;
-            },
-            ''
+            $returnedTypes,
+            fn (string $code, string $returnClassname): string => $this->getTypeInnerCode(
+                $returnClassname,
+                $code
+            ),
+            '',
         );
     }
 
     /**
-     * @param string[] $registeredClassnames
+     * @param string[] $registeredTypes
      *
      * @return string[]
      */
-    private function mergeEmbeddedClassnames(string $className, array $registeredClassnames = []): array
+    private function getClassMembersTypes(string $type, array $registeredTypes = []): array
     {
-        if (!class_exists($className) && !interface_exists($className)) {
-            return $registeredClassnames;
+        if ((!class_exists($type) && !interface_exists($type)) || isset($registeredTypes[$type])) {
+            return $registeredTypes;
         }
 
-        $ref = new \ReflectionClass($className);
+        $registeredTypes[$type] = $type;
 
-        $itemsToInspects = array_merge(
-            $ref->getMethods(\ReflectionMethod::IS_PUBLIC),
-            $ref->getProperties(\ReflectionProperty::IS_PUBLIC)
+        if (in_array($type, Type::$builtinTypes, true)) {
+            return $registeredTypes;
+        }
+
+        $ref = new \ReflectionClass($type);
+
+        $subTypes = $this->getMembersTypes(
+            [
+                ...$ref->getMethods(\ReflectionMethod::IS_PUBLIC),
+                ...$ref->getProperties(\ReflectionProperty::IS_PUBLIC),
+            ]
         );
 
-        foreach ($itemsToInspects as $item) {
-            $newTypes = $this->getClassnamesFromReflector($item);
-
-            $newTypes = array_filter(
-                $newTypes,
-                static fn (string $propertyType) => (class_exists($propertyType) || interface_exists(
-                    $propertyType
-                )) && !\in_array(
-                    $propertyType,
-                    $registeredClassnames,
-                    true
-                )
-            );
-
-            $registeredClassnames = array_merge($registeredClassnames, $newTypes);
-
-            foreach ($newTypes as $type) {
-                $registeredClassnames = $this->mergeEmbeddedClassnames($type, $registeredClassnames);
-            }
+        foreach ($subTypes as $subType) {
+            $registeredTypes = $this->getClassMembersTypes($subType, $registeredTypes);
         }
 
-        return $registeredClassnames;
+        return $registeredTypes;
     }
 
     /**
      * @return array<int, string>
      */
-    private function getClassnamesFromReflector(
-        \ReflectionMethod|\ReflectionProperty $reflector
-    ): array {
-        $type = $reflector instanceof \ReflectionMethod
-            ? $reflector->getReturnType()
-            : $reflector->getType();
+    private function getTypes(\ReflectionMethod|\ReflectionProperty $member): array {
+        $type = $member instanceof \ReflectionMethod
+            ? $member->getReturnType()
+            : $member->getType();
 
-        $docComment = $reflector->getDocComment() !== false
-            ? $reflector->getDocComment()
+        $docComment = $member->getDocComment() !== false
+            ? $member->getDocComment()
             : null;
 
-        $classnames = [];
+        $types = [];
 
         if ($type !== null) {
-            $classnames = array_merge(
-                $classnames,
-                $this->getClassnamesFromReflectionType($type)
+            $types = array_merge(
+                $types,
+                $this->getReflectionTypeNames($type)
             );
         }
 
         if ($docComment !== null) {
-            $classnames = array_merge(
-                $classnames,
-                $this->getReturnAndVarTagsClassnamesFromPhpDoc($reflector->class, $docComment)
+            $types = array_merge(
+                $types,
+                $this->getPhpDocTypesNames(
+                    $member->getDeclaringClass()->getName(),
+                    $docComment,
+                    ['@var', '@return'],
+                )
             );
         }
 
-        return array_unique($classnames);
+        return array_unique($types);
+    }
+
+    /**
+     * @param array<\ReflectionMethod|\ReflectionProperty> $members
+     * @return array<int, string>
+     */
+    private function getMembersTypes(array $members): array
+    {
+        $types = [];
+        foreach ($members as $member) {
+            $types[] = $this->getTypes($member);
+        }
+
+        return array_unique(array_merge(...$types));
     }
 
     /**
      * @return array<int, string>
      */
-    private function getClassnamesFromReflectionType(\ReflectionType $type): array
+    private function getReflectionTypeNames(\ReflectionType $type): array
     {
         if ($type instanceof \ReflectionNamedType) {
             return [$type->getName()];
@@ -363,37 +361,29 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     }
 
     /**
+     * @param array<string> $tagNames
+     * @param class-string  $classContext
+     *
      * @return array<int, string>
      */
-    private function getReturnAndVarTagsClassnamesFromPhpDoc(string $classContext, string $docComment): array
+    private function getPhpDocTypesNames(string $classContext, string $docComment, array $tagNames = []): array
     {
         $classNames = [];
         $nameScope = $this->getNameScope($classContext);
         $tokens = new TokenIterator($this->lexer->tokenize($docComment));
 
         $phpDocNode = $this->phpDocParser->parse($tokens);
-
-        $tagValues = array_merge(
-            $phpDocNode->getReturnTagValues(),
-            $phpDocNode->getVarTagValues()
-        );
-
-        foreach ($tagValues as $value) {
-            foreach ($this->typeHelper->getTypes($value, $nameScope) as $type) {
-                if (\in_array($type->getClassName(), ['self', 'static', 'parent'], true)) {
-                    continue;
-                }
-
-                $classNames[] = $type->getClassName();
-
-                if ($type->isCollection()) {
-                    $classNames = array_merge(
-                        $classNames,
-                        array_map(
-                            static fn (Type $type) => $type->getClassName(),
-                            $type->getCollectionValueTypes()
-                        )
-                    );
+        foreach ($tagNames as $tagName) {
+            $tags = $phpDocNode->getTagsByName($tagName);
+            foreach ($tags as $tag) {
+                $types = $this->typeHelper->getTypes($tag->value, $nameScope);
+                foreach ($types as $type) {
+                    $classNames[] = $type->getClassName() ?? $type->getBuiltinType();
+                    if ($type->isCollection()) {
+                        foreach ($type->getCollectionValueTypes() as $collectionValueType) {
+                            $classNames[] = $collectionValueType->getClassName() ?? $collectionValueType->getBuiltinType();
+                        }
+                    }
                 }
             }
         }
@@ -404,7 +394,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     /**
      * @param \ReflectionMethod|\ReflectionClass<object> $reflection
      */
-    private function getCode(\ReflectionMethod|\ReflectionClass $reflection): string
+    private function getInnerCode(\ReflectionMethod|\ReflectionClass $reflection): string
     {
         $name = $reflection->getName();
         $filename = $reflection->getFileName();
@@ -438,7 +428,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
         if ($code === null) {
             throw new \RuntimeException(sprintf(
-                'An error occured while cleaning %s %s\'s code.',
+                'An error occurred while cleaning %s %s\'s code.',
                 $name,
                 $reflection instanceof \ReflectionMethod ? 'method' : 'class',
             ));
@@ -538,6 +528,9 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         return $propRef->getValue($object);
     }
 
+    /**
+     * @param class-string $className
+     */
     private function getNameScope(string $className): NameScope
     {
         if (!isset($this->resolvedNameScopes[$className])) {
@@ -545,5 +538,18 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         }
 
         return $this->resolvedNameScopes[$className];
+    }
+
+    /**
+     * @param array<string, mixed> $parameters
+     */
+    private function getParametersHash(array $parameters): string
+    {
+        $identifier = '';
+        foreach ($parameters as $parameterName => $parameterValue) {
+            $identifier .= '.' . $parameterName . '.' . serialize($parameterValue);
+        }
+
+        return $identifier;
     }
 }
