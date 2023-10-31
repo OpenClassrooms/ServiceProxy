@@ -17,9 +17,12 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
     public function prefix(Instance $instance): Response
     {
         $attribute = $instance->getMethod()
-            ->getAttribute(Transaction::class);
-        $handler = $this->getHandler(TransactionHandler::class, $attribute);
-        $handler->begin($attribute->entityManagers);
+                              ->getAttribute(Transaction::class);
+
+        $handlers = $this->getHandlers(TransactionHandler::class, $attribute);
+        foreach ($handlers as $handler) {
+            $handler->begin($attribute->entityManagers);
+        }
 
         return new Response();
     }
@@ -30,16 +33,19 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
     public function suffix(Instance $instance): Response
     {
         $attribute = $instance->getMethod()
-            ->getAttribute(Transaction::class);
-        $handler = $this->getHandler(TransactionHandler::class, $attribute);
-        if ($instance->getMethod()->threwException()) {
-            $handler->rollback($attribute->entityManagers);
+                              ->getAttribute(Transaction::class);
 
-            if ($attribute->hasMappedExceptions()) {
-                $this->handleMappedException($instance, $attribute);
+        $handlers = $this->getHandlers(TransactionHandler::class, $attribute);
+        foreach ($handlers as $handler) {
+            if ($instance->getMethod()->threwException()) {
+                $handler->rollback($attribute->entityManagers);
+
+                if ($attribute->hasMappedExceptions()) {
+                    $this->handleMappedException($instance, $attribute);
+                }
+            } else {
+                $handler->commit($attribute->entityManagers);
             }
-        } else {
-            $handler->commit($attribute->entityManagers);
         }
 
         return new Response();
@@ -53,7 +59,7 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
     public function supportsPrefix(Instance $instance): bool
     {
         return $instance->getMethod()
-            ->hasAttribute(Transaction::class);
+                        ->hasAttribute(Transaction::class);
     }
 
     public function getPrefixPriority(): int
@@ -72,7 +78,7 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
     private function handleMappedException(Instance $instance, Transaction $attribute): void
     {
         $thrownException = $instance->getMethod()
-            ->getException();
+                                    ->getException();
 
         if ($thrownException instanceof \Exception) {
             foreach ($attribute->exceptions as $fromException => $toException) {
