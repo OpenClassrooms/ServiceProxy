@@ -26,14 +26,14 @@ final class Configuration implements ConfigurationInterface
 
         $defaultHandlersNode = $children->arrayNode('default_handlers');
         $defaultHandlersNode->useAttributeAsKey('name')
-            ->arrayPrototype()
-            ->scalarPrototype()->end()
-            ->end();
+                            ->arrayPrototype()
+                            ->scalarPrototype()->end()
+                            ->end();
 
         $defaultHandlersNode->defaultValue([
             'cache' => ['array'],
             'transaction' => ['doctrine_orm'],
-            'event' => ['symfony_messenger', 'symfony_event_dispatcher'],
+            'event' => ['symfony_event_dispatcher'],
             'security' => ['symfony_authorization_checker'],
         ])->end();
 
@@ -41,18 +41,11 @@ final class Configuration implements ConfigurationInterface
         $productionEnvsNode->prototype('scalar')->end();
         $productionEnvsNode->defaultValue(['prod'])->end();
 
-        // $evalNode = $children->arrayNode('use_eval');
-        // $evalNode->prototype('boolean')
-        //     ->end();
-        // $evalNode->defaultValue(false)
-        //     ->end();
-
         $handlersNode = $children->arrayNode('handlers');
         $handlersNode->useAttributeAsKey('name')
-            ->arrayPrototype()
-            ->scalarPrototype()->end()
-            ->end()
-        ;
+                     ->arrayPrototype()
+                     ->scalarPrototype()->end()
+                     ->end();
 
         $children->end();
 
