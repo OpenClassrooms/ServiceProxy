@@ -42,17 +42,20 @@ final class TypesExtractor
     }
 
     /**
-     * @return array<int, string>
+     * @return array<string, string>
      */
     public function extractFromMethod(\ReflectionMethod $method): array
     {
-        $returnedTypes = $this->getTypes($method);
+        $registeredTypes = [];
+        $methodReturnTypes = $this->getTypes($method);
 
-        foreach ($returnedTypes as $type) {
-            $returnedTypes = $this->getClassMembersTypes($type, $returnedTypes);
+        foreach ($methodReturnTypes as $methodType) {
+            $registeredTypes[] = $this->getClassMembersTypes($methodType);
         }
 
-        return array_values($returnedTypes);
+        $registeredTypes[] = $methodReturnTypes;
+
+        return array_unique(array_merge(...$registeredTypes));
     }
 
     /**
