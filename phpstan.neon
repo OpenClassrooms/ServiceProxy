@@ -29,4 +29,3 @@ parameters:
             - PHPUnit\Framework\Exception
             - ReflectionException
             - Psr\Cache\CacheException
-            - OpenClassrooms\ServiceProxy\Interceptor\Exception\InternalCodeRetrievalException
