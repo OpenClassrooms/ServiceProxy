@@ -46,13 +46,13 @@ final class TypesExtractor
      */
     public function extractFromMethod(\ReflectionMethod $method): array
     {
-        $types = $this->getTypes($method);
+        $returnedTypes = $this->getTypes($method);
 
-        foreach ($types as $type) {
-            $types = $this->getClassMembersTypes($type, $types);
+        foreach ($returnedTypes as $type) {
+            $returnedTypes = $this->getClassMembersTypes($type, $returnedTypes);
         }
 
-        return array_values($types);
+        return array_values($returnedTypes);
     }
 
     /**
