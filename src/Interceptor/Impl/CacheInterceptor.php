@@ -7,16 +7,21 @@ namespace OpenClassrooms\ServiceProxy\Interceptor\Impl;
 use OpenClassrooms\ServiceProxy\Attribute\Cache;
 use OpenClassrooms\ServiceProxy\ExpressionLanguage\ExpressionResolver;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
+use OpenClassrooms\ServiceProxy\Helper\TypesExtractor;
 use OpenClassrooms\ServiceProxy\Interceptor\Config\CacheInterceptorConfig;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Exception\InternalCodeRetrievalException;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
+use Symfony\Component\PropertyInfo\Type;
 
 final class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
     private const DEFAULT_POOL_NAME = 'default';
+
+    private const AUTO_TAG_PROPERTY_NAME = 'id';
 
     /**
      * @var string[][]
@@ -30,6 +35,8 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
     private ExpressionResolver $expressionResolver;
 
+    private TypesExtractor $typesExtractor;
+
     public function __construct(
         private readonly CacheInterceptorConfig $config,
         iterable                                $handlers = [],
@@ -37,6 +44,8 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         parent::__construct($handlers);
 
         $this->expressionResolver = new ExpressionResolver();
+
+        $this->typesExtractor = new TypesExtractor();
     }
 
     /**
@@ -106,7 +115,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
                     $cacheKey,
                     $data,
                     $attribute->ttl ?? $this->config->defaultTtl,
-                    $this->getTags($instance, $attribute)
+                    $this->getTags($instance, $attribute, $data)
                 );
             }
 
@@ -141,7 +150,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
                 $cacheKey,
                 $data,
                 $attribute->ttl ?? $this->config->defaultTtl,
-                $this->getTags($instance, $attribute)
+                $this->getTags($instance, $attribute, $data)
             );
         }
 
@@ -171,37 +180,67 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
     private function buildCacheKey(Instance $instance, Cache $attribute): string
     {
-        $method = $instance->getMethod();
-
-        $parameters = $method->getParameters();
-
-        $identifier = $instance->getReflection()
-            ->getName() . '.' . $method->getName();
-
-        if (\count($parameters) > 0) {
-            foreach ($parameters as $parameterName => $parameterValue) {
-                $identifier .= '.' . $parameterName . '.' . hash('xxh3', serialize($parameterValue));
-            }
-        }
-
-        $identifier = array_reduce(
-            $this->getTags($instance, $attribute),
-            static fn (string $identifier, string $tag) => $identifier . '.' . $tag,
-            $identifier
+        $identifier = implode(
+            '.',
+            [
+                $instance->getReflection()
+                    ->getName(),
+                $instance->getMethod()
+                    ->getName(),
+                $this->getParametersHash($instance->getMethod()->getParameters()),
+                ...$this->getTags($instance, $attribute),
+                $attribute->ttl,
+                $this->getInnerCode($instance->getMethod()->getReflection()),
+                $this->getTypesInnerCode($instance->getMethod()->getReflection()),
+            ],
         );
-
-        $identifier .= $this->getMethodCode($method->getReflection());
 
         return hash('xxh3', $identifier);
     }
 
-    private function getMethodCode(\ReflectionMethod $reflectionMethod): string
+    private function getTypesInnerCode(\ReflectionMethod $method): string
     {
-        $methodName = $reflectionMethod->getName();
-        $filename = $reflectionMethod->getFileName();
+        $types = $this->typesExtractor->extractFromMethod($method);
+
+        return array_reduce(
+            $types,
+            fn (string $code, string $classname): string => $this->getTypeInnerCode(
+                $classname,
+                $code
+            ),
+            '',
+        );
+    }
+
+    private function getTypeInnerCode(string $type, string $code): string
+    {
+        if (\in_array($type, Type::$builtinTypes, true)) {
+            return $code . '.' . $type;
+        }
+
+        if (!class_exists($type) && !interface_exists($type)) {
+            return $code . '.' . $type;
+        }
+
+        try {
+            $returnClassCode = $this->getInnerCode(new \ReflectionClass($type));
+        } catch (InternalCodeRetrievalException) {
+            $returnClassCode = '';
+        }
+
+        return $code . '.' . $type . '.' . $returnClassCode;
+    }
+
+    /**
+     * @param \ReflectionMethod|\ReflectionClass<object> $reflection
+     */
+    private function getInnerCode(\ReflectionMethod|\ReflectionClass $reflection): string
+    {
+        $name = $reflection->getName();
+        $filename = $reflection->getFileName();
 
         if ($filename === false) {
-            throw new \RuntimeException("Method {$methodName} seems to be an internal method.");
+            throw new InternalCodeRetrievalException($name);
         }
 
         $file = file($filename);
@@ -210,16 +249,16 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             throw new \LogicException("Unable to open file {$filename}.");
         }
 
-        $startLine = $reflectionMethod->getStartLine();
+        $startLine = $reflection->getStartLine();
 
         if ($startLine === false) {
-            throw new \LogicException("Unable to find {$methodName} start line.");
+            throw new \LogicException("Unable to find {$name} start line.");
         }
 
-        $endLine = $reflectionMethod->getEndLine();
+        $endLine = $reflection->getEndLine();
 
         if ($endLine === false) {
-            throw new \LogicException("Unable to find {$methodName} end line.");
+            throw new \LogicException("Unable to find {$name} end line.");
         }
 
         $length = $endLine - $startLine;
@@ -228,7 +267,11 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $code = preg_replace('/\s+/', '', implode('', $code));
 
         if ($code === null) {
-            throw new \RuntimeException("An error occurd while cleaning {$methodName} method's code.");
+            throw new \RuntimeException(sprintf(
+                'An error occurred while cleaning %s %s\'s code.',
+                $name,
+                $reflection instanceof \ReflectionMethod ? 'method' : 'class',
+            ));
         }
 
         return $code;
@@ -237,7 +280,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     /**
      * @return array<int, string>
      */
-    private function getTags(Instance $instance, Cache $attribute): array
+    private function getTags(Instance $instance, Cache $attribute, mixed $response = null): array
     {
         $parameters = $instance->getMethod()
             ->getParameters();
@@ -247,17 +290,17 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             $attribute->tags
         );
 
-        if ($instance->getMethod()->threwException()) {
-            return $tags;
+        if ($response !== null) {
+            $tags = array_values(array_filter([
+                ...$tags,
+                ...$this->guessObjectsTags(
+                    $response,
+                    $this->config->autoTagsExcludedClasses
+                ),
+            ]));
         }
 
-        $autoTags = $this->guessObjectsTags(
-            $instance->getMethod()
-                ->getResponse(),
-            $this->config->autoTagsExcludedClasses
-        );
-
-        return array_values(array_filter([...$tags, ...$autoTags]));
+        return $tags;
     }
 
     /**
@@ -283,13 +326,13 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             if (!$propRef->isInitialized($object)) {
                 continue;
             }
-            $getter = 'get' . ucfirst($propRef->getName());
-            if ($propRef->getName() === 'id' || $ref->hasMethod($getter)) {
+            $getter = 'get' . ucfirst(self::AUTO_TAG_PROPERTY_NAME);
+            if ($propRef->getName() === self::AUTO_TAG_PROPERTY_NAME || $ref->hasMethod($getter)) {
                 $tag =
                     str_replace('\\', '.', \get_class($object))
                     .
                     '.'
-                    . $this->getPropertyValue($ref, $object, 'id');
+                    . $this->getPropertyValue($ref, $object, self::AUTO_TAG_PROPERTY_NAME);
                 if (isset($tags[$tag])) {
                     return $tags;
                 }
@@ -323,5 +366,18 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $propRef->setAccessible(true);
 
         return $propRef->getValue($object);
+    }
+
+    /**
+     * @param array<string, mixed> $parameters
+     */
+    private function getParametersHash(array $parameters): string
+    {
+        $identifier = '';
+        foreach ($parameters as $parameterName => $parameterValue) {
+            $identifier .= '.' . $parameterName . '.' . serialize($parameterValue);
+        }
+
+        return $identifier;
     }
 }

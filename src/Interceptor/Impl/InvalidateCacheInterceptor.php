@@ -71,11 +71,21 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
             $attribute->tags
         );
 
-        return array_values(
+        if (\count($tags) > 0) {
+            return $tags;
+        }
+
+        $guessedTags = array_values(
             array_filter(
-                [...$tags, ...$this->guessObjectsTags($instance->getMethod()->getResponse())]
+                $this->guessObjectsTags($instance->getMethod()->getResponse())
             )
         );
+
+        if (\count($guessedTags) === 0) {
+            throw new \RuntimeException('No tags found for method ' . $instance->getMethod()->getName());
+        }
+
+        return $guessedTags;
     }
 
     /**
@@ -84,7 +94,7 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
     private function guessObjectsTags(mixed $objects): array
     {
         if (!is_iterable($objects)) {
-            $objects = (array) $objects;
+            $objects = [$objects];
         }
 
         $tags = [];
