@@ -16,8 +16,7 @@ parameters:
         - '/.+ is not allowed to extend ".+"./'
         - '/Short ternary operator is not allowed.+/'
         - '/Method .+OpenClassroomsServiceProxyBundle.+ has a parameter \$container/'
-        - '/Method .+ServiceProxyPass.+ has a parameter \$container/'
-        - '/Function compact\(\) should not be used/'
+        - '/Method .+ServiceProxy.+ has a parameter \$container/'
 
     exceptions:
         check:

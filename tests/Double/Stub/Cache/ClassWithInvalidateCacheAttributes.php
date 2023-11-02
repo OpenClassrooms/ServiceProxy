@@ -28,4 +28,40 @@ class ClassWithInvalidateCacheAttributes
     {
         throw new \Exception();
     }
+
+    #[InvalidateCache]
+    public function methodWithInvalidateCacheButNoTagNorResponseObject(): string
+    {
+        return self::DATA;
+    }
+
+    #[Cache]
+    public function methodWithCacheButNoTag(): ResponseStub
+    {
+        return new ResponseStub();
+    }
+
+    #[InvalidateCache]
+    public function methodWithInvalidateCacheButNoTag(): ResponseStub
+    {
+        return new ResponseStub();
+    }
+
+    #[InvalidateCache(tags: ['"OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.12"'])]
+    public function methodWithInvalidateCacheAndExplicitTag(): ResponseStub
+    {
+        return new ResponseStub();
+    }
+
+    #[Cache]
+    public function methodWithCachedEmbeddedResponse(): ResponseStub
+    {
+        return new ResponseStub(new EmbeddedResponseStub());
+    }
+
+    #[InvalidateCache]
+    public function methodInvalidatingSubResource(): EmbeddedResponseStub
+    {
+        return new EmbeddedResponseStub();
+    }
 }

@@ -23,6 +23,21 @@ class ClassWithCacheAttributes
     }
 
     #[Cache]
+    public function methodWithAttributeReturningObject(): ResponseStub
+    {
+        return new ResponseStub();
+    }
+
+    /**
+     * @return \OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ResponseStub
+     */
+    #[Cache]
+    public function methodWithAttributeAndPhpDoc()
+    {
+        return new ResponseStub();
+    }
+
+    #[Cache]
     public function methodWithVoidReturn(): void
     {
         $doSomething = static function () {
@@ -45,7 +60,7 @@ class ClassWithCacheAttributes
         return self::DATA;
     }
 
-    #[Cache(lifetime: 60)]
+    #[Cache(ttl: 60)]
     public function methodWithLifetime(): string
     {
         return self::DATA;
@@ -57,19 +72,19 @@ class ClassWithCacheAttributes
         return self::DATA;
     }
 
-    #[Cache(pool: 'toto')]
+    #[Cache(pools: ['toto'])]
     public function invalidPool(): string
     {
         return self::DATA;
     }
 
-    #[Cache(handler: 'foo', pool: 'bar')]
+    #[Cache(handler: 'array', pools: ['default'])]
     public function bothHandlerAndPool(): string
     {
         return self::DATA;
     }
 
-    #[Cache(pool: 'array')]
+    #[Cache(pools: ['default'])]
     public function methodWithPool(): string
     {
         return self::DATA;
@@ -83,6 +98,12 @@ class ClassWithCacheAttributes
 
     #[Cache(tags: ['"my_tag" ~ param.publicField'])]
     public function methodWithResolvedTag(ParameterClassStub $param): string
+    {
+        return self::DATA;
+    }
+
+    #[Cache(pools: ['foo', 'bar'])]
+    public function methodWithMultiplePools(): string
     {
         return self::DATA;
     }

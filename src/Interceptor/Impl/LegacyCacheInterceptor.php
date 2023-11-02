@@ -46,7 +46,7 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
         $handler = $this->getHandler(CacheHandler::class, $annotation);
 
         array_unshift($tags, $proxyId);
-        $data = $handler->fetch(implode('|', $tags));
+        $data = $handler->fetch('default', implode('|', $tags));
 
         // this is needed to solve a bug (when the false is stored in the cache)
 
@@ -76,6 +76,7 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
         $handler = $this->getHandler(CacheHandler::class, $annotation);
 
         $handler->save(
+            'default',
             $proxyId,
             $data,
             $annotation->getLifetime(),

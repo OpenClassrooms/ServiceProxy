@@ -86,5 +86,74 @@ final class OpenClassroomsServiceProxyExtension extends Extension
             'openclassrooms.service_proxy.handler.defaults',
             (array) $config['default_handlers']
         );
+
+        $container->setParameter('openclassrooms.service_proxy.handlers', $config['handlers']);
+
+        $this->autoConfigure($config, $container);
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     */
+    private function autoConfigure(array $config, ContainerBuilder $container): void
+    {
+        $types = ['handler', 'interceptor'];
+        foreach ($types as $type) {
+            $typeKey = $type . 's';
+            /** @var array<string, array<string, mixed>> $elements */
+            $elements = $config[$typeKey] ?? [];
+            foreach ($elements as $name => $element) {
+                $domain = $this->getElementType($name);
+                $args = $this->prefixKeys($element);
+                $configClass = $this->getConfigClass($name, $type, $domain);
+                $container->register($configClass)
+                    ->setArguments($args)
+                ;
+            }
+        }
+    }
+
+    private function getElementType(string $name): ?string
+    {
+        $parts = explode('_', (string) preg_replace('/(?<!^)[A-Z]/', '_$0', $name));
+
+        return $parts[\count($parts) - 2] ?? null;
+    }
+
+    private function getConfigClass(string $name, string $type, ?string $domain = null): string
+    {
+        $type = ucfirst($type);
+        if ($domain !== null) {
+            $domain = "{$domain}\\";
+        }
+
+        $configClasses = [
+            "OpenClassrooms\\ServiceProxy\\{$type}\\Config\\{$domain}{$name}Config",
+            "OpenClassrooms\\ServiceProxy\\{$type}\\Config\\{$name}Config",
+        ];
+
+        foreach ($configClasses as $configClass) {
+            if (class_exists($configClass)) {
+                return $configClass;
+            }
+        }
+
+        throw new \InvalidArgumentException(
+            "The '{$type}' config class for '{$name}' does not exist."
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $element
+     * @return array<string, mixed>
+     */
+    private function prefixKeys(array $element): array
+    {
+        $args = [];
+        foreach ($element as $key => $value) {
+            $args['$' . $key] = $value;
+        }
+
+        return $args;
     }
 }
