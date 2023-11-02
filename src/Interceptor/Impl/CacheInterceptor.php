@@ -7,6 +7,7 @@ namespace OpenClassrooms\ServiceProxy\Interceptor\Impl;
 use OpenClassrooms\ServiceProxy\Attribute\Cache;
 use OpenClassrooms\ServiceProxy\ExpressionLanguage\ExpressionResolver;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
+use OpenClassrooms\ServiceProxy\Helper\TypesExtractor;
 use OpenClassrooms\ServiceProxy\Interceptor\Config\CacheInterceptorConfig;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
@@ -14,15 +15,7 @@ use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Exception\InternalCodeRetrievalException;
 use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
 use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
-use PHPStan\PhpDocParser\Lexer\Lexer;
-use PHPStan\PhpDocParser\Parser\ConstExprParser;
-use PHPStan\PhpDocParser\Parser\PhpDocParser;
-use PHPStan\PhpDocParser\Parser\TokenIterator;
-use PHPStan\PhpDocParser\Parser\TypeParser;
-use Symfony\Component\PropertyInfo\PhpStan\NameScope;
-use Symfony\Component\PropertyInfo\PhpStan\NameScopeFactory;
 use Symfony\Component\PropertyInfo\Type;
-use Symfony\Component\PropertyInfo\Util\PhpStanTypeHelper;
 
 final class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
@@ -42,18 +35,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
     private ExpressionResolver $expressionResolver;
 
-    private PhpDocParser $phpDocParser;
-
-    private Lexer $lexer;
-
-    private PhpStanTypeHelper $typeHelper;
-
-    private NameScopeFactory $nameScopeFactory;
-
-    /**
-     * @var array<class-string, NameScope>
-     */
-    private array $resolvedNameScopes = [];
+    private TypesExtractor $typesExtractor;
 
     public function __construct(
         private readonly CacheInterceptorConfig $config,
@@ -62,16 +44,8 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         parent::__construct($handlers);
 
         $this->expressionResolver = new ExpressionResolver();
-        $this->typeHelper = new PhpStanTypeHelper();
-        $this->nameScopeFactory = new NameScopeFactory();
-        $this->lexer = new Lexer();
 
-        $constExprParser = new ConstExprParser();
-
-        $this->phpDocParser = new PhpDocParser(
-            new TypeParser($constExprParser),
-            $constExprParser
-        );
+        $this->typesExtractor = new TypesExtractor();
     }
 
     /**
@@ -88,25 +62,6 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     public static function getMisses(?string $poolName = self::DEFAULT_POOL_NAME): array
     {
         return self::$misses[$poolName] ?? [];
-    }
-
-    private function getTypeInnerCode(string $type, string $code): string
-    {
-        if (\in_array($type, Type::$builtinTypes, true)) {
-            return $code . '.' . $type;
-        }
-
-        if (!class_exists($type) && !interface_exists($type)) {
-            return $code . '.' . $type;
-        }
-
-        try {
-            $returnClassCode = $this->getInnerCode(new \ReflectionClass($type));
-        } catch (InternalCodeRetrievalException) {
-            $returnClassCode = '';
-        }
-
-        return $code . '.' . $type . '.' . $returnClassCode;
     }
 
     public function prefix(Instance $instance): Response
@@ -228,8 +183,10 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $identifier = implode(
             '.',
             [
-                $instance->getReflection()->getName(),
-                $instance->getMethod()->getName(),
+                $instance->getReflection()
+                    ->getName(),
+                $instance->getMethod()
+                    ->getName(),
                 $this->getParametersHash($instance->getMethod()->getParameters()),
                 ...$this->getTags($instance, $attribute),
                 $attribute->ttl,
@@ -243,152 +200,35 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
     private function getTypesInnerCode(\ReflectionMethod $method): string
     {
-        $returnedTypes = $this->getTypes($method);
-
-        foreach ($returnedTypes as $type) {
-            $returnedTypes = $this->getClassMembersTypes($type, $returnedTypes);
-        }
+        $types = $this->typesExtractor->extractFromMethod($method);
 
         return array_reduce(
-            $returnedTypes,
-            fn (string $code, string $returnClassname): string => $this->getTypeInnerCode(
-                $returnClassname,
+            $types,
+            fn (string $code, string $classname): string => $this->getTypeInnerCode(
+                $classname,
                 $code
             ),
             '',
         );
     }
 
-    /**
-     * @param string[] $registeredTypes
-     *
-     * @return string[]
-     */
-    private function getClassMembersTypes(string $type, array $registeredTypes = []): array
+    private function getTypeInnerCode(string $type, string $code): string
     {
-        if ((!class_exists($type) && !interface_exists($type)) || isset($registeredTypes[$type])) {
-            return $registeredTypes;
+        if (\in_array($type, Type::$builtinTypes, true)) {
+            return $code . '.' . $type;
         }
 
-        $registeredTypes[$type] = $type;
-
-        if (in_array($type, Type::$builtinTypes, true)) {
-            return $registeredTypes;
+        if (!class_exists($type) && !interface_exists($type)) {
+            return $code . '.' . $type;
         }
 
-        $ref = new \ReflectionClass($type);
-
-        $subTypes = $this->getMembersTypes(
-            [
-                ...$ref->getMethods(\ReflectionMethod::IS_PUBLIC),
-                ...$ref->getProperties(\ReflectionProperty::IS_PUBLIC),
-            ]
-        );
-
-        foreach ($subTypes as $subType) {
-            $registeredTypes = $this->getClassMembersTypes($subType, $registeredTypes);
+        try {
+            $returnClassCode = $this->getInnerCode(new \ReflectionClass($type));
+        } catch (InternalCodeRetrievalException) {
+            $returnClassCode = '';
         }
 
-        return $registeredTypes;
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function getTypes(\ReflectionMethod|\ReflectionProperty $member): array {
-        $type = $member instanceof \ReflectionMethod
-            ? $member->getReturnType()
-            : $member->getType();
-
-        $docComment = $member->getDocComment() !== false
-            ? $member->getDocComment()
-            : null;
-
-        $types = [];
-
-        if ($type !== null) {
-            $types = array_merge(
-                $types,
-                $this->getReflectionTypeNames($type)
-            );
-        }
-
-        if ($docComment !== null) {
-            $types = array_merge(
-                $types,
-                $this->getPhpDocTypesNames(
-                    $member->getDeclaringClass()->getName(),
-                    $docComment,
-                    ['@var', '@return'],
-                )
-            );
-        }
-
-        return array_unique($types);
-    }
-
-    /**
-     * @param array<\ReflectionMethod|\ReflectionProperty> $members
-     * @return array<int, string>
-     */
-    private function getMembersTypes(array $members): array
-    {
-        $types = [];
-        foreach ($members as $member) {
-            $types[] = $this->getTypes($member);
-        }
-
-        return array_unique(array_merge(...$types));
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function getReflectionTypeNames(\ReflectionType $type): array
-    {
-        if ($type instanceof \ReflectionNamedType) {
-            return [$type->getName()];
-        }
-
-        if ($type instanceof \ReflectionUnionType) {
-            return array_map(
-                static fn (\ReflectionNamedType $type) => $type->getName(),
-                $type->getTypes()
-            );
-        }
-
-        return [];
-    }
-
-    /**
-     * @param array<string> $tagNames
-     * @param class-string  $classContext
-     *
-     * @return array<int, string>
-     */
-    private function getPhpDocTypesNames(string $classContext, string $docComment, array $tagNames = []): array
-    {
-        $classNames = [];
-        $nameScope = $this->getNameScope($classContext);
-        $tokens = new TokenIterator($this->lexer->tokenize($docComment));
-
-        $phpDocNode = $this->phpDocParser->parse($tokens);
-        foreach ($tagNames as $tagName) {
-            $tags = $phpDocNode->getTagsByName($tagName);
-            foreach ($tags as $tag) {
-                $types = $this->typeHelper->getTypes($tag->value, $nameScope);
-                foreach ($types as $type) {
-                    $classNames[] = $type->getClassName() ?? $type->getBuiltinType();
-                    if ($type->isCollection()) {
-                        foreach ($type->getCollectionValueTypes() as $collectionValueType) {
-                            $classNames[] = $collectionValueType->getClassName() ?? $collectionValueType->getBuiltinType();
-                        }
-                    }
-                }
-            }
-        }
-
-        return array_filter($classNames);
+        return $code . '.' . $type . '.' . $returnClassCode;
     }
 
     /**
@@ -526,18 +366,6 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $propRef->setAccessible(true);
 
         return $propRef->getValue($object);
-    }
-
-    /**
-     * @param class-string $className
-     */
-    private function getNameScope(string $className): NameScope
-    {
-        if (!isset($this->resolvedNameScopes[$className])) {
-            $this->resolvedNameScopes[$className] = $this->nameScopeFactory->create($className);
-        }
-
-        return $this->resolvedNameScopes[$className];
     }
 
     /**
