@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Model;
 
+use OpenClassrooms\ServiceProxy\Attribute\Event\Transport;
 use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 use OpenClassrooms\ServiceProxy\Model\Request\Moment;
 
@@ -26,51 +27,63 @@ final class Event
 
     public static function createFromSenderInstance(
         Instance $instance,
-        Moment $type = Moment::SUFFIX,
+        Moment $moment = Moment::SUFFIX,
         ?string $name = null
     ): self {
+        /** @var class-string $className */
+        $className = $instance->getReflection()->getName();
+
         return new self(
-            self::getEventName(
-                $instance->getReflection()
-                    ->getShortName(),
-                $instance->getMethod()
-                    ->getName(),
-                $type,
-                $name,
+            self::getName(
+                className: $className,
+                moment: $moment,
+                method: $instance->getMethod()
+                                 ->getName(),
+                name: $name,
             ),
             $instance->getReflection()
-                ->getName(),
+                     ->getName(),
             $instance->getReflection()
-                ->getShortName(),
+                     ->getShortName(),
             $instance->getMethod()
-                ->getName(),
+                     ->getName(),
             $instance->getMethod()
-                ->getParameters(),
+                     ->getParameters(),
             $instance->getMethod()
-                ->getReturnedValue(),
+                     ->getReturnedValue(),
             $instance->getMethod()
-                ->getException(),
-            $type,
+                     ->getException(),
+            $moment,
         );
     }
 
-    public static function getEventName(
-        string $classShortName,
-        string $method,
-        Moment $type,
+    /**
+     * @param class-string $className
+     */
+    public static function getName(
+        string $className,
+        Moment $moment = Moment::SUFFIX,
+        ?Transport $transport = null,
+        string $method = '',
         ?string $name = null
     ): string {
         if ($name !== null) {
             return $name;
         }
 
-        $name = \in_array($method, ['__invoke', 'execute'], true)
+        $parts = explode('\\', $className);
+        $classShortName = array_pop($parts);
+
+        $name = \in_array($method, ['__invoke', 'execute', ''], true)
             ? $classShortName
-            : $classShortName . '.' . $method
-        ;
+            : $classShortName . '.' . $method;
 
         $name = mb_strtolower((string) preg_replace('/(?<=\\w)(?=[A-Z])/', '_$1', $name));
 
-        return "{$type->value}.{$name}";
+        if ($transport !== null) {
+            return "{$moment->value}.{$name}.{$transport->value}";
+        }
+
+        return "{$moment->value}.{$name}";
     }
 }
