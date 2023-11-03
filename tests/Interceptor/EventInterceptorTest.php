@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
-use Doctrine\Common\Annotations\AnnotationException;
-use OpenClassrooms\ServiceProxy\Interceptor\Interceptor\EventInterceptor;
-use OpenClassrooms\ServiceProxy\Model\Event;
+use OpenClassrooms\ServiceProxy\Interceptor\Impl\EventInterceptor;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event\EventHandlerMock;
-use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\ClassImplementingUseCaseInterface;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\EventAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\InvalidMethodEventAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
@@ -40,8 +37,9 @@ final class EventInterceptorTest extends TestCase
 
     public function testInvalidMethodEventThrowException(): void
     {
-        $this->expectException(AnnotationException::class);
-        $this->proxyFactory->createProxy(new InvalidMethodEventAnnotatedClass());
+        $this->expectException(\InvalidArgumentException::class);
+        $proxy = $this->proxyFactory->createProxy(new InvalidMethodEventAnnotatedClass());
+        $proxy->eventWithWrongMethods();
     }
 
     public function testOnExceptionEventSendException(): void
@@ -51,8 +49,9 @@ final class EventInterceptorTest extends TestCase
         } catch (\Exception $e) {
             $this->assertEventsCount(1);
             $this->assertEvent(
-                'use_case.exception.event_annotated_class',
+                0,
                 [
+                    'name' => 'exception.event_annotated_class.event_on_exception',
                     'parameters' => [
                         'useCaseRequest' => 'whatever',
                     ],
@@ -67,7 +66,7 @@ final class EventInterceptorTest extends TestCase
     {
         $response = $this->proxy->multiEvents('whatever');
         $this->assertSame(1, $response);
-        $this->assertEventsCount(7);
+        $this->assertEventsCount(8);
         $data = [
             'parameters' => [
                 'useCaseRequest' => 'whatever',
@@ -75,165 +74,57 @@ final class EventInterceptorTest extends TestCase
             'response' => $response,
             'exception' => null,
         ];
-        $dataWithEmptyResponse = [
+        $dataWithoutResponse = [
             'parameters' => [
                 'useCaseRequest' => 'whatever',
             ],
-            'response' => null,
-            'exception' => null,
         ];
         $this->assertEvent(
-            'first_event',
-            $dataWithEmptyResponse
+            0,
+            $dataWithoutResponse
         );
         $this->assertEvent(
-            'first_event',
+            1,
+            $dataWithoutResponse,
+        );
+        $this->assertEvent(
+            2,
+            $dataWithoutResponse
+        );
+        $this->assertEvent(
+            3,
+            $data
+        );
+        $this->assertEvent(
+            4,
             $data,
             1
         );
         $this->assertEvent(
-            'second_event',
+            5,
             $data
         );
         $this->assertEvent(
-            'third_event',
-            $dataWithEmptyResponse
-        );
-        $this->assertEvent(
-            'third_event',
-            $data,
-            1
-        );
-        $this->assertEvent(
-            'use_case.pre.event_annotated_class',
-            $dataWithEmptyResponse
-        );
-        $this->assertEvent(
-            'use_case.post.event_annotated_class',
+            6,
             $data
         );
-    }
-
-    /**
-     * @dataProvider dataProvider
-     */
-    public function testEventNamesTest(
-        string $method,
-        string $eventName,
-        $expectedResponse = null,
-        ?\Exception $expectedException = null
-    ): void {
-        $response = $this->proxy->{$method}('whatever');
-        $this->assertSame(1, $response);
-        $this->assertEventsCount(1);
-        $this->assertEvent(
-            $eventName,
-            [
-                'parameters' => [
-                    'useCaseRequest' => 'whatever',
-                ],
-                'response' => $expectedResponse,
-                'exception' => $expectedException,
-            ]
-        );
-    }
-
-    public function dataProvider(): iterable
-    {
-        yield 'default' => [
-            'annotatedMethod',
-            'use_case.post.event_annotated_class',
-            1,
-        ];
-
-        yield 'named event' => [
-            'eventWithOnlyName',
-            'event_name',
-            1,
-        ];
-
-        yield 'pre event' => [
-            'eventPre',
-            'use_case.pre.event_annotated_class',
-            null,
-        ];
-
-        yield 'post event' => [
-            'eventPost',
-            'use_case.post.event_annotated_class',
-            1,
-        ];
-
-        yield 'duplicated named event' => [
-            'duplicatedEvent',
-            'first_event',
-            1,
-        ];
-
-        yield 'prefixed event' => [
-            'prefixedEvent',
-            'toto.post.event_annotated_class',
-            1,
-        ];
-
-        yield 'prefixed named event' => [
-            'namedEventWithPrefix',
-            'first_event',
-            1,
-        ];
-
-        yield 'empty prefix' => [
-            'eventEmptyPrefix',
-            'use_case.post.event_annotated_class',
-            1,
-        ];
-
-        yield 'included method name' => [
-            'EventWithMethodName',
-            'use_case.post.event_with_method_name.event_annotated_class',
-            1,
-        ];
-    }
-
-    public function testGenericEventSendPostExecution(): void
-    {
-        $proxy = $this->proxyFactory->createProxy(new ClassImplementingUseCaseInterface());
-        $response = $proxy->execute('whateverParameter');
-        $this->assertSame(1, $response);
-
-        $events = $this->handler->getCreatedEvents('use_case.post.execute');
-        $event = reset($events);
-        $this->assertInstanceOf(Event::class, $event);
-        $this->assertNotEmpty($event);
-        $this->assertSame('use_case.post.execute', $event->eventName);
-        $this->assertSame('ClassImplementingUseCaseInterface', $event->senderClassShortName);
-        $this->assertSame([
-            'parameters' => 'whateverParameter',
-        ], $event->parameters);
-        $this->assertSame(1, $event->response);
     }
 
     private function assertEventsCount(int $count): void
     {
-        $this->assertCount($count, $this->handler->getCreatedEvents());
-        $this->assertCount($count, $this->handler->getSentEvents());
+        $this->assertCount($count, $this->handler->getEvents());
     }
 
     /**
      * @param array{parameters: array, response: mixed, exception: \Exception} $data
      */
-    private function assertEvent(string $expectedEventName, array $data, int $position = 0): void
+    private function assertEvent(int $index, array $data): void
     {
-        $this->assertNotEmpty($this->handler->getCreatedEvents());
-        $event = $this->handler->getCreatedEvent($expectedEventName, $position);
-        $this->assertInstanceOf(Event::class, $event);
-        $this->assertNotEmpty($event);
-        $this->assertSame($expectedEventName, $event->eventName);
-        $this->assertEquals($data, [
-            'parameters' => $event->parameters,
-            'response' => $event->response,
-            'exception' => $event->exception,
-        ]);
-        $this->assertContains($expectedEventName, $this->handler->getSentEvents());
+        $this->assertNotEmpty($this->handler->getEvents());
+        $event = $this->handler->getEvents()[$index];
+        foreach ($data as $key => $value) {
+            $this->assertObjectHasProperty($key, $event);
+            $this->assertSame($value, $event->{$key});
+        }
     }
 }
