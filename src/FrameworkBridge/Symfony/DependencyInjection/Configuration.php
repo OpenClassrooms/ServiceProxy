@@ -33,7 +33,7 @@ final class Configuration implements ConfigurationInterface
         $defaultHandlersNode->defaultValue([
             'cache' => ['array'],
             'transaction' => ['doctrine_orm'],
-            'event' => ['symfony_event_dispatcher'],
+            'event' => ['symfony_messenger', 'symfony_event_dispatcher'],
             'security' => ['symfony_authorization_checker'],
         ])->end();
 
