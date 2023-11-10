@@ -8,15 +8,17 @@ namespace OpenClassrooms\ServiceProxy\Attribute;
 final class Cache extends Attribute
 {
     /**
-     * @param array<int, string> $tags
+     * @param array<string>|string|null $handler
      * @param array<int, string> $pools
+     * @param array<int, string> $tags
      */
     public function __construct(
-        protected ?string     $handler = null,
+        array|string|null     $handler = null,
         public readonly array $pools = [],
         public readonly ?int  $ttl = null,
         public readonly array $tags = [],
     ) {
         parent::__construct();
+        $this->setHandlers($handler);
     }
 }

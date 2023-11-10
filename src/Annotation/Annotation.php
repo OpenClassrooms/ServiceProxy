@@ -6,11 +6,10 @@ namespace OpenClassrooms\ServiceProxy\Annotation;
 
 abstract class Annotation
 {
-    protected ?string $handler = null;
-
-    protected int $prefixPriority = 0;
-
-    protected int $suffixPriority = 0;
+    /**
+     * @var array<string>|null
+     */
+    protected array|string|null $handler = null;
 
     /**
      * @param array<string, mixed> $data Key-value for properties to be defined in this class.
@@ -40,8 +39,6 @@ abstract class Annotation
     }
 
     /**
-     * @param string $name Unknown property name.
-     *
      * @throws \BadMethodCallException
      */
     final public function __isset(string $name): bool
@@ -52,47 +49,28 @@ abstract class Annotation
     }
 
     /**
-     * @param string $name  Unknown property name.
-     * @param mixed  $value Property value.
-     *
      * @throws \BadMethodCallException
      */
-    final public function __set(string $name, $value): void
+    final public function __set(string $name, mixed $value): void
     {
         throw new \BadMethodCallException(
             sprintf("Unknown property '%s' on annotation '%s'.", $name, static::class)
         );
     }
 
-    final public function getHandler(): ?string
+    /**
+     * @return array<string>
+     */
+    final public function getHandlers(): array
     {
-        return $this->handler;
-    }
-
-    final public function getPrefixPriority(): int
-    {
-        return $this->prefixPriority;
-    }
-
-    final public function getSuffixPriority(): int
-    {
-        return $this->suffixPriority;
-    }
-
-    final public function setPrefixPriority(int $prefixPriority): void
-    {
-        $this->prefixPriority = $prefixPriority;
-    }
-
-    final public function setSuffixPriority(int $suffixPriority): void
-    {
-        $this->suffixPriority = $suffixPriority;
+        return (array) ($this->handler ?? []);
     }
 
     /**
-     * @param array<string, null|string> $aliases
+     * @param array<string, string>|string|null $handlers
+     * @param array<string, array<string>|string|null> $aliases
      */
-    final protected function setHandler(?string $handler = null, array $aliases = []): void
+    final protected function setHandlers(array|string|null $handlers = null, array $aliases = []): void
     {
         if (\count($aliases) > 0) {
             $values = array_values($aliases);
@@ -106,7 +84,7 @@ abstract class Annotation
 
             $this->handler = $values[0] ?? $values[1];
         } else {
-            $this->handler = $handler;
+            $this->handler = $handlers;
         }
     }
 }

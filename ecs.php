@@ -32,6 +32,7 @@ use PhpCsFixer\Fixer\PhpUnit\PhpUnitTestClassRequiresCoversFixer;
 use PhpCsFixer\Fixer\Strict\DeclareStrictTypesFixer;
 use PhpCsFixer\Fixer\Strict\StrictParamFixer;
 use Symplify\CodingStandard\Fixer\LineLength\LineLengthFixer;
+use Symplify\CodingStandard\Fixer\Spacing\MethodChainingNewlineFixer;
 use Symplify\EasyCodingStandard\Config\ECSConfig;
 use Symplify\EasyCodingStandard\ValueObject\Set\SetList;
 
@@ -58,6 +59,7 @@ return static function (ECSConfig $ecsConfig): void {
             PhpUnitInternalClassFixer::class,
             PhpdocToCommentFixer::class,
             FunctionTypehintSpaceFixer::class,
+            MethodChainingNewlineFixer::class,
         ]
     );
 

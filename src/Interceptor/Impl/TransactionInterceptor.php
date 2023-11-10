@@ -9,8 +9,8 @@ use OpenClassrooms\ServiceProxy\Handler\Contract\TransactionHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
-use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
-use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
+use OpenClassrooms\ServiceProxy\Model\Request\Instance;
+use OpenClassrooms\ServiceProxy\Model\Response\Response;
 
 final class TransactionInterceptor extends AbstractInterceptor implements PrefixInterceptor, SuffixInterceptor
 {
@@ -18,8 +18,11 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
     {
         $attribute = $instance->getMethod()
             ->getAttribute(Transaction::class);
-        $handler = $this->getHandler(TransactionHandler::class, $attribute);
-        $handler->begin($attribute->entityManagers);
+
+        $handlers = $this->getHandlers(TransactionHandler::class, $attribute);
+        foreach ($handlers as $handler) {
+            $handler->begin($attribute->entityManagers);
+        }
 
         return new Response();
     }
@@ -31,15 +34,18 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
     {
         $attribute = $instance->getMethod()
             ->getAttribute(Transaction::class);
-        $handler = $this->getHandler(TransactionHandler::class, $attribute);
-        if ($instance->getMethod()->threwException()) {
-            $handler->rollback($attribute->entityManagers);
 
-            if ($attribute->hasMappedExceptions()) {
-                $this->handleMappedException($instance, $attribute);
+        $handlers = $this->getHandlers(TransactionHandler::class, $attribute);
+        foreach ($handlers as $handler) {
+            if ($instance->getMethod()->threwException()) {
+                $handler->rollback($attribute->entityManagers);
+
+                if ($attribute->hasMappedExceptions()) {
+                    $this->handleMappedException($instance, $attribute);
+                }
+            } else {
+                $handler->commit($attribute->entityManagers);
             }
-        } else {
-            $handler->commit($attribute->entityManagers);
         }
 
         return new Response();

@@ -29,11 +29,12 @@ final class ServiceProxyPass implements CompilerPassInterface
     {
         $serviceProxyIds = [];
         $taggedServices = $this->container->findTaggedServiceIds('openclassrooms.service_proxy');
-        foreach ($taggedServices as $taggedServiceName => $tagParameters) {
-            $this->buildServiceProxyFactoryDefinition($taggedServiceName);
-            $serviceProxyIds[] = $taggedServiceName;
-            $this->compiler->log($this, 'Add proxy for ' . $taggedServiceName . ' service.');
+        foreach ($taggedServices as $taggedServiceId => $tagParameters) {
+            $this->buildServiceProxyFactoryDefinition($taggedServiceId);
+            $serviceProxyIds[] = $taggedServiceId;
+            $this->compiler->log($this, "Add proxy for {$taggedServiceId} service.");
         }
+
         $this->container->setParameter('openclassrooms.service_proxy.service_proxy_ids', $serviceProxyIds);
     }
 

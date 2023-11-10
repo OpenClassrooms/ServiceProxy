@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Interceptor\Request;
+namespace OpenClassrooms\ServiceProxy\Model\Request;
 
 use Doctrine\Common\Annotations\AnnotationException;
 use Doctrine\Common\Annotations\AnnotationReader;
@@ -21,7 +21,6 @@ final class Instance
 
     /**
      * @param array<string, mixed>|null $parameters
-     * @param mixed $response
      *
      * @throws \ReflectionException
      * @throws AnnotationException
@@ -30,7 +29,7 @@ final class Instance
         object $object,
         string $methodName,
         ?array $parameters = null,
-        $response = null
+        mixed $response = null
     ): self {
         $annotationReader = new AnnotationReader();
         $reflection = new \ReflectionObject($object);
@@ -75,10 +74,7 @@ final class Instance
         return $this;
     }
 
-    /**
-     * @param mixed $response
-     */
-    public function setResponse($response): self
+    public function setResponse(mixed $response): self
     {
         $this->method->setResponse($response);
 

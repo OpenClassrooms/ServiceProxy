@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Interceptor\Impl;
 
 use OpenClassrooms\ServiceProxy\Attribute\Cache;
-use OpenClassrooms\ServiceProxy\ExpressionLanguage\ExpressionResolver;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Helper\TypesExtractor;
 use OpenClassrooms\ServiceProxy\Interceptor\Config\CacheInterceptorConfig;
@@ -13,8 +12,9 @@ use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Exception\InternalCodeRetrievalException;
-use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
-use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
+use OpenClassrooms\ServiceProxy\Model\Request\Instance;
+use OpenClassrooms\ServiceProxy\Model\Response\Response;
+use OpenClassrooms\ServiceProxy\Util\Expression;
 use Symfony\Component\PropertyInfo\Type;
 
 final class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
@@ -33,8 +33,6 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
      */
     private static array $misses = [];
 
-    private ExpressionResolver $expressionResolver;
-
     private TypesExtractor $typesExtractor;
 
     public function __construct(
@@ -42,8 +40,6 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         iterable                                $handlers = [],
     ) {
         parent::__construct($handlers);
-
-        $this->expressionResolver = new ExpressionResolver();
 
         $this->typesExtractor = new TypesExtractor();
     }
@@ -90,7 +86,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             return new Response(null, false);
         }
 
-        $handler = $this->getHandler(CacheHandler::class, $attribute);
+        $handler = $this->getHandlers(CacheHandler::class, $attribute)[0];
 
         $missedPools = [];
 
@@ -141,7 +137,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             ->getResponse()
         ;
 
-        $handler = $this->getHandler(CacheHandler::class, $attribute);
+        $handler = $this->getHandlers(CacheHandler::class, $attribute)[0];
         $pools = \count($attribute->pools) === 0 ? [self::DEFAULT_POOL_NAME] : $attribute->pools;
 
         foreach ($pools as $pool) {
@@ -286,7 +282,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             ->getParameters();
 
         $tags = array_map(
-            fn (string $expression) => $this->expressionResolver->resolve($expression, $parameters),
+            static fn (string $expression) => Expression::evaluateToString($expression, $parameters),
             $attribute->tags
         );
 

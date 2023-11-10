@@ -14,10 +14,11 @@ parameters:
         - '/Method .+ has parameter .+ with a nullable type declaration./'
         - '/Language construct isset\(\) should not be used./'
         - '/.+ is not allowed to extend ".+"./'
-        - '/Short ternary operator is not allowed.+/'
         - '/Method .+OpenClassroomsServiceProxyBundle.+ has a parameter \$container/'
         - '/Method .+ServiceProxy.+ has a parameter \$container/'
-
+        - '/Call to static method Webmozart\\Assert\\Assert::allIsInstanceOf\(\) with/'
+        - '/Function compact\(\) should not be used/'
+        - '/In method .+, caught "Throwable" must be rethrown. Either catch a more specific exception or add a "throw" clause in the "catch" block to propagate the exception./'
     exceptions:
         check:
             missingCheckedExceptionInThrows: true

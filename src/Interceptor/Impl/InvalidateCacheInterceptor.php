@@ -5,25 +5,16 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Interceptor\Impl;
 
 use OpenClassrooms\ServiceProxy\Attribute\InvalidateCache;
-use OpenClassrooms\ServiceProxy\ExpressionLanguage\ExpressionResolver;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
-use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
-use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
+use OpenClassrooms\ServiceProxy\Model\Request\Instance;
+use OpenClassrooms\ServiceProxy\Model\Response\Response;
+use OpenClassrooms\ServiceProxy\Util\Expression;
 
 final class InvalidateCacheInterceptor extends AbstractInterceptor implements SuffixInterceptor
 {
     private string $defaultPoolName = 'default';
-
-    private ExpressionResolver $expressionResolver;
-
-    public function __construct(iterable $handlers = [])
-    {
-        parent::__construct($handlers);
-
-        $this->expressionResolver = new ExpressionResolver();
-    }
 
     public function suffix(Instance $instance): Response
     {
@@ -34,7 +25,7 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
         $attribute = $instance->getMethod()
             ->getAttribute(InvalidateCache::class);
 
-        $handler = $this->getHandler(CacheHandler::class, $attribute);
+        $handler = $this->getHandlers(CacheHandler::class, $attribute)[0];
         $pools = \count($attribute->pools) === 0 ? [$this->defaultPoolName] : $attribute->pools;
 
         $tags = $this->getTags($instance, $attribute);
@@ -67,7 +58,7 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
         ;
 
         $tags = array_map(
-            fn (string $expression) => $this->expressionResolver->resolve($expression, $parameters),
+            static fn (string $expression) => Expression::evaluateToString($expression, $parameters),
             $attribute->tags
         );
 

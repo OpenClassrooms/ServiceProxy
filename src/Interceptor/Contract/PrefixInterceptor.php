@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Interceptor\Contract;
 
-use OpenClassrooms\ServiceProxy\Interceptor\Request\Instance;
-use OpenClassrooms\ServiceProxy\Interceptor\Response\Response;
+use OpenClassrooms\ServiceProxy\Model\Request\Instance;
+use OpenClassrooms\ServiceProxy\Model\Response\Response;
 
 interface PrefixInterceptor
 {

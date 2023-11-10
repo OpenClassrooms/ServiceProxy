@@ -2,30 +2,21 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Interceptor\Response;
+namespace OpenClassrooms\ServiceProxy\Model\Response;
 
 final class Response
 {
     private bool $earlyReturn;
 
-    /**
-     * @var mixed
-     */
-    private $value;
+    private mixed $value;
 
-    /**
-     * @param mixed $value
-     */
-    public function __construct($value = null, bool $earlyReturn = false)
+    public function __construct(mixed $value = null, bool $earlyReturn = false)
     {
         $this->value = $value;
         $this->earlyReturn = $earlyReturn;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getValue()
+    public function getValue(): mixed
     {
         return $this->value;
     }

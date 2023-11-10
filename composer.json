@@ -33,8 +33,8 @@
     "symfony/filesystem": "^5.0 || ^6.0",
     "symfony/property-info": "^5.0 || ^6.0",
     "phpdocumentor/reflection-docblock": "^5.0",
-    "webmozart/assert": "^1.11",
-    "phpstan/phpdoc-parser": "^1.24"
+    "phpstan/phpdoc-parser": "^1.24",
+    "webmozart/assert": "^1.11"
   },
   "require-dev": {
     "phpunit/phpunit": "^9.5",
@@ -58,17 +58,26 @@
     "symfony/security-bundle": "^5.0 || ^6.0",
     "symfony/messenger": "^5.0 || ^6.0",
     "doctrine/orm": "~2.5 || ^3.0",
-    "symfony/stopwatch": "^5.0 || ^6.0"
+    "symfony/stopwatch": "^5.0 || ^6.0",
+    "symfony/serializer": "^5.0 || ^6.0",
+    "symfony/http-client": "^5.0 || ^6.0",
+    "symfony/uid": "^5.0 || ^6.0",
+    "symfony/http-foundation": "^5.0 || ^6.0",
+    "phpstan/phpstan-webmozart-assert": "^1.2"
   },
   "suggest": {
     "symfony/dependency-injection": "For Symfony integration",
     "symfony/config": "For Symfony integration",
-    "symfony/cache": "For Symfony integration with @Cache annotation",
+    "symfony/cache": "For Symfony integration with Cache",
     "symfony/http-kernel": "For Symfony integration",
-    "symfony/event-dispatcher": "For Symfony integration with @Event annotation",
-    "symfony/security-bundle": "For Symfony integration with @Security annotation",
-    "symfony/messenger": "For Symfony integration with @Event annotation",
-    "doctrine/orm": "For Doctrine integration with @Transaction and legacy @Cache annotation"
+    "symfony/event-dispatcher": "For Symfony integration with Event",
+    "symfony/messenger": "For Symfony integration with Event",
+    "symfony/http-client": "For Symfony integration with Event",
+    "symfony/http-foundation": "For Symfony integration with Event",
+    "symfony/uid": "For Symfony integration with Event",
+    "symfony/serializer": "For Symfony integration with Event",
+    "symfony/security-bundle": "For Symfony integration with Security",
+    "doctrine/orm": "For Doctrine integration with Transaction and legacy Cache"
   },
   "extra": {
     "branch-alias": {

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
-use OpenClassrooms\ServiceProxy\Configuration;
 use OpenClassrooms\ServiceProxy\Interceptor\Config\CacheInterceptorConfig;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\CacheInterceptor;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
+use OpenClassrooms\ServiceProxy\ProxyFactoryConfiguration;
 use OpenClassrooms\ServiceProxy\Tests\CacheTestTrait;
 use Symfony\Component\Filesystem\Filesystem;
 
@@ -27,7 +27,7 @@ $cacheHandlerMock = (new class() {
 $cacheInterceptor = new CacheInterceptor($config, [$cacheHandlerMock]);
 
 $proxyFactory = new ProxyFactory(
-    new Configuration($cacheDir),
+    new ProxyFactoryConfiguration($cacheDir),
     [$cacheInterceptor],
     [$cacheInterceptor]
 );

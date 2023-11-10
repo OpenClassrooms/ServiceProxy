@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy;
 
-final class Configuration
+final class ProxyFactoryConfiguration
 {
     private string $proxiesDir;
 

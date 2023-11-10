@@ -22,14 +22,12 @@ final class Configuration implements ConfigurationInterface
 
         $cacheDirNode = $children->scalarNode('cache_dir');
         $cacheDirNode->cannotBeEmpty();
-        $cacheDirNode->defaultValue('%kernel.cache_dir%/openclassrooms_service_proxy')
-            ->end();
+        $cacheDirNode->defaultValue('%kernel.cache_dir%/openclassrooms_service_proxy')->end();
 
         $defaultHandlersNode = $children->arrayNode('default_handlers');
         $defaultHandlersNode->useAttributeAsKey('name')
             ->arrayPrototype()
-            ->scalarPrototype()
-            ->end()
+            ->scalarPrototype()->end()
             ->end();
 
         $defaultHandlersNode->defaultValue([

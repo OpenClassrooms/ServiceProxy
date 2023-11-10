@@ -6,7 +6,6 @@ namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
 use OpenClassrooms\ServiceProxy\Annotation\Cache;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
-use OpenClassrooms\ServiceProxy\Handler\Exception\DuplicatedDefaultHandler;
 use OpenClassrooms\ServiceProxy\Handler\Exception\DuplicatedHandler;
 use OpenClassrooms\ServiceProxy\Handler\Exception\HandlerNotFound;
 use OpenClassrooms\ServiceProxy\Handler\Exception\MissingDefaultHandler;
@@ -37,12 +36,6 @@ final class AbstractInterceptorTest extends TestCase
         new CacheInterceptor(new CacheInterceptorConfig(), [new CacheHandlerMock(), new CacheHandlerMock()]);
     }
 
-    public function testWithMultipleDefaultHandlersThrowException(): void
-    {
-        $this->expectException(DuplicatedDefaultHandler::class);
-        new CacheInterceptor(new CacheInterceptorConfig(), [new CacheHandlerMock(), new CacheHandlerMock('other')]);
-    }
-
     public function testWithMultipleHandlersNoDefaultThrowException(): void
     {
         $this->expectException(MissingDefaultHandler::class);
@@ -58,12 +51,12 @@ final class AbstractInterceptorTest extends TestCase
             new CacheHandlerMock(),
             new CacheHandlerMock('other', false),
         ]);
-        $handler = $interceptor->getHandler(
+        $handler = $interceptor->getHandlers(
             CacheHandler::class,
             new Cache([
                 'handler' => 'other',
             ])
-        );
+        )[0];
         $this->assertSame('other', $handler->getName());
     }
 
@@ -72,10 +65,10 @@ final class AbstractInterceptorTest extends TestCase
         $interceptor = new CacheInterceptor(new CacheInterceptorConfig(), [
             new CacheHandlerMock('other', false),
         ]);
-        $handler = $interceptor->getHandler(
+        $handler = $interceptor->getHandlers(
             CacheHandler::class,
             new Cache()
-        );
+        )[0];
         $this->assertSame('other', $handler->getName());
     }
 }

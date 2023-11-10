@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests;
 
-use OpenClassrooms\ServiceProxy\Configuration;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
+use OpenClassrooms\ServiceProxy\ProxyFactoryConfiguration;
 use PHPUnit\Framework\TestCase as Assert;
 use ProxyManager\Proxy\AccessInterceptorInterface;
 use ProxyManager\Proxy\ValueHolderInterface;
@@ -43,7 +43,7 @@ trait ProxyTestTrait
     private function getProxyFactory(array $interceptors): ProxyFactory
     {
         return new ProxyFactory(
-            new Configuration(self::$cacheDir),
+            new ProxyFactoryConfiguration(self::$cacheDir),
             $interceptors,
             $interceptors,
         );

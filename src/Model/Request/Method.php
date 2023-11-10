@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Interceptor\Request;
+namespace OpenClassrooms\ServiceProxy\Model\Request;
 
 use OpenClassrooms\ServiceProxy\Annotation\Annotation;
+use OpenClassrooms\ServiceProxy\Attribute\Attribute;
 
 final class Method
 {
@@ -95,7 +96,7 @@ final class Method
     }
 
     /**
-     * @template T of Annotation
+     * @template T of Attribute
      *
      * @param class-string<T> $attributeClass
      *
@@ -124,6 +125,23 @@ final class Method
         }
 
         return $attributes;
+    }
+
+    /**
+     * @template T of Attribute
+     *
+     * @param class-string<T>|null $attributeClass
+     *
+     * @return array<int, T>
+     */
+    public function getAttributesInstances(?string $attributeClass = null): array
+    {
+        $attributes = $this->getAttributes($attributeClass);
+
+        return array_map(
+            static fn (\ReflectionAttribute $attribute) => $attribute->newInstance(),
+            $attributes
+        );
     }
 
     public function getName(): string
