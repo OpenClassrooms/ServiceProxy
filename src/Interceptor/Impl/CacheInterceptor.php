@@ -301,9 +301,11 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
     /**
      * @param array<class-string> $excludedClasses
+     * @param array<string, string> $registeredTags
+     *
      * @return array<string, string>
      */
-    private function guessObjectsTags(mixed $object, array $excludedClasses = []): array
+    private function guessObjectsTags(mixed $object, array $excludedClasses = [], array $registeredTags = []): array
     {
         if (!\is_object($object)) {
             return [];
@@ -311,41 +313,65 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
         foreach ($excludedClasses as $excludedClass) {
             if ($object instanceof $excludedClass) {
-                return [];
+                return $registeredTags;
             }
         }
 
         $ref = new \ReflectionClass($object);
 
-        $tags = [];
+        $objectTag = $this->buildTag($ref, $object);
+
+        if (isset($registeredTags[$objectTag])) {
+            return $registeredTags;
+        }
+
+        if ($objectTag !== null) {
+            $registeredTags[$objectTag] = $objectTag;
+        }
+
         foreach ($ref->getProperties() as $propRef) {
-            if (!$propRef->isInitialized($object)) {
+            if ($propRef->getName() === self::AUTO_TAG_PROPERTY_NAME) {
                 continue;
             }
-            $getter = 'get' . ucfirst(self::AUTO_TAG_PROPERTY_NAME);
-            if ($propRef->getName() === self::AUTO_TAG_PROPERTY_NAME || $ref->hasMethod($getter)) {
-                $tag =
-                    str_replace('\\', '.', \get_class($object))
-                    .
-                    '.'
-                    . $this->getPropertyValue($ref, $object, self::AUTO_TAG_PROPERTY_NAME);
-                if (isset($tags[$tag])) {
-                    return $tags;
-                }
-                $tags[$tag] = $tag;
-                continue;
-            }
+
             $subObject = $this->getPropertyValue($ref, $object, $propRef->getName());
             if (is_iterable($subObject)) {
                 foreach ($subObject as $item) {
-                    $tags = [...$tags, ...$this->guessObjectsTags($item, $excludedClasses)];
+                    $registeredTags = [
+                        ...$registeredTags,
+                        ...$this->guessObjectsTags($item, $excludedClasses, $registeredTags),
+                    ];
                 }
             } else {
-                $tags = [...$tags, ...$this->guessObjectsTags($subObject, $excludedClasses)];
+                $registeredTags = [
+                    ...$registeredTags,
+                    ...$this->guessObjectsTags($subObject, $excludedClasses, $registeredTags),
+                ];
             }
         }
 
-        return $tags;
+        return $registeredTags;
+    }
+
+    /**
+     * @param \ReflectionClass<object> $ref
+     */
+    private function buildTag(\ReflectionClass $ref, object $object): ?string
+    {
+        try {
+            $propRef = $ref->getProperty(self::AUTO_TAG_PROPERTY_NAME);
+        } catch (\ReflectionException $e) {
+            return null;
+        }
+
+        if (!$propRef->isInitialized($object)) {
+            return null;
+        }
+
+        return str_replace('\\', '.', \get_class($object))
+            .
+            '.'
+            . $this->getPropertyValue($ref, $object, $propRef->getName());
     }
 
     /**
@@ -355,10 +381,15 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     {
         $getter = 'get' . ucfirst($propertyName);
         $refMethod = $ref->hasMethod($getter) ? $ref->getMethod($getter) : null;
-        if ($refMethod !== null && $refMethod->isPublic()) {
+        if ($refMethod !== null && $refMethod->isPublic() && \count($refMethod->getParameters()) === 0) {
             return $refMethod->invoke($object);
         }
+
         $propRef = $ref->getProperty($propertyName);
+        if (!$propRef->isInitialized($object)) {
+            return null;
+        }
+
         $propRef->setAccessible(true);
 
         return $propRef->getValue($object);
