@@ -9,6 +9,7 @@ use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Helper\TypesExtractor;
 use OpenClassrooms\ServiceProxy\Interceptor\Config\CacheInterceptorConfig;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Contract\Cache\AutoTaggable;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Exception\InternalCodeRetrievalException;
@@ -20,8 +21,6 @@ use Symfony\Component\PropertyInfo\Type;
 final class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
     private const DEFAULT_POOL_NAME = 'default';
-
-    private const AUTO_TAG_PROPERTY_NAME = 'id';
 
     /**
      * @var string[][]
@@ -311,61 +310,44 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             return $registeredTags;
         }
 
+        if (!$object instanceof AutoTaggable) {
+            return $registeredTags;
+        }
+
         foreach ($excludedClasses as $excludedClass) {
             if ($object instanceof $excludedClass) {
                 return $registeredTags;
             }
         }
 
-        $ref = new \ReflectionClass($object);
+        $tag = $this->buildTag($object);
 
-        $objectTag = $this->buildTag($ref, $object);
-
-        if (isset($registeredTags[$objectTag])) {
+        if (isset($registeredTags[$tag])) {
             return $registeredTags;
         }
 
-        if ($objectTag !== null) {
-            $registeredTags[$objectTag] = $objectTag;
-        }
+        $registeredTags[$tag] = $tag;
+
+        $ref = new \ReflectionClass($object);
 
         foreach ($ref->getProperties() as $propRef) {
-            if ($propRef->getName() === self::AUTO_TAG_PROPERTY_NAME) {
-                continue;
+            $subObject = $this->getPropertyValue($ref, $object, $propRef->getName());
+
+            if (!is_iterable($subObject)) {
+                $subObject = [$subObject];
             }
 
-            $subObject = $this->getPropertyValue($ref, $object, $propRef->getName());
-            if (is_iterable($subObject)) {
-                foreach ($subObject as $item) {
-                    $registeredTags = $this->guessObjectsTags($item, $excludedClasses, $registeredTags);
-                }
-            } else {
-                $registeredTags = $this->guessObjectsTags($subObject, $excludedClasses, $registeredTags);
+            foreach ($subObject as $item) {
+                $registeredTags = $this->guessObjectsTags($item, $excludedClasses, $registeredTags);
             }
         }
 
         return $registeredTags;
     }
 
-    /**
-     * @param \ReflectionClass<object> $ref
-     */
-    private function buildTag(\ReflectionClass $ref, object $object): ?string
+    private function buildTag(AutoTaggable $object): string
     {
-        try {
-            $propRef = $ref->getProperty(self::AUTO_TAG_PROPERTY_NAME);
-        } catch (\ReflectionException $e) {
-            return null;
-        }
-
-        if (!$propRef->isInitialized($object)) {
-            return null;
-        }
-
-        return str_replace('\\', '.', \get_class($object))
-            .
-            '.'
-            . $this->getPropertyValue($ref, $object, $propRef->getName());
+        return str_replace('\\', '.', \get_class($object)) . '.' . $object->getId();
     }
 
     /**
