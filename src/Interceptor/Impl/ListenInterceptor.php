@@ -37,21 +37,6 @@ final class ListenInterceptor extends AbstractInterceptor implements StartUpInte
         return new Response();
     }
 
-    private function isInfinityLoop(string $eventName, string $className): bool
-    {
-        $pattern = '#^('.\implode('|', \array_column(Moment::cases(), 'value')).')\.#';
-        if (\preg_match($pattern, $eventName) === 1) {
-            $eventNameWithoutPrefix = \explode('.', $eventName)[1];
-        } else {
-            $eventNameWithoutPrefix = \explode('.', $eventName)[0];
-        }
-        $eventShortName = \str_replace('_', '', \ucwords($eventNameWithoutPrefix, '_'));
-        $tmp = \explode('\\', $className);
-        $classShortName = \array_pop($tmp);
-
-        return $eventShortName === $classShortName;
-    }
-
     public function supportsStartUp(Instance $instance): bool
     {
         return $instance->getMethod()
@@ -61,5 +46,20 @@ final class ListenInterceptor extends AbstractInterceptor implements StartUpInte
     public function getStartUpPriority(): int
     {
         return 0;
+    }
+
+    private function isInfinityLoop(string $eventName, string $className): bool
+    {
+        $pattern = '#^(' . implode('|', array_column(Moment::cases(), 'value')) . ')\.#';
+        if (preg_match($pattern, $eventName) === 1) {
+            $eventNameWithoutPrefix = explode('.', $eventName)[1];
+        } else {
+            $eventNameWithoutPrefix = explode('.', $eventName)[0];
+        }
+        $eventShortName = str_replace('_', '', ucwords($eventNameWithoutPrefix, '_'));
+        $tmp = explode('\\', $className);
+        $classShortName = array_pop($tmp);
+
+        return $eventShortName === $classShortName;
     }
 }

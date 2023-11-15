@@ -43,7 +43,10 @@ final class HttpEventHandler implements EventHandler
     {
         $message = $this->createMessage($event, $queue);
         $response = $this->httpClient->request('POST', $this->config->brokerEndpoint, [
-            'body' => $this->serializer->serialize(['context' => $message->context, 'body' => $message->body], 'json'),
+            'body' => $this->serializer->serialize([
+                'context' => $message->context,
+                'body' => $message->body,
+            ], 'json'),
             'headers' => [
                 ...$message->headers,
                 'x-api-key' => $this->config->brokerApiKey,
