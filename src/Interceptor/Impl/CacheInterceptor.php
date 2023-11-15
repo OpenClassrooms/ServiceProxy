@@ -308,7 +308,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     private function guessObjectsTags(mixed $object, array $excludedClasses = [], array $registeredTags = []): array
     {
         if (!\is_object($object)) {
-            return [];
+            return $registeredTags;
         }
 
         foreach ($excludedClasses as $excludedClass) {
@@ -337,16 +337,10 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             $subObject = $this->getPropertyValue($ref, $object, $propRef->getName());
             if (is_iterable($subObject)) {
                 foreach ($subObject as $item) {
-                    $registeredTags = [
-                        ...$registeredTags,
-                        ...$this->guessObjectsTags($item, $excludedClasses, $registeredTags),
-                    ];
+                    $registeredTags = $this->guessObjectsTags($item, $excludedClasses, $registeredTags);
                 }
             } else {
-                $registeredTags = [
-                    ...$registeredTags,
-                    ...$this->guessObjectsTags($subObject, $excludedClasses, $registeredTags),
-                ];
+                $registeredTags = $this->guessObjectsTags($subObject, $excludedClasses, $registeredTags);
             }
         }
 
