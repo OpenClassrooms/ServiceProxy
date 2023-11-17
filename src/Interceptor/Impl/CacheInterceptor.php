@@ -6,39 +6,57 @@ namespace OpenClassrooms\ServiceProxy\Interceptor\Impl;
 
 use OpenClassrooms\ServiceProxy\Attribute\Cache;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
+use OpenClassrooms\ServiceProxy\Helper\TypesExtractor;
+use OpenClassrooms\ServiceProxy\Interceptor\Config\CacheInterceptorConfig;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Contract\Cache\AutoTaggable;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Exception\InternalCodeRetrievalException;
 use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 use OpenClassrooms\ServiceProxy\Model\Response\Response;
 use OpenClassrooms\ServiceProxy\Util\Expression;
+use Symfony\Component\PropertyInfo\Type;
 
 final class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
+    private const DEFAULT_POOL_NAME = 'default';
+
     /**
-     * @var string[]
+     * @var string[][]
      */
     private static array $hits = [];
 
     /**
-     * @var string[]
+     * @var string[][]
      */
     private static array $misses = [];
 
-    /**
-     * @return string[]
-     */
-    public static function getHits(): array
-    {
-        return self::$hits;
+    private TypesExtractor $typesExtractor;
+
+    public function __construct(
+        private readonly CacheInterceptorConfig $config,
+        iterable                                $handlers = [],
+    ) {
+        parent::__construct($handlers);
+
+        $this->typesExtractor = new TypesExtractor();
     }
 
     /**
-     * @return string[]
+     * @return array<int, string>
      */
-    public static function getMisses(): array
+    public static function getHits(?string $poolName = self::DEFAULT_POOL_NAME): array
     {
-        return self::$misses;
+        return self::$hits[$poolName] ?? [];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public static function getMisses(?string $poolName = self::DEFAULT_POOL_NAME): array
+    {
+        return self::$misses[$poolName] ?? [];
     }
 
     public function prefix(Instance $instance): Response
@@ -56,23 +74,50 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             ->getReturnType()
         ;
 
+        $pools = \count($attribute->pools) === 0 ? [self::DEFAULT_POOL_NAME] : $attribute->pools;
+
         if ($returnType instanceof \ReflectionNamedType && $returnType->getName() === 'void') {
-            self::$misses[] = $cacheKey;
+            self::$misses = array_combine(
+                $pools,
+                [array_fill(0, \count($pools), $cacheKey)]
+            );
 
             return new Response(null, false);
         }
 
         $handler = $this->getHandlers(CacheHandler::class, $attribute)[0];
 
-        if ($handler->contains($cacheKey) === false) {
-            self::$misses[] = $cacheKey;
+        $missedPools = [];
 
-            return new Response(null, false);
+        foreach ($pools as $pool) {
+            if (!$handler->contains($pool, $cacheKey)) {
+                $missedPools[] = $pool;
+
+                self::$misses[$pool] = self::$misses[$pool] ?? [];
+                self::$misses[$pool][] = $cacheKey;
+
+                continue;
+            }
+
+            $data = $handler->fetch($pool, $cacheKey);
+
+            self::$hits[$pool] = self::$hits[$pool] ?? [];
+            self::$hits[$pool][] = $cacheKey;
+
+            foreach ($missedPools as $missedPool) {
+                $handler->save(
+                    $missedPool,
+                    $cacheKey,
+                    $data,
+                    $attribute->ttl ?? $this->config->defaultTtl,
+                    $this->getTags($instance, $attribute, $data)
+                );
+            }
+
+            return new Response($data, true);
         }
 
-        self::$hits[] = $cacheKey;
-
-        return new Response($handler->fetch($cacheKey), true);
+        return new Response(null, false);
     }
 
     public function suffix(Instance $instance): Response
@@ -92,13 +137,17 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         ;
 
         $handler = $this->getHandlers(CacheHandler::class, $attribute)[0];
+        $pools = \count($attribute->pools) === 0 ? [self::DEFAULT_POOL_NAME] : $attribute->pools;
 
-        $handler->save(
-            $cacheKey,
-            $data,
-            $attribute->getLifetime(),
-            $this->getTags($instance, $attribute)
-        );
+        foreach ($pools as $pool) {
+            $handler->save(
+                $pool,
+                $cacheKey,
+                $data,
+                $attribute->ttl ?? $this->config->defaultTtl,
+                $this->getTags($instance, $attribute, $data)
+            );
+        }
 
         return new Response($data);
     }
@@ -126,37 +175,67 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
     private function buildCacheKey(Instance $instance, Cache $attribute): string
     {
-        $method = $instance->getMethod();
-
-        $parameters = $method->getParameters();
-
-        $identifier = $instance->getReflection()
-            ->getName() . '.' . $method->getName();
-
-        if (\count($parameters) > 0) {
-            foreach ($parameters as $parameterName => $parameterValue) {
-                $identifier .= '.' . $parameterName . '.' . hash('xxh3', serialize($parameterValue));
-            }
-        }
-
-        $identifier = array_reduce(
-            $this->getTags($instance, $attribute),
-            static fn (string $identifier, string $tag) => $identifier .= '.' . $tag,
-            $identifier
+        $identifier = implode(
+            '.',
+            [
+                $instance->getReflection()
+                    ->getName(),
+                $instance->getMethod()
+                    ->getName(),
+                $this->getParametersHash($instance->getMethod()->getParameters()),
+                ...$this->getTags($instance, $attribute),
+                $attribute->ttl,
+                $this->getInnerCode($instance->getMethod()->getReflection()),
+                $this->getTypesInnerCode($instance->getMethod()->getReflection()),
+            ],
         );
-
-        $identifier .= $this->getMethodCode($method->getReflection());
 
         return hash('xxh3', $identifier);
     }
 
-    private function getMethodCode(\ReflectionMethod $reflectionMethod): string
+    private function getTypesInnerCode(\ReflectionMethod $method): string
     {
-        $methodName = $reflectionMethod->getName();
-        $filename = $reflectionMethod->getFileName();
+        $types = $this->typesExtractor->extractFromMethod($method);
+
+        return array_reduce(
+            $types,
+            fn (string $code, string $classname): string => $this->getTypeInnerCode(
+                $classname,
+                $code
+            ),
+            '',
+        );
+    }
+
+    private function getTypeInnerCode(string $type, string $code): string
+    {
+        if (\in_array($type, Type::$builtinTypes, true)) {
+            return $code . '.' . $type;
+        }
+
+        if (!class_exists($type) && !interface_exists($type)) {
+            return $code . '.' . $type;
+        }
+
+        try {
+            $returnClassCode = $this->getInnerCode(new \ReflectionClass($type));
+        } catch (InternalCodeRetrievalException) {
+            $returnClassCode = '';
+        }
+
+        return $code . '.' . $type . '.' . $returnClassCode;
+    }
+
+    /**
+     * @param \ReflectionMethod|\ReflectionClass<object> $reflection
+     */
+    private function getInnerCode(\ReflectionMethod|\ReflectionClass $reflection): string
+    {
+        $name = $reflection->getName();
+        $filename = $reflection->getFileName();
 
         if ($filename === false) {
-            throw new \RuntimeException("Method {$methodName} seems to be an internal method.");
+            throw new InternalCodeRetrievalException($name);
         }
 
         $file = file($filename);
@@ -165,16 +244,16 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             throw new \LogicException("Unable to open file {$filename}.");
         }
 
-        $startLine = $reflectionMethod->getStartLine();
+        $startLine = $reflection->getStartLine();
 
         if ($startLine === false) {
-            throw new \LogicException("Unable to find {$methodName} start line.");
+            throw new \LogicException("Unable to find {$name} start line.");
         }
 
-        $endLine = $reflectionMethod->getEndLine();
+        $endLine = $reflection->getEndLine();
 
         if ($endLine === false) {
-            throw new \LogicException("Unable to find {$methodName} end line.");
+            throw new \LogicException("Unable to find {$name} end line.");
         }
 
         $length = $endLine - $startLine;
@@ -183,7 +262,11 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $code = preg_replace('/\s+/', '', implode('', $code));
 
         if ($code === null) {
-            throw new \RuntimeException("An error occurd while cleaning {$methodName} method's code.");
+            throw new \RuntimeException(sprintf(
+                'An error occurred while cleaning %s %s\'s code.',
+                $name,
+                $reflection instanceof \ReflectionMethod ? 'method' : 'class',
+            ));
         }
 
         return $code;
@@ -192,16 +275,114 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     /**
      * @return array<int, string>
      */
-    private function getTags(Instance $instance, Cache $attribute): array
+    private function getTags(Instance $instance, Cache $attribute, mixed $response = null): array
     {
         $parameters = $instance->getMethod()
             ->getParameters();
 
         $tags = array_map(
             static fn (string $expression) => Expression::evaluateToString($expression, $parameters),
-            $attribute->getTags()
+            $attribute->tags
         );
 
-        return array_filter($tags);
+        if ($response !== null) {
+            $tags = array_values(array_filter([
+                ...$tags,
+                ...$this->guessObjectsTags(
+                    $response,
+                    $this->config->autoTagsExcludedClasses
+                ),
+            ]));
+        }
+
+        return $tags;
+    }
+
+    /**
+     * @param array<class-string> $excludedClasses
+     * @param array<string, string> $registeredTags
+     *
+     * @return array<string, string>
+     */
+    private function guessObjectsTags(mixed $object, array $excludedClasses = [], array $registeredTags = []): array
+    {
+        if (!\is_object($object) && !is_iterable($object)) {
+            return $registeredTags;
+        }
+
+        foreach ($excludedClasses as $excludedClass) {
+            if ($object instanceof $excludedClass) {
+                return $registeredTags;
+            }
+        }
+
+        if (is_iterable($object)) {
+            foreach ($object as $item) {
+                $registeredTags = $this->guessObjectsTags($item, $excludedClasses, $registeredTags);
+            }
+
+            return $registeredTags;
+        }
+
+        if (!$object instanceof AutoTaggable) {
+            return $registeredTags;
+        }
+
+        $tag = $this->buildTag($object);
+
+        if (isset($registeredTags[$tag])) {
+            return $registeredTags;
+        }
+
+        $registeredTags[$tag] = $tag;
+
+        $ref = new \ReflectionClass($object);
+
+        foreach ($ref->getProperties() as $propRef) {
+            $subObject = $this->getPropertyValue($ref, $object, $propRef->getName());
+
+            $registeredTags = $this->guessObjectsTags($subObject, $excludedClasses, $registeredTags);
+        }
+
+        return $registeredTags;
+    }
+
+    private function buildTag(AutoTaggable $object): string
+    {
+        return str_replace('\\', '.', \get_class($object)) . '.' . $object->getId();
+    }
+
+    /**
+     * @param \ReflectionClass<object> $ref
+     */
+    private function getPropertyValue(\ReflectionClass $ref, object $object, string $propertyName): mixed
+    {
+        $getter = 'get' . ucfirst($propertyName);
+        $refMethod = $ref->hasMethod($getter) ? $ref->getMethod($getter) : null;
+        if ($refMethod !== null && $refMethod->isPublic() && \count($refMethod->getParameters()) === 0) {
+            return $refMethod->invoke($object);
+        }
+
+        $propRef = $ref->getProperty($propertyName);
+        if (!$propRef->isInitialized($object)) {
+            return null;
+        }
+
+        $propRef->setAccessible(true);
+
+        return $propRef->getValue($object);
+    }
+
+    /**
+     * @param array<string, mixed> $parameters
+     */
+    private function getParametersHash(array $parameters): string
+    {
+        $identifier = '';
+        foreach ($parameters as $parameterName => $parameterValue) {
+            $identifier .= '.' . $parameterName . '.' . serialize($parameterValue);
+        }
+
+        return $identifier;
     }
 }

@@ -26,9 +26,9 @@ final class Configuration implements ConfigurationInterface
 
         $defaultHandlersNode = $children->arrayNode('default_handlers');
         $defaultHandlersNode->useAttributeAsKey('name')
-                            ->arrayPrototype()
-                            ->scalarPrototype()->end()
-                            ->end();
+            ->arrayPrototype()
+            ->scalarPrototype()->end()
+            ->end();
 
         $defaultHandlersNode->defaultValue([
             'cache' => ['array'],
@@ -38,14 +38,30 @@ final class Configuration implements ConfigurationInterface
         ])->end();
 
         $productionEnvsNode = $children->arrayNode('production_environments');
-        $productionEnvsNode->prototype('scalar')->end();
+        $productionEnvsNode->prototype('scalar')
+            ->end();
         $productionEnvsNode->defaultValue(['prod'])->end();
+
+        // $evalNode = $children->arrayNode('use_eval');
+        // $evalNode->prototype('boolean')
+        //     ->end();
+        // $evalNode->defaultValue(false)
+        //     ->end();
 
         $handlersNode = $children->arrayNode('handlers');
         $handlersNode->useAttributeAsKey('name')
-                     ->arrayPrototype()
-                     ->scalarPrototype()->end()
-                     ->end();
+            ->arrayPrototype()
+            ->scalarPrototype()
+            ->end()
+            ->end()
+        ;
+
+        $interceptorsNode = $children->arrayNode('interceptors');
+        $interceptorsNode->useAttributeAsKey('name')
+            ->arrayPrototype()
+            ->variablePrototype()
+            ->end()
+        ;
 
         $children->end();
 

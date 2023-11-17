@@ -38,21 +38,21 @@ final class Event
                 className: $className,
                 moment: $moment,
                 method: $instance->getMethod()
-                                 ->getName(),
+                    ->getName(),
                 name: $name,
             ),
             $instance->getReflection()
-                     ->getName(),
+                ->getName(),
             $instance->getReflection()
-                     ->getShortName(),
+                ->getShortName(),
             $instance->getMethod()
-                     ->getName(),
+                ->getName(),
             $instance->getMethod()
-                     ->getParameters(),
+                ->getParameters(),
             $instance->getMethod()
-                     ->getReturnedValue(),
+                ->getReturnedValue(),
             $instance->getMethod()
-                     ->getException(),
+                ->getException(),
             $moment,
         );
     }

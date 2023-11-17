@@ -104,23 +104,71 @@ final class OpenClassroomsServiceProxyExtension extends Extension
 
         $container->setParameter('openclassrooms.service_proxy.handlers', $config['handlers']);
 
-        foreach ($config['handlers'] as $handlerName => $handler) {
-            $parts = explode('_', preg_replace('/(?<!^)[A-Z]/', '_$0', $handlerName));
-            array_pop($parts);
-            $handlerType = array_pop($parts);
-            $handlerConfigClass = "OpenClassrooms\\ServiceProxy\\Handler\\Config\\{$handlerType}\\{$handlerName}Config";
-            if (!class_exists($handlerConfigClass)) {
-                throw new \InvalidArgumentException(
-                    sprintf('The handler config class "%s" does not exist.', $handlerConfigClass)
-                );
+        $this->autoConfigure($config, $container);
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     */
+    private function autoConfigure(array $config, ContainerBuilder $container): void
+    {
+        $types = ['handler', 'interceptor'];
+        foreach ($types as $type) {
+            $typeKey = $type . 's';
+            /** @var array<string, array<string, mixed>> $elements */
+            $elements = $config[$typeKey] ?? [];
+            foreach ($elements as $name => $element) {
+                $domain = $this->getElementType($name);
+                $args = $this->prefixKeys($element);
+                $configClass = $this->getConfigClass($name, $type, $domain);
+                $container->register($configClass)
+                    ->setArguments($args)
+                ;
             }
-            $args = [];
-            foreach ($handler as $key => $value) {
-                $args['$' . $key] = $value;
-            }
-            $container->register($handlerConfigClass)
-                ->setArguments($args)
-            ;
         }
+    }
+
+    private function getElementType(string $name): ?string
+    {
+        $parts = explode('_', (string) preg_replace('/(?<!^)[A-Z]/', '_$0', $name));
+
+        return $parts[\count($parts) - 2] ?? null;
+    }
+
+    private function getConfigClass(string $name, string $type, ?string $domain = null): string
+    {
+        $type = ucfirst($type);
+        if ($domain !== null) {
+            $domain = "{$domain}\\";
+        }
+
+        $configClasses = [
+            "OpenClassrooms\\ServiceProxy\\{$type}\\Config\\{$domain}{$name}Config",
+            "OpenClassrooms\\ServiceProxy\\{$type}\\Config\\{$name}Config",
+        ];
+
+        foreach ($configClasses as $configClass) {
+            if (class_exists($configClass)) {
+                return $configClass;
+            }
+        }
+
+        throw new \InvalidArgumentException(
+            "The '{$type}' config class for '{$name}' does not exist."
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $element
+     * @return array<string, mixed>
+     */
+    private function prefixKeys(array $element): array
+    {
+        $args = [];
+        foreach ($element as $key => $value) {
+            $args['$' . $key] = $value;
+        }
+
+        return $args;
     }
 }

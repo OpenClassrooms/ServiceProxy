@@ -9,18 +9,18 @@ interface CacheHandler extends AnnotationHandler
     /**
      * @return mixed
      */
-    public function fetch(string $id);
+    public function fetch(string $poolName, string $id);
 
     /**
      * @param array<int, string> $tags
      * @param mixed              $data
      */
-    public function save(string $id, $data, ?int $lifeTime = null, array $tags = []): void;
+    public function save(string $poolName, string $id, $data, ?int $lifeTime = null, array $tags = []): void;
 
-    public function contains(string $id): bool;
+    public function contains(string $poolName, string $id): bool;
 
     /**
      * @param array<int, string> $tags
      */
-    public function invalidateTags(array $tags): void;
+    public function invalidateTags(string $poolName, array $tags): void;
 }
