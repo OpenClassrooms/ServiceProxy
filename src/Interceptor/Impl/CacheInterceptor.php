@@ -310,6 +310,14 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             return $registeredTags;
         }
 
+        if (is_iterable($object)) {
+            foreach ($object as $item) {
+                $registeredTags = $this->guessObjectsTags($item, $excludedClasses, $registeredTags);
+            }
+
+            return $registeredTags;
+        }
+
         if (!$object instanceof AutoTaggable) {
             return $registeredTags;
         }
