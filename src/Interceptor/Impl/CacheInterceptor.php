@@ -306,8 +306,14 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
      */
     private function guessObjectsTags(mixed $object, array $excludedClasses = [], array $registeredTags = []): array
     {
-        if (!\is_object($object)) {
+        if (!\is_object($object) && !is_iterable($object)) {
             return $registeredTags;
+        }
+
+        foreach ($excludedClasses as $excludedClass) {
+            if ($object instanceof $excludedClass) {
+                return $registeredTags;
+            }
         }
 
         if (is_iterable($object)) {
@@ -320,12 +326,6 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
         if (!$object instanceof AutoTaggable) {
             return $registeredTags;
-        }
-
-        foreach ($excludedClasses as $excludedClass) {
-            if ($object instanceof $excludedClass) {
-                return $registeredTags;
-            }
         }
 
         $tag = $this->buildTag($object);
@@ -341,13 +341,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         foreach ($ref->getProperties() as $propRef) {
             $subObject = $this->getPropertyValue($ref, $object, $propRef->getName());
 
-            if (!is_iterable($subObject)) {
-                $subObject = [$subObject];
-            }
-
-            foreach ($subObject as $item) {
-                $registeredTags = $this->guessObjectsTags($item, $excludedClasses, $registeredTags);
-            }
+            $registeredTags = $this->guessObjectsTags($subObject, $excludedClasses, $registeredTags);
         }
 
         return $registeredTags;
