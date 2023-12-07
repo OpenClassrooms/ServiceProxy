@@ -6,6 +6,7 @@ namespace OpenClassrooms\ServiceProxy\Model\Request;
 
 use Doctrine\Common\Annotations\AnnotationException;
 use Doctrine\Common\Annotations\AnnotationReader;
+use ProxyManager\Proxy\ValueHolderInterface;
 
 final class Instance
 {
@@ -62,6 +63,24 @@ final class Instance
         $self->method = $method;
 
         return $self;
+    }
+
+    public static function createFromProxy(
+        object $proxy,
+        \ReflectionMethod $methodRef
+    ): self {
+        $object = $proxy;
+        if ($proxy instanceof ValueHolderInterface) {
+            $object = $proxy->getWrappedValueHolderValue();
+            if ($object === null) {
+                throw new \Exception('The proxy is not initialized.');
+            }
+        }
+        return Instance::create(
+            $proxy,
+            new \ReflectionObject($object),
+            Method::create($methodRef)
+        );
     }
 
     /**

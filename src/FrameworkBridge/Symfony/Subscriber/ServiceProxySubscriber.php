@@ -28,7 +28,7 @@ final class ServiceProxySubscriber implements EventSubscriberInterface
      * @throws \Doctrine\Common\Annotations\AnnotationException
      */
     public function __construct(
-        private readonly iterable $proxies,
+        private readonly iterable $proxyMethodInstances,
         iterable          $startUpInterceptors,
     ) {
         if (!\is_array($startUpInterceptors)) {
@@ -56,41 +56,11 @@ final class ServiceProxySubscriber implements EventSubscriberInterface
                 StartUpInterceptor $b
             ) => $a->getStartUpPriority() <=> $b->getStartUpPriority()
         );
-        foreach ($this->getInstances() as $instance) {
+        foreach ($this->proxyMethodInstances as $proxyMethodInstance) {
             foreach ($this->startUpInterceptors as $interceptor) {
-                if ($interceptor->supportsStartUp($instance)) {
-                    $interceptor->startUp($instance);
+                if ($interceptor->supportsStartUp($proxyMethodInstance)) {
+                    $interceptor->startUp($proxyMethodInstance);
                 }
-            }
-        }
-    }
-
-    /**
-     * @return iterable<Instance>
-     */
-    public function getInstances(): iterable
-    {
-        foreach ($this->proxies as $proxy) {
-            $object = $proxy;
-            if ($proxy instanceof ValueHolderInterface) {
-                $object = $proxy->getWrappedValueHolderValue();
-                if ($object === null) {
-                    continue;
-                }
-            }
-            $instanceRef = new \ReflectionObject($object);
-            $methods = $instanceRef->getMethods(\ReflectionMethod::IS_PUBLIC);
-            foreach ($methods as $methodRef) {
-                $methodAnnotations = $this->annotationReader->getMethodAnnotations($methodRef);
-                $instance = Instance::create(
-                    $proxy,
-                    $instanceRef,
-                    Method::create(
-                        $methodRef,
-                        $methodAnnotations,
-                    )
-                );
-                yield $instance;
             }
         }
     }

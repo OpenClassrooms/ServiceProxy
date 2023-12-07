@@ -35,7 +35,7 @@ final class Method
     /**
      * @param array<int, object> $annotations
      */
-    public static function create(\ReflectionMethod $reflection, array $annotations): self
+    public static function create(\ReflectionMethod $reflection, array $annotations = []): self
     {
         $self = new self();
         $self->reflection = $reflection;

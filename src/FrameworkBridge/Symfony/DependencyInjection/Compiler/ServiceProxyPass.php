@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\DependencyInjection\Compiler;
 
+use OpenClassrooms\ServiceProxy\Model\Request\Instance;
+use OpenClassrooms\ServiceProxy\Model\Request\Method;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
+use ProxyManager\Proxy\ValueHolderInterface;
 use Symfony\Component\DependencyInjection\Compiler\Compiler;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -48,5 +51,17 @@ final class ServiceProxyPass implements CompilerPassInterface
         $factoryDefinition->setPublic($definition->isPublic());
         $factoryDefinition->setLazy($definition->isLazy());
         $factoryDefinition->setTags($definition->getTags());
+
+        $proxyRef = new \ReflectionClass($definition->getClass());
+        $proxyMethodsRef = $proxyRef->getMethods(\ReflectionMethod::IS_PUBLIC);
+        foreach ($proxyMethodsRef as $proxyMethodRef) {
+            $instance = new Definition(Instance::class);
+            $instance->setFactory([new Reference(Instance::class), 'createFromProxy']);
+            $instance->setArguments([
+                new Reference($taggedServiceName),
+                $proxyMethodRef,
+            ]);
+            $instance->setTags(['openclassrooms.service_proxy.proxy_method_instance']);
+        }
     }
 }
