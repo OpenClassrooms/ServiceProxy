@@ -6,9 +6,6 @@ namespace OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\Subscriber;
 
 use Doctrine\Common\Annotations\AnnotationReader;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\StartUpInterceptor;
-use OpenClassrooms\ServiceProxy\Model\Request\Instance;
-use OpenClassrooms\ServiceProxy\Model\Request\Method;
-use ProxyManager\Proxy\ValueHolderInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\DependencyInjection\Compiler;
 
+use OC\Common\Util\Chrono;
 use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 use OpenClassrooms\ServiceProxy\Model\Request\Method;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
@@ -43,6 +44,7 @@ final class ServiceProxyPass implements CompilerPassInterface
 
     private function buildServiceProxyFactoryDefinition(string $taggedServiceName): void
     {
+        Chrono::start();
         $definition = $this->container->findDefinition($taggedServiceName);
         $factoryDefinition = new Definition($definition->getClass());
         $factoryDefinition->setFactory([new Reference(ProxyFactory::class), 'createProxy']);
@@ -59,9 +61,12 @@ final class ServiceProxyPass implements CompilerPassInterface
             $instance->setFactory([new Reference(Instance::class), 'createFromProxy']);
             $instance->setArguments([
                 new Reference($taggedServiceName),
-                $proxyMethodRef,
+                $proxyMethodRef->getName(),
             ]);
             $instance->setTags(['openclassrooms.service_proxy.proxy_method_instance']);
+            dump($taggedServiceName.'_'.$proxyMethodRef->getName().'_instance');
+            $this->container->setDefinition($taggedServiceName.'_'.$proxyMethodRef->getName().'_instance', $instance);
         }
+        Chrono::end();
     }
 }

@@ -67,7 +67,7 @@ final class Instance
 
     public static function createFromProxy(
         object $proxy,
-        \ReflectionMethod $methodRef
+        string $methodName
     ): self {
         $object = $proxy;
         if ($proxy instanceof ValueHolderInterface) {
@@ -79,7 +79,7 @@ final class Instance
         return Instance::create(
             $proxy,
             new \ReflectionObject($object),
-            Method::create($methodRef)
+            Method::create(new \ReflectionMethod($proxy, $methodName))
         );
     }
 
