@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\Subscriber;
 
 use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Annotations\Reader;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\StartUpInterceptor;
 use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 use OpenClassrooms\ServiceProxy\Model\Request\Method;
@@ -14,12 +15,12 @@ use Symfony\Component\HttpKernel\Event\RequestEvent;
 
 final class ServiceProxySubscriber implements EventSubscriberInterface
 {
-    private AnnotationReader $annotationReader;
-
     /**
      * @var array<StartUpInterceptor>
      */
     private array $startUpInterceptors;
+
+    private Reader $annotationReader;
 
     /**
      * @param iterable<StartUpInterceptor> $startUpInterceptors
@@ -30,11 +31,13 @@ final class ServiceProxySubscriber implements EventSubscriberInterface
     public function __construct(
         private readonly iterable $proxies,
         iterable          $startUpInterceptors,
+        Reader|null       $annotationReader = null,
     ) {
         if (!\is_array($startUpInterceptors)) {
             $this->startUpInterceptors = iterator_to_array($startUpInterceptors);
         }
-        $this->annotationReader = new AnnotationReader();
+
+        $this->annotationReader = $annotationReader ?? new AnnotationReader();
     }
 
     /**

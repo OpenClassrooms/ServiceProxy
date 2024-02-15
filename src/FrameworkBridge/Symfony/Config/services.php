@@ -11,6 +11,7 @@ use OpenClassrooms\ServiceProxy\ProxyFactoryConfiguration;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\inline_service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
+use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
 return static function (ContainerConfigurator $containerConfigurator) {
@@ -50,6 +51,7 @@ return static function (ContainerConfigurator $containerConfigurator) {
                 ]),
             tagged_iterator('openclassrooms.service_proxy.prefix_interceptor'),
             tagged_iterator('openclassrooms.service_proxy.suffix_interceptor'),
+            service('annotation_reader')->nullOnInvalid(),
         ])
     ;
 
@@ -69,6 +71,7 @@ return static function (ContainerConfigurator $containerConfigurator) {
         ->args([
             tagged_iterator('openclassrooms.service_proxy'),
             tagged_iterator('openclassrooms.service_proxy.start_up_interceptor'),
+            service('annotation_reader')->nullOnInvalid(),
         ])
         ->tag('kernel.event_subscriber');
 };
