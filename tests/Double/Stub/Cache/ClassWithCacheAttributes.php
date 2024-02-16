@@ -47,7 +47,7 @@ class ClassWithCacheAttributes
     }
 
     #[Cache]
-    public function methodWithArguments(string $foo, string $bar): string
+    public function methodWithArguments(string $foo, string $bar, string|int|bool|null $baz = null): string
     {
         return self::DATA;
     }

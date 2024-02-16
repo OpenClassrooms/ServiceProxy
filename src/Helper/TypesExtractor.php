@@ -103,10 +103,10 @@ final class TypesExtractor
         }
 
         if ($type instanceof \ReflectionUnionType) {
-            return array_map(
-                static fn (\ReflectionNamedType $type) => $type->getName(),
+            return array_merge(...array_map(
+                fn (\ReflectionType $type) => $this->getReflectionTypeNames($type),
                 $type->getTypes()
-            );
+            ));
         }
 
         return [];
