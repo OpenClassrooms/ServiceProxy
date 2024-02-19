@@ -32,7 +32,7 @@ trait ConfigurableHandler
     {
         $interfaces = class_implements($this);
         $interface = array_values(
-            array_filter($interfaces, static fn (string $interface) => preg_match(
+            array_filter($interfaces, static fn (string $interface) => (bool) preg_match(
                 '/(?<!Annotation)Handler$/',
                 $interface
             ))

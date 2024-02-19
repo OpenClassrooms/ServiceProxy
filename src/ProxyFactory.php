@@ -6,6 +6,7 @@ namespace OpenClassrooms\ServiceProxy;
 
 use Doctrine\Common\Annotations\AnnotationException;
 use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Annotations\Reader;
 use OpenClassrooms\ServiceProxy\Generator\Factory\AccessInterceptorValueHolderFactory;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
@@ -18,7 +19,7 @@ use Symfony\Component\Filesystem\Filesystem;
 
 final class ProxyFactory
 {
-    private AnnotationReader $annotationReader;
+    private Reader $annotationReader;
 
     private ProxyFactoryConfiguration $configuration;
 
@@ -36,9 +37,9 @@ final class ProxyFactory
     public function __construct(
         ProxyFactoryConfiguration $configuration,
         iterable                  $prefixInterceptors,
-        iterable                  $suffixInterceptors
+        iterable                  $suffixInterceptors,
+        Reader|null               $annotationReader = null,
     ) {
-        $this->annotationReader = new AnnotationReader();
         $this->configuration = $configuration;
         $this->interceptors = [
             PrefixInterceptor::PREFIX_TYPE => $this->orderByPriority(
@@ -50,6 +51,8 @@ final class ProxyFactory
                 SuffixInterceptor::SUFFIX_TYPE
             ),
         ];
+
+        $this->annotationReader = $annotationReader ?? new AnnotationReader();
     }
 
     /**
