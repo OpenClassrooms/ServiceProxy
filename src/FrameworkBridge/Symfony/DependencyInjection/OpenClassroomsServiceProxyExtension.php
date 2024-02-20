@@ -72,6 +72,10 @@ final class OpenClassroomsServiceProxyExtension extends Extension
             new FileLocator(\dirname(__DIR__) . '/Config/')
         );
         $loader->load('services.php');
+
+        foreach ($configs['disabled_interceptors'] as $interceptor) {
+            $container->removeDefinition($interceptor);
+        }
     }
 
     public function getAlias(): string

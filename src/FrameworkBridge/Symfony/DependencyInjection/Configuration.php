@@ -63,6 +63,12 @@ final class Configuration implements ConfigurationInterface
             ->end()
         ;
 
+        $disabledInterceptors = $children->arrayNode('disabled_interceptors');
+        $disabledInterceptors->prototype('scalar')
+            ->end()
+        ;
+        $disabledInterceptors->defaultValue([])->end();
+
         $children->end();
 
         return $treeBuilder;
