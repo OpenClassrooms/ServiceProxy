@@ -52,6 +52,10 @@ final class ServiceProxySubscriber implements EventSubscriberInterface
 
     public function startUp(RequestEvent $event): void
     {
+        if (\count($this->startUpInterceptors) === 0) {
+            return;
+        }
+
         usort(
             $this->startUpInterceptors,
             static fn (
