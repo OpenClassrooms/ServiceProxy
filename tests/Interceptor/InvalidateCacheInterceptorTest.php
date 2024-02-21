@@ -42,7 +42,7 @@ final class InvalidateCacheInterceptorTest extends TestCase
             $this->invalidateCacheInterceptor,
         ]);
 
-        $this->proxy = $this->proxyFactory->createProxy(new ClassWithInvalidateCacheAttributes());
+        $this->proxy = $this->proxyFactory->createInstance(ClassWithInvalidateCacheAttributes::class);
     }
 
     protected function tearDown(): void

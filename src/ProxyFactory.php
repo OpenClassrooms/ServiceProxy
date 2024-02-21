@@ -7,7 +7,9 @@ namespace OpenClassrooms\ServiceProxy;
 use Doctrine\Common\Annotations\AnnotationException;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\Reader;
-use OpenClassrooms\ServiceProxy\Generator\Factory\AccessInterceptorValueHolderFactory;
+use OpenClassrooms\ServiceProxy\Generator\AccessInterceptorGenerator\Factory\AccessInterceptorFactory;
+use OpenClassrooms\ServiceProxy\Generator\AccessInterceptorScopeLocalizerGenerator\Factory\AccessInterceptorScopeLocalizerFactory;
+use OpenClassrooms\ServiceProxy\Generator\AccessInterceptorValueHolderGenerator\Factory\AccessInterceptorValueHolderFactory;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Model\Request\Instance;
@@ -58,19 +60,29 @@ final class ProxyFactory
     /**
      * @template T of object
      *
-     * @param T $object
+     * @param class-string<T> $class
+     * @param mixed ...$agrs
      *
      * @return T
      */
-    public function createProxy(object $object): object
+    public function createInstance(string $class, ...$args): object
     {
-        $instanceRef = new \ReflectionObject($object);
-        $methods = $instanceRef->getMethods(\ReflectionMethod::IS_PUBLIC);
+        $instanceRef = new \ReflectionClass($class);
+
+        if ($instanceRef->isFinal()) {
+            throw new \LogicException(sprintf("Unable to proxify final class %s. Hint: replace final keywords with a @final annotation", $instanceRef->getName()));
+        }
+
+        $methods = $instanceRef->getMethods();
         $interceptionClosures = [];
         foreach ($methods as $methodRef) {
             $methodAnnotations = $this->annotationReader->getMethodAnnotations($methodRef);
+
+            if (count($methodAnnotations) === 0 && count($methodRef->getAttributes()) === 0) {
+                continue;
+            }
+
             $instance = Instance::create(
-                $object,
                 $instanceRef,
                 Method::create(
                     $methodRef,
@@ -80,6 +92,14 @@ final class ProxyFactory
             foreach ([PrefixInterceptor::PREFIX_TYPE, SuffixInterceptor::SUFFIX_TYPE] as $type) {
                 $interceptors = $this->filterInterceptors($instance, $type);
                 if (\count($interceptors) > 0) {
+                    if ($methodRef->isFinal()) {
+                        throw new \LogicException(sprintf("Unable to proxify a final method %s on class %s. Hint: replace final keywords with a @final annotation", $methodRef->getName(), $methodRef->getDeclaringClass()));
+                    }
+
+                    if ($methodRef->isPrivate()) {
+                        throw new \LogicException(sprintf("Unable to attach an interceptor to a private method %s on class %s.", $methodRef->getName(), $methodRef->getDeclaringClass()));
+                    }
+
                     $interceptionClosures[$type][$methodRef->getName()] = $this->getInterceptionClosure(
                         $type,
                         $interceptors,
@@ -90,12 +110,13 @@ final class ProxyFactory
         }
 
         if (\count($interceptionClosures) === 0) {
-            return $object;
+            return new $class(...$args);
         }
 
         return $this->getInterceptorFactory()
-            ->createProxy(
-                $object,
+            ->createInstance(
+                $class,
+                $args,
                 $interceptionClosures[PrefixInterceptor::PREFIX_TYPE] ?? [],
                 $interceptionClosures[SuffixInterceptor::SUFFIX_TYPE] ?? [],
             )
@@ -252,10 +273,10 @@ final class ProxyFactory
         };
     }
 
-    private function getInterceptorFactory(): AccessInterceptorValueHolderFactory
+    private function getInterceptorFactory(): AccessInterceptorFactory
     {
         if ($this->configuration->isEval()) {
-            return new AccessInterceptorValueHolderFactory();
+            return new AccessInterceptorFactory();
         }
 
         $proxiesDir = $this->configuration->getProxiesDir();
@@ -270,6 +291,6 @@ final class ProxyFactory
         // @phpstan-ignore-next-line
         spl_autoload_register($conf->getProxyAutoloader());
 
-        return new AccessInterceptorValueHolderFactory($conf);
+        return new AccessInterceptorFactory($conf);
     }
 }

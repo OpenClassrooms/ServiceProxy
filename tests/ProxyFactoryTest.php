@@ -17,6 +17,9 @@ use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event\EventHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Security\SecurityHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Transaction\TransactionHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ClassWithCacheAttributes;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\ClassWithAnnotationOnPrivateMethod;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\ClassWithFinalMethod;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\FinalClass;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\WithConstructorAnnotationClass;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\WithoutAnnotationClass;
 use PHPUnit\Framework\TestCase;
@@ -39,33 +42,49 @@ final class ProxyFactoryTest extends TestCase
         );
     }
 
-    public function testWithoutAnnotationReturnServiceProxyInterface(): void
+    public function testWithoutAnnotationReturnUnmodifiedObject(): void
     {
-        $inputClass = new WithoutAnnotationClass();
-        $inputClass->field = true;
-        $proxy = $this->factory->createProxy($inputClass);
+        $instance = $this->factory->createInstance(WithoutAnnotationClass::class);
+        $instance->field = true;
 
-        $this->assertTrue($proxy->aMethodWithoutAnnotation());
-        $this->assertTrue($proxy->aMethodWithoutServiceProxyAnnotation());
-        $this->assertNotProxy($inputClass, $proxy);
+        $this->assertTrue($instance->aMethodWithoutAnnotation());
+        $this->assertTrue($instance->aMethodWithoutServiceProxyAnnotation());
+        $this->assertNotProxy(WithoutAnnotationClass::class, $instance);
+    }
+
+
+    public function testThrownExceptionWhenCreateAProxyOnFinalClass(): void
+    {
+        $this->expectException(\LogicException::class);
+        $this->factory->createInstance(FinalClass::class);
+    }
+
+    public function testThrownExceptionOnFinalMethodInterception(): void
+    {
+        $this->expectException(\LogicException::class);
+        $this->factory->createInstance(ClassWithFinalMethod::class);
+    }
+
+    public function testThrownExceptionOnPrivateMethodInterception(): void
+    {
+        $this->expectException(\LogicException::class);
+        $this->factory->createInstance(ClassWithAnnotationOnPrivateMethod::class);
     }
 
     public function testWithCacheAnnotationReturnServiceProxyCacheInterface(): void
     {
-        $inputClass = new ClassWithCacheAttributes();
-        $proxy = $this->factory->createProxy($inputClass);
+        $instance = $this->factory->createInstance(ClassWithCacheAttributes::class);
 
-        $this->assertProxy($inputClass, $proxy);
-        $this->assertTrue($proxy->methodWithoutAttribute());
+        $this->assertProxy(ClassWithCacheAttributes::class, $instance);
+        $this->assertTrue($instance->methodWithoutAttribute());
     }
 
     public function testWithCacheAnnotationWithConstructorReturnServiceProxyCacheInterface(): void
     {
-        $inputClass = new WithConstructorAnnotationClass('test');
-        $proxy = $this->factory->createProxy($inputClass);
+        $instance = $this->factory->createInstance(WithConstructorAnnotationClass::class, 'test');
 
-        $this->assertProxy($inputClass, $proxy);
-        $this->assertTrue($proxy->aMethodWithoutAnnotation());
+        $this->assertProxy(WithConstructorAnnotationClass::class, $instance);
+        $this->assertTrue($instance->aMethodWithoutAnnotation());
     }
 
     public function testCheckInterceptorsOrders(): void

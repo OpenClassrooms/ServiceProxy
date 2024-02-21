@@ -9,6 +9,7 @@ use OpenClassrooms\ServiceProxy\Invoker\Impl\AggregateMethodInvoker;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\ProxyFactoryConfiguration;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\CacheWarmer\ProxyCacheWarmer;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\inline_service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
@@ -74,4 +75,10 @@ return static function (ContainerConfigurator $containerConfigurator) {
             service('annotation_reader')->nullOnInvalid(),
         ])
         ->tag('kernel.event_subscriber');
+
+    $services->set(ProxyCacheWarmer::class)
+        ->args([
+            tagged_iterator('openclassrooms.service_proxy')
+        ])
+        ->tag('kernel.cache_warmer', ['priority' => 128]);
 };

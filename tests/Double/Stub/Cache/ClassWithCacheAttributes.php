@@ -11,6 +11,13 @@ class ClassWithCacheAttributes
 {
     public const DATA = 'data';
 
+    public readonly string $data;
+
+    public function __construct(?string $data = null)
+    {
+        $this->data = $data ?? 'hello';
+    }
+
     public function methodWithoutAttribute(): bool
     {
         return true;
