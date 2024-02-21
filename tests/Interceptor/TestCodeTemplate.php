@@ -33,11 +33,10 @@ $proxyFactory = new ProxyFactory(
 );
 
 $classname = '\\OpenClassrooms\\ServiceProxy\\Tests\\tmp\\' . $argv[1];
-$instance = new $classname();
 
-$proxy = $proxyFactory->createProxy($instance);
+$instance = $proxyFactory->createInstance($classname);
 
-$proxy->execute();
+$instance->execute();
 
 $cacheHit = !empty($cacheInterceptor->getHits());
 
