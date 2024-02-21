@@ -11,9 +11,7 @@ final class Instance
 {
     private Method $method;
 
-    private object $object;
-
-    private \ReflectionObject $reflection;
+    private \ReflectionClass $reflection;
 
     private function __construct()
     {
@@ -26,13 +24,13 @@ final class Instance
      * @throws AnnotationException
      */
     public static function createFromMethod(
-        object $object,
+        string $class,
         string $methodName,
         ?array $parameters = null,
         mixed $response = null
     ): self {
         $annotationReader = new AnnotationReader();
-        $reflection = new \ReflectionObject($object);
+        $reflection = new \ReflectionClass($class);
         $methodRef = $reflection->getMethod($methodName);
         $annotations = $annotationReader->getMethodAnnotations($methodRef);
         $method = Method::create($methodRef, $annotations);
@@ -43,7 +41,7 @@ final class Instance
             $method->setResponse($response);
         }
 
-        return self::create($object, $reflection, $method);
+        return self::create($reflection, $method);
     }
 
     public function getMethod(): Method
@@ -52,12 +50,10 @@ final class Instance
     }
 
     public static function create(
-        object $object,
-        \ReflectionObject $reflection,
+        \ReflectionClass $reflection,
         Method $method
     ): self {
         $self = new self();
-        $self->object = $object;
         $self->reflection = $reflection;
         $self->method = $method;
 
@@ -81,12 +77,7 @@ final class Instance
         return $this;
     }
 
-    public function getObject(): object
-    {
-        return $this->object;
-    }
-
-    public function getReflection(): \ReflectionObject
+    public function getReflection(): \ReflectionClass
     {
         return $this->reflection;
     }
