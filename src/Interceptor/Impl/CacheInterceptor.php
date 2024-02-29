@@ -90,7 +90,9 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $missedPools = [];
 
         foreach ($pools as $pool) {
-            if (!$handler->contains($pool, $cacheKey)) {
+            $data = $handler->fetch($pool, $cacheKey);
+
+            if (!$data->isHit()) {
                 $missedPools[] = $pool;
 
                 self::$misses[$pool] = self::$misses[$pool] ?? [];
@@ -99,8 +101,6 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
                 continue;
             }
 
-            $data = $handler->fetch($pool, $cacheKey);
-
             self::$hits[$pool] = self::$hits[$pool] ?? [];
             self::$hits[$pool][] = $cacheKey;
 
@@ -108,13 +108,13 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
                 $handler->save(
                     $missedPool,
                     $cacheKey,
-                    $data,
+                    $data->get(),
                     $attribute->ttl ?? $this->config->defaultTtl,
                     $this->getTags($instance, $attribute, $data)
                 );
             }
 
-            return new Response($data, true);
+            return new Response($data->get(), true);
         }
 
         return new Response(null, false);

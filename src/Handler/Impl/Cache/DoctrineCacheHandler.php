@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace OpenClassrooms\ServiceProxy\Handler\Impl\Cache;
 
 use Doctrine\Common\Cache\ArrayCache;
+use Doctrine\Common\Cache\Psr6\CacheItem;
 use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Handler\Impl\ConfigurableHandler;
+use Psr\Cache\CacheItemInterface;
 
 /**
  * @deprecated use SymfonyCacheHandler instead
@@ -24,12 +26,14 @@ final class DoctrineCacheHandler implements CacheHandler
         $this->name = $name;
     }
 
-    public function fetch(string $poolName, string $id)
+    public function fetch(string $poolName, string $id): CacheItemInterface
     {
         $tags = explode('|', $id);
         $id = array_shift($tags);
 
-        return $this->cacheProvider->fetchWithNamespace($id, $tags[0] ?? null);
+        $value = $this->cacheProvider->fetchWithNamespace($id, $tags[0] ?? null);
+
+        return new CacheItem($id, $value, $value !== false);
     }
 
     public function save(string $poolName, string $id, $data, ?int $lifeTime = null, array $tags = []): void
