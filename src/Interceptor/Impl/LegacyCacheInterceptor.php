@@ -41,11 +41,11 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
 
         // this is needed to solve a bug (when the false is stored in the cache)
 
-        if ($data === false) {
+        if (!$data->isHit()) {
             return new Response(null, false);
         }
 
-        return new Response($data, true);
+        return new Response($data->get(), true);
     }
 
     public function suffix(Instance $instance): Response

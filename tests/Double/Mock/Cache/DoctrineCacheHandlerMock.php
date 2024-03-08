@@ -8,6 +8,7 @@ use Doctrine\Common\Cache\ArrayCache;
 use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Handler\Impl\Cache\DoctrineCacheHandler;
+use Psr\Cache\CacheItemInterface;
 
 final class DoctrineCacheHandlerMock implements CacheHandler
 {
@@ -30,7 +31,7 @@ final class DoctrineCacheHandlerMock implements CacheHandler
         $this->wrappedHandler = new DoctrineCacheHandler($cacheProvider, $name);
     }
 
-    public function fetch(string $poolName, string $id)
+    public function fetch(string $poolName, string $id): CacheItemInterface
     {
         return $this->wrappedHandler->fetch($poolName, $id);
     }
@@ -40,11 +41,6 @@ final class DoctrineCacheHandlerMock implements CacheHandler
         self::$lifeTime = $lifeTime;
 
         $this->wrappedHandler->save($poolName, $id, $data, $lifeTime, $tags);
-    }
-
-    public function contains(string $poolName, string $id, array $tags = []): bool
-    {
-        return $this->wrappedHandler->contains($poolName, $id);
     }
 
     public function invalidateTags(string $poolName, array $tags): void

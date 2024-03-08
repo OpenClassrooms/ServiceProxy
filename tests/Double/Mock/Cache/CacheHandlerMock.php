@@ -6,6 +6,7 @@ namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache;
 
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Handler\Impl\Cache\SymfonyCacheHandler;
+use Psr\Cache\CacheItemInterface;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 
@@ -31,7 +32,7 @@ final class CacheHandlerMock implements CacheHandler
         ], $name);
     }
 
-    public function fetch(string $poolName, string $id)
+    public function fetch(string $poolName, string $id): CacheItemInterface
     {
         return $this->wrappedHandler->fetch($poolName, $id);
     }
@@ -41,11 +42,6 @@ final class CacheHandlerMock implements CacheHandler
         self::$lifeTime = $lifeTime;
 
         $this->wrappedHandler->save($poolName, $id, $data, $lifeTime, $tags);
-    }
-
-    public function contains(string $poolName, string $id): bool
-    {
-        return $this->wrappedHandler->contains($poolName, $id);
     }
 
     public function isDefault(): bool

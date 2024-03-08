@@ -79,6 +79,9 @@
     "symfony/security-bundle": "For Symfony integration with Security",
     "doctrine/orm": "For Doctrine integration with Transaction and legacy Cache"
   },
+  "conflict": {
+    "psr/cache": ">=3.0"
+  },
   "extra": {
     "branch-alias": {
       "dev-master": "2.0.x-dev"
