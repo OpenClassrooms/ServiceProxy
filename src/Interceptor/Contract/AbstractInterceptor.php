@@ -110,7 +110,7 @@ abstract class AbstractInterceptor
         }
 
         throw new \InvalidArgumentException(
-            'All handlers must implement AnnotationHandler interface.'
+            'All handlers must implement AnnotationHandler interface. Handler : ' . \get_class($handler)
         );
     }
 
