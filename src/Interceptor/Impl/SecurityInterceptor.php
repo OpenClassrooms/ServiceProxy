@@ -56,6 +56,11 @@ final class SecurityInterceptor extends AbstractInterceptor implements PrefixInt
         ;
     }
 
+    /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     */
     private function guessRoleName(Instance $instance): string
     {
         $className = $instance->getReflection()

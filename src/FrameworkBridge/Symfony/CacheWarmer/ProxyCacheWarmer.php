@@ -1,16 +1,23 @@
 <?php
 
-namespace OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\CacheWarmer;
+declare(strict_types=1);
 
+namespace OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\CacheWarmer;
 
 use ProxyManager\Proxy\LazyLoadingInterface;
 use Symfony\Component\HttpKernel\CacheWarmer\CacheWarmerInterface;
 use Symfony\Component\VarExporter\LazyObjectInterface;
 
-class ProxyCacheWarmer implements CacheWarmerInterface
+final class ProxyCacheWarmer implements CacheWarmerInterface
 {
+    /**
+     * @var iterable<object>
+     */
     private iterable $proxies;
 
+    /**
+     * @param iterable<object> $proxies
+     */
     public function __construct(iterable $proxies)
     {
         $this->proxies = $proxies;
@@ -19,7 +26,7 @@ class ProxyCacheWarmer implements CacheWarmerInterface
     /**
      * {@inheritdoc}
      */
-    public function warmUp(string $cacheDir)
+    public function warmUp(string $cacheDir): array
     {
         foreach ($this->proxies as $proxy) {
             if ($proxy instanceof LazyLoadingInterface && !$proxy->isProxyInitialized()) {
@@ -32,6 +39,8 @@ class ProxyCacheWarmer implements CacheWarmerInterface
                 $proxy->initializeLazyObject();
             }
         }
+
+        return [];
     }
 
     /**

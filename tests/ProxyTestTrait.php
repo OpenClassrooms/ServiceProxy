@@ -10,8 +10,6 @@ use OpenClassrooms\ServiceProxy\Proxy\AccessInterceptorsInterface;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\ProxyFactoryConfiguration;
 use PHPUnit\Framework\TestCase as Assert;
-use ProxyManager\Proxy\AccessInterceptorInterface;
-use ProxyManager\Proxy\ValueHolderInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
 trait ProxyTestTrait

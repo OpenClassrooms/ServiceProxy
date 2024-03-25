@@ -7,10 +7,16 @@ namespace OpenClassrooms\ServiceProxy\Model\Request;
 use Doctrine\Common\Annotations\AnnotationException;
 use Doctrine\Common\Annotations\AnnotationReader;
 
+/**
+ * @template T of object
+ */
 final class Instance
 {
     private Method $method;
 
+    /**
+     * @var \ReflectionClass<T>
+     */
     private \ReflectionClass $reflection;
 
     private function __construct()
@@ -18,10 +24,13 @@ final class Instance
     }
 
     /**
+     * @param class-string<T> $class
      * @param array<string, mixed>|null $parameters
      *
      * @throws \ReflectionException
      * @throws AnnotationException
+     *
+     * @return self<T>
      */
     public static function createFromMethod(
         string $class,
@@ -49,10 +58,16 @@ final class Instance
         return $this->method;
     }
 
+    /**
+     * @param \ReflectionClass<T> $reflection
+     *
+     * @return self<T>
+     */
     public static function create(
         \ReflectionClass $reflection,
         Method $method
     ): self {
+        /** @var Instance<T> $self */
         $self = new self();
         $self->reflection = $reflection;
         $self->method = $method;
@@ -62,6 +77,8 @@ final class Instance
 
     /**
      * @param array<string, mixed> $parameters
+     *
+     * @return self<T>
      */
     public function setParameters(array $parameters): self
     {
@@ -70,6 +87,9 @@ final class Instance
         return $this;
     }
 
+    /**
+     * @return self<T>
+     */
     public function setResponse(mixed $response): self
     {
         $this->method->setResponse($response);
@@ -77,6 +97,9 @@ final class Instance
         return $this;
     }
 
+    /**
+     * @return \ReflectionClass<T>
+     */
     public function getReflection(): \ReflectionClass
     {
         return $this->reflection;

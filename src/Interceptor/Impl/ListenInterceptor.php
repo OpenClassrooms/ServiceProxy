@@ -14,6 +14,11 @@ use OpenClassrooms\ServiceProxy\Model\Response\Response;
 
 final class ListenInterceptor extends AbstractInterceptor implements StartUpInterceptor
 {
+    /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     */
     public function startUp(Instance $instance): Response
     {
         $attributes = $instance->getMethod()
@@ -37,6 +42,11 @@ final class ListenInterceptor extends AbstractInterceptor implements StartUpInte
         return new Response();
     }
 
+    /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     */
     public function supportsStartUp(Instance $instance): bool
     {
         return $instance->getMethod()
