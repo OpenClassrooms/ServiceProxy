@@ -34,6 +34,11 @@ class Event
         );
     }
 
+    /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     */
     public function getUseCaseRequest(): mixed
     {
         return $this->parameters['useCaseRequest'] ?? ($this->parameters['request'] ?? null);

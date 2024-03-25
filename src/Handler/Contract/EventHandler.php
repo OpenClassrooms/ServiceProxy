@@ -11,5 +11,10 @@ interface EventHandler extends AnnotationHandler
 {
     public function dispatch(object $event, ?string $queue = null, ?int $delay = null): void;
 
+    /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     */
     public function listen(Instance $instance, string $name, Transport $transport = null, int $priority = 0): void;
 }

@@ -8,8 +8,6 @@ use Doctrine\Common\Annotations\AnnotationException;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\Reader;
 use OpenClassrooms\ServiceProxy\Generator\AccessInterceptorGenerator\Factory\AccessInterceptorFactory;
-use OpenClassrooms\ServiceProxy\Generator\AccessInterceptorScopeLocalizerGenerator\Factory\AccessInterceptorScopeLocalizerFactory;
-use OpenClassrooms\ServiceProxy\Generator\AccessInterceptorValueHolderGenerator\Factory\AccessInterceptorValueHolderFactory;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Model\Request\Instance;
@@ -61,7 +59,7 @@ final class ProxyFactory
      * @template T of object
      *
      * @param class-string<T> $class
-     * @param mixed ...$agrs
+     * @param mixed ...$args
      *
      * @return T
      */
@@ -70,7 +68,10 @@ final class ProxyFactory
         $instanceRef = new \ReflectionClass($class);
 
         if ($instanceRef->isFinal()) {
-            throw new \LogicException(sprintf("Unable to proxify final class %s. Hint: replace final keywords with a @final annotation", $instanceRef->getName()));
+            throw new \LogicException(sprintf(
+                'Unable to proxify final class %s. Hint: replace final keywords with a @final annotation',
+                $instanceRef->getName()
+            ));
         }
 
         $methods = $instanceRef->getMethods();
@@ -78,7 +79,7 @@ final class ProxyFactory
         foreach ($methods as $methodRef) {
             $methodAnnotations = $this->annotationReader->getMethodAnnotations($methodRef);
 
-            if (count($methodAnnotations) === 0 && count($methodRef->getAttributes()) === 0) {
+            if (\count($methodAnnotations) === 0 && \count($methodRef->getAttributes()) === 0) {
                 continue;
             }
 
@@ -93,11 +94,19 @@ final class ProxyFactory
                 $interceptors = $this->filterInterceptors($instance, $type);
                 if (\count($interceptors) > 0) {
                     if ($methodRef->isFinal()) {
-                        throw new \LogicException(sprintf("Unable to proxify a final method %s on class %s. Hint: replace final keywords with a @final annotation", $methodRef->getName(), $methodRef->getDeclaringClass()));
+                        throw new \LogicException(sprintf(
+                            'Unable to proxify a final method %s on class %s. Hint: replace final keywords with a @final annotation',
+                            $methodRef->getName(),
+                            $methodRef->getDeclaringClass()
+                        ));
                     }
 
                     if ($methodRef->isPrivate()) {
-                        throw new \LogicException(sprintf("Unable to attach an interceptor to a private method %s on class %s.", $methodRef->getName(), $methodRef->getDeclaringClass()));
+                        throw new \LogicException(sprintf(
+                            'Unable to attach an interceptor to a private method %s on class %s.',
+                            $methodRef->getName(),
+                            $methodRef->getDeclaringClass()
+                        ));
                     }
 
                     $interceptionClosures[$type][$methodRef->getName()] = $this->getInterceptionClosure(
@@ -132,8 +141,11 @@ final class ProxyFactory
     }
 
     /**
+     * @template T of object
+     *
      * @param PrefixInterceptor::PREFIX_TYPE|SuffixInterceptor::SUFFIX_TYPE $type
      * @param PrefixInterceptor[]|SuffixInterceptor[]                       $interceptors
+     * @param Instance<T> $instance
      */
     private function intercept(
         string   $type,
@@ -200,6 +212,10 @@ final class ProxyFactory
     }
 
     /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     * /
      * @param PrefixInterceptor::PREFIX_TYPE|SuffixInterceptor::SUFFIX_TYPE $type
      *
      * @return PrefixInterceptor[]|SuffixInterceptor[]
@@ -227,8 +243,10 @@ final class ProxyFactory
     }
 
     /**
+     * @template T of object
      * @param PrefixInterceptor::PREFIX_TYPE|SuffixInterceptor::SUFFIX_TYPE $type
      * @param SuffixInterceptor[]|PrefixInterceptor[]                       $interceptors
+     * @param Instance<T> $instance
      */
     private function getInterceptionClosure(
         string $type,

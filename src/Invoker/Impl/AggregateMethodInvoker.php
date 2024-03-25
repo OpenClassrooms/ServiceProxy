@@ -10,13 +10,18 @@ use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 final class AggregateMethodInvoker
 {
     /**
-     * @param  iterable<MethodInvoker> $invokers
+     * @param iterable<MethodInvoker> $invokers
      */
     public function __construct(
         private iterable $invokers
     ) {
     }
 
+    /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     */
     public function invoke(Instance $instance, ?object $object = null): mixed
     {
         if (!\is_array($this->invokers)) {

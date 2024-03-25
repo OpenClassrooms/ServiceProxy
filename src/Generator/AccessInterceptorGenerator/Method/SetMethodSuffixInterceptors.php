@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Generator\AccessInterceptorGenerator\Method;
 
-use Closure;
 use Laminas\Code\Generator\Exception\InvalidArgumentException;
 use Laminas\Code\Generator\ParameterGenerator;
 use Laminas\Code\Generator\PropertyGenerator;
