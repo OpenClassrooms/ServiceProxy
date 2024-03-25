@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Generator\AccessInterceptorGenerator\Factory;
 
@@ -19,7 +21,7 @@ class AccessInterceptorFactory extends AbstractBaseFactory
 
     /**
      * @template T of object
-     * 
+     *
      * @param class-string<T> $class
      * @param array<mixed> $args
      * @param array<string, \Closure> $prefixInterceptors an array (indexed by method name) of interceptor closures to be called
@@ -41,13 +43,15 @@ class AccessInterceptorFactory extends AbstractBaseFactory
         );
         $methods = array_unique($methods);
 
-        $proxyClassName = $this->generateProxy($class, ['methods' => $methods]);
+        $proxyClassName = $this->generateProxy($class, [
+            'methods' => $methods,
+        ]);
 
         $instance = new $proxyClassName(...$args);
-        
+
         $instance->setPrefixInterceptors($prefixInterceptors);
         $instance->setSuffixInterceptors($suffixInterceptors);
-        
+
         return $instance;
     }
 

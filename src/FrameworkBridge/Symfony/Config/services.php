@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\CacheWarmer\ProxyCacheWarmer;
 use OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\Messenger\Transport\Serialization\MessageSerializer;
 use OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\Subscriber\ServiceProxySubscriber;
 use OpenClassrooms\ServiceProxy\Handler\Impl\Cache\SymfonyCacheHandler;
@@ -9,7 +10,6 @@ use OpenClassrooms\ServiceProxy\Invoker\Impl\AggregateMethodInvoker;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\ProxyFactoryConfiguration;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\CacheWarmer\ProxyCacheWarmer;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\inline_service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
@@ -78,7 +78,9 @@ return static function (ContainerConfigurator $containerConfigurator) {
 
     $services->set(ProxyCacheWarmer::class)
         ->args([
-            tagged_iterator('openclassrooms.service_proxy')
+            tagged_iterator('openclassrooms.service_proxy'),
         ])
-        ->tag('kernel.cache_warmer', ['priority' => 128]);
+        ->tag('kernel.cache_warmer', [
+            'priority' => 128,
+        ]);
 };

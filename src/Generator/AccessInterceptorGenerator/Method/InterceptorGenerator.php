@@ -63,19 +63,29 @@ final class InterceptorGenerator
         ?\ReflectionMethod $originalMethod
     ): string {
         $replacements = [
-            '{{$name}}'                        => var_export($method->getName(), true),
-            '{{$prefixInterceptorsName}}'      => $prefixInterceptors->getName(),
-            '{{$prefixEarlyReturnExpression}}' => ProxiedMethodReturnExpression::generate('$prefixReturnValue', $originalMethod),
-            '{{$methodBody}}'                  => $methodBody,
-            '{{$suffixInterceptorsName}}'      => $suffixInterceptors->getName(),
-            '{{$suffixEarlyReturnExpression}}' => ProxiedMethodReturnExpression::generate('$suffixReturnValue', $originalMethod),
-            '{{$returnExpression}}'            => ProxiedMethodReturnExpression::generate('$returnValue', $originalMethod),
-            '{{$paramsString}}'                => 'array(' . implode(', ', array_map(
-                    static function (ParameterGenerator $parameter): string {
-                        return var_export($parameter->getName(), true) . ' => ' . ($parameter->getPassedByReference() ? '&$' : '$') . $parameter->getName();
-                    },
-                    $method->getParameters()
-                ))
+            '{{$name}}' => var_export($method->getName(), true),
+            '{{$prefixInterceptorsName}}' => $prefixInterceptors->getName(),
+            '{{$prefixEarlyReturnExpression}}' => ProxiedMethodReturnExpression::generate(
+                '$prefixReturnValue',
+                $originalMethod
+            ),
+            '{{$methodBody}}' => $methodBody,
+            '{{$suffixInterceptorsName}}' => $suffixInterceptors->getName(),
+            '{{$suffixEarlyReturnExpression}}' => ProxiedMethodReturnExpression::generate(
+                '$suffixReturnValue',
+                $originalMethod
+            ),
+            '{{$returnExpression}}' => ProxiedMethodReturnExpression::generate(
+                '$returnValue',
+                $originalMethod
+            ),
+            '{{$paramsString}}' => 'array(' . implode(', ', array_map(
+                static fn (ParameterGenerator $parameter): string => var_export(
+                    $parameter->getName(),
+                    true
+                ) . ' => ' . ($parameter->getPassedByReference() ? '&$' : '$') . $parameter->getName(),
+                $method->getParameters()
+            ))
                 . ')',
         ];
 

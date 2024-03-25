@@ -52,7 +52,6 @@ final class ProxyFactoryTest extends TestCase
         $this->assertNotProxy(WithoutAnnotationClass::class, $instance);
     }
 
-
     public function testThrownExceptionWhenCreateAProxyOnFinalClass(): void
     {
         $this->expectException(\LogicException::class);

@@ -8,7 +8,6 @@ use Laminas\Code\Generator\Exception\InvalidArgumentException;
 use Laminas\Code\Generator\PropertyGenerator;
 use Laminas\Code\Reflection\MethodReflection;
 
-use OpenClassrooms\ServiceProxy\Generator\AccessInterceptorGenerator\Method\InterceptorGenerator;
 use ProxyManager\Generator\MethodGenerator;
 
 /**
@@ -24,7 +23,7 @@ final class InterceptedMethod extends MethodGenerator
         PropertyGenerator $prefixInterceptors,
         PropertyGenerator $suffixInterceptors
     ): self {
-        $method          = static::fromReflectionWithoutBodyAndDocBlock($originalMethod);
+        $method = static::fromReflectionWithoutBodyAndDocBlock($originalMethod);
         $forwardedParams = [];
 
         foreach ($originalMethod->getParameters() as $parameter) {
