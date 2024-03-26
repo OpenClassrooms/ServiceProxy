@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\CacheWarmer\ProxyCacheWarmer;
 use OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\Messenger\Transport\Serialization\MessageSerializer;
 use OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\Subscriber\ServiceProxySubscriber;
 use OpenClassrooms\ServiceProxy\Handler\Impl\Cache\SymfonyCacheHandler;
@@ -74,4 +75,12 @@ return static function (ContainerConfigurator $containerConfigurator) {
             service('annotation_reader')->nullOnInvalid(),
         ])
         ->tag('kernel.event_subscriber');
+
+    $services->set(ProxyCacheWarmer::class)
+        ->args([
+            tagged_iterator('openclassrooms.service_proxy'),
+        ])
+        ->tag('kernel.cache_warmer', [
+            'priority' => 128,
+        ]);
 };
