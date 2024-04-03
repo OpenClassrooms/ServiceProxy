@@ -44,7 +44,9 @@ final class ServiceProxyPass implements CompilerPassInterface
         if ($definition->getFactory() !== null) {
             $this->compiler->log($this, "Service {$taggedServiceName} is not compatible with service proxy");
 
-            return;
+            throw new \RuntimeException(
+                "Unable to override {$taggedServiceName}, remove the factory definition or the Interceptable interface."
+            );
         }
 
         $definition->setFactory([new Reference(ProxyFactory::class), 'createInstance']);

@@ -11,8 +11,6 @@ class ClassWithInvalidateCacheAttributes
 {
     public const DATA = 'data';
 
-    private $data;
-
     #[Cache(tags: ['"my_tag"'])]
     public function methodWithTaggedCache(): string
     {
