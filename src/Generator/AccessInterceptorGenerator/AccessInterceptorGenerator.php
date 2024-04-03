@@ -18,10 +18,6 @@ use ProxyManager\ProxyGenerator\AccessInterceptor\PropertyGenerator\MethodSuffix
 use ProxyManager\ProxyGenerator\Assertion\CanProxyAssertion;
 use ProxyManager\ProxyGenerator\ProxyGeneratorInterface;
 
-use InvalidArgumentException;
-use ReflectionClass;
-use ReflectionMethod;
-
 class AccessInterceptorGenerator implements ProxyGeneratorInterface
 {
     /**
@@ -29,13 +25,13 @@ class AccessInterceptorGenerator implements ProxyGeneratorInterface
      *
      * @param array{'methods'?: array<string>} $proxyOptions
      *
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      * @throws InvalidProxiedClassException
      */
-    public function generate(ReflectionClass $originalClass, ClassGenerator $classGenerator, array $proxyOptions = [])
+    public function generate(\ReflectionClass $originalClass, ClassGenerator $classGenerator, array $proxyOptions = [])
     {
         if (!\array_key_exists('methods', $proxyOptions)) {
-            throw new InvalidArgumentException(sprintf('Missing methods options for %s.', __CLASS__));
+            throw new \InvalidArgumentException(sprintf('Missing methods options for %s.', __CLASS__));
         }
 
         CanProxyAssertion::assertClassCanBeProxied($originalClass, false);
@@ -69,7 +65,7 @@ class AccessInterceptorGenerator implements ProxyGeneratorInterface
         MethodPrefixInterceptors $prefixInterceptors,
         MethodSuffixInterceptors $suffixInterceptors
     ): callable {
-        return static function (ReflectionMethod $method) use (
+        return static function (\ReflectionMethod $method) use (
             $prefixInterceptors,
             $suffixInterceptors
         ): InterceptedMethod {
