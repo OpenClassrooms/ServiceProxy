@@ -86,4 +86,19 @@ final class Event
 
         return "{$moment->value}.{$name}";
     }
+
+    public function getUseCaseRequest(): mixed
+    {
+        return $this->parameters['useCaseRequest'];
+    }
+
+    public function getUseCaseResponse(): mixed
+    {
+        return $this->response;
+    }
+
+    public function getUseCaseException(): mixed
+    {
+        return $this->exception;
+    }
 }
