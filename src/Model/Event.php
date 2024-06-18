@@ -25,6 +25,11 @@ final class Event
     ) {
     }
 
+    /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     */
     public static function createFromSenderInstance(
         Instance $instance,
         Moment $moment = Moment::SUFFIX,

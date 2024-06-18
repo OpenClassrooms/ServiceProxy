@@ -47,6 +47,13 @@ final class SymfonyEventDispatcherEventHandler implements EventHandler
         );
     }
 
+    /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     *
+     * @return callable(object): mixed
+     */
     private function getCallable(Instance $instance): callable
     {
         return fn (object $event) => $this->aggregateMethodInvoker->invoke($instance, $event);
