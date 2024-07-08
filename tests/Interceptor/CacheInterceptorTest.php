@@ -13,6 +13,7 @@ use OpenClassrooms\ServiceProxy\Tests\CacheTestTrait;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ClassWithCacheAttributes;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\LegacyCacheAnnotatedClass;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\Request1Stub;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ResponseStub;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\ParameterClassStub;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
@@ -768,5 +769,28 @@ final class CacheInterceptorTest extends TestCase
 
         $this->executeAndAssertCacheMiss('ClassWithCache');
         $this->executeAndAssertCacheHit('ClassWithCache');
+    }
+
+    public function testRequestAndTagAttribute(): void
+    {
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy->methodWithTaggedRequest(new Request1Stub());
+
+        $this->assertEmpty(CacheInterceptor::getHits());
+        $this->assertNotEmpty(CacheInterceptor::getMisses());
+
+        $result = $proxy->methodWithTaggedRequest(new Request1Stub());
+
+        $this->assertEquals(new ResponseStub(), $result);
+        $this->assertNotEmpty(CacheInterceptor::getHits());
+        $this->assertEquals([
+                                'OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.getId.12',
+                                'OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.getName.test',
+                                'OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.getUserId.1111',
+                                'OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.age.10',
+                                'prefix.paris',
+                                'OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.id.1',
+                            ], CacheInterceptor::getHits()[0]['tags']);
+        $this->assertEmpty(CacheInterceptor::getMisses());
     }
 }

@@ -103,10 +103,14 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
                 continue;
             }
 
-            self::$hits[$pool] = self::$hits[$pool] ?? [];
-            self::$hits[$pool][] = $cacheKey;
+
             $data = $data->get();
             $tags = $this->getTags($instance, $attribute, $data);
+            self::$hits[$pool] = self::$hits[$pool] ?? [];
+            self::$hits[$pool][] = [
+                'key'  => $cacheKey,
+                'tags' => $tags,
+            ];
             foreach ($missedPools as $missedPool) {
                 $handler->save(
                     $missedPool,

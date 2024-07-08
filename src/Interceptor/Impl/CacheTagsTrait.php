@@ -196,11 +196,11 @@ trait CacheTagsTrait
         ?\ReflectionAttribute                 $tagAttribute = null
     ): string {
         $value = $member instanceof \ReflectionProperty
-            ? $member->getValue()
+            ? $member->getValue($object)
             : $member->invoke($object, []);
 
         if ($tagAttribute?->newInstance()?->prefix !== null) {
-            return $tagAttribute->newInstance()->prefix . $value;
+            return $tagAttribute->newInstance()->prefix . '.' . $value;
         }
 
         return $prefix . '.' . $member->getName() . '.' . $value;
