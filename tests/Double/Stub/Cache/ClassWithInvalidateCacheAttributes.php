@@ -47,7 +47,7 @@ class ClassWithInvalidateCacheAttributes
         return new ResponseStub();
     }
 
-    #[InvalidateCache(tags: ['"OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.12"'])]
+    #[InvalidateCache(tags: ['"OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.getId.12"'])]
     public function methodWithInvalidateCacheAndExplicitTag(): ResponseStub
     {
         return new ResponseStub();

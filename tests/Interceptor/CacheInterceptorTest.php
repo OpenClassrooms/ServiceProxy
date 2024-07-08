@@ -239,7 +239,7 @@ final class CacheInterceptorTest extends TestCase
         $this->assertNotEmpty($this->cacheInterceptor::getHits());
         $this->assertEmpty($this->cacheInterceptor::getMisses());
 
-        $tagToInvalidate = str_replace('\\', '.', ResponseStub::class) . '.' . ResponseStub::ID;
+        $tagToInvalidate = str_replace('\\', '.', ResponseStub::class) . '.getId.' . ResponseStub::ID;
 
         $this->cacheHandlerMock->invalidateTags('default', [$tagToInvalidate]);
 

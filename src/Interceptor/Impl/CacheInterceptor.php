@@ -9,17 +9,17 @@ use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Helper\TypesExtractor;
 use OpenClassrooms\ServiceProxy\Interceptor\Config\CacheInterceptorConfig;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
-use OpenClassrooms\ServiceProxy\Interceptor\Contract\Cache\AutoTaggable;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Exception\InternalCodeRetrievalException;
 use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 use OpenClassrooms\ServiceProxy\Model\Response\Response;
-use OpenClassrooms\ServiceProxy\Util\Expression;
 use Symfony\Component\PropertyInfo\Type;
 
 final class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
+    use CacheTagsTrait;
+
     private const DEFAULT_POOL_NAME = 'default';
 
     /**
@@ -46,16 +46,18 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     /**
      * @return array<int, string>
      */
-    public static function getHits(?string $poolName = self::DEFAULT_POOL_NAME): array
+    public static function getHits(?string $poolName = null): array
     {
+        $poolName ??= self::DEFAULT_POOL_NAME;
         return self::$hits[$poolName] ?? [];
     }
 
     /**
      * @return array<int, string>
      */
-    public static function getMisses(?string $poolName = self::DEFAULT_POOL_NAME): array
+    public static function getMisses(?string $poolName = null): array
     {
+        $poolName ??= self::DEFAULT_POOL_NAME;
         return self::$misses[$poolName] ?? [];
     }
 
@@ -103,18 +105,19 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
             self::$hits[$pool] = self::$hits[$pool] ?? [];
             self::$hits[$pool][] = $cacheKey;
-
+            $data = $data->get();
+            $tags = $this->getTags($instance, $attribute, $data);
             foreach ($missedPools as $missedPool) {
                 $handler->save(
                     $missedPool,
                     $cacheKey,
-                    $data->get(),
+                    $data,
                     $attribute->ttl ?? $this->config->defaultTtl,
-                    $this->getTags($instance, $attribute, $data)
+                    $tags
                 );
             }
 
-            return new Response($data->get(), true);
+            return new Response($data, true);
         }
 
         return new Response(null, false);
@@ -273,107 +276,6 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     }
 
     /**
-     * @return array<int, string>
-     */
-    private function getTags(Instance $instance, Cache $attribute, mixed $response = null): array
-    {
-        $parameters = $instance->getMethod()
-            ->getParameters();
-
-        $tags = array_map(
-            static fn (string $expression) => Expression::evaluateToString($expression, $parameters),
-            $attribute->tags
-        );
-
-        if ($response !== null) {
-            $tags = array_values(array_filter([
-                ...$tags,
-                ...$this->guessObjectsTags(
-                    $response,
-                    $this->config->autoTagsExcludedClasses
-                ),
-            ]));
-        }
-
-        return $tags;
-    }
-
-    /**
-     * @param array<class-string> $excludedClasses
-     * @param array<string, string> $registeredTags
-     *
-     * @return array<string, string>
-     */
-    private function guessObjectsTags(mixed $object, array $excludedClasses = [], array $registeredTags = []): array
-    {
-        if (!\is_object($object) && !is_iterable($object)) {
-            return $registeredTags;
-        }
-
-        foreach ($excludedClasses as $excludedClass) {
-            if ($object instanceof $excludedClass) {
-                return $registeredTags;
-            }
-        }
-
-        if (is_iterable($object)) {
-            foreach ($object as $item) {
-                $registeredTags = $this->guessObjectsTags($item, $excludedClasses, $registeredTags);
-            }
-
-            return $registeredTags;
-        }
-
-        if (!$object instanceof AutoTaggable) {
-            return $registeredTags;
-        }
-
-        $tag = $this->buildTag($object);
-
-        if (isset($registeredTags[$tag])) {
-            return $registeredTags;
-        }
-
-        $registeredTags[$tag] = $tag;
-
-        $ref = new \ReflectionClass($object);
-
-        foreach ($ref->getProperties() as $propRef) {
-            $subObject = $this->getPropertyValue($ref, $object, $propRef->getName());
-
-            $registeredTags = $this->guessObjectsTags($subObject, $excludedClasses, $registeredTags);
-        }
-
-        return $registeredTags;
-    }
-
-    private function buildTag(AutoTaggable $object): string
-    {
-        return str_replace('\\', '.', \get_class($object)) . '.' . $object->getId();
-    }
-
-    /**
-     * @param \ReflectionClass<object> $ref
-     */
-    private function getPropertyValue(\ReflectionClass $ref, object $object, string $propertyName): mixed
-    {
-        $getter = 'get' . ucfirst($propertyName);
-        $refMethod = $ref->hasMethod($getter) ? $ref->getMethod($getter) : null;
-        if ($refMethod !== null && $refMethod->isPublic() && \count($refMethod->getParameters()) === 0) {
-            return $refMethod->invoke($object);
-        }
-
-        $propRef = $ref->getProperty($propertyName);
-        if (!$propRef->isInitialized($object)) {
-            return null;
-        }
-
-        $propRef->setAccessible(true);
-
-        return $propRef->getValue($object);
-    }
-
-    /**
      * @param array<string, mixed> $parameters
      */
     private function getParametersHash(array $parameters): string
@@ -384,5 +286,13 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         }
 
         return $identifier;
+    }
+
+    /**
+     * @return array<class-string>
+     */
+    private function getAutoTagsExcludedClasses(): array
+    {
+        return $this->config->autoTagsExcludedClasses ?? [];
     }
 }
