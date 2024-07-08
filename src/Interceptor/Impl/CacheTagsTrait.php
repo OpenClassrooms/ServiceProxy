@@ -13,6 +13,15 @@ use OpenClassrooms\ServiceProxy\Util\Expression;
 
 trait CacheTagsTrait
 {
+    private function normalizePrefixName(string $name): string
+    {
+        return str_replace(
+            ['\\', 'SharedResponse', 'Embedded', '_Shared'],
+            ['.', '', '', ''],
+            $name,
+        );
+    }
+
     /**
      * @return array<class-string>
      */
@@ -34,15 +43,9 @@ trait CacheTagsTrait
 
         /** @noinspection PhpConditionCheckedByNextConditionInspection */
         if ($response !== null && \is_object($response)) {
-            $prefix = str_replace(
-                ['\\', 'SharedResponse', 'Embedded', '_Shared'],
-                ['.', '', '', ''],
-                \get_class($response)
-            );
+            $prefix = $this->normalizePrefixName(\get_class($response));
         } else {
-            $prefix = str_replace(
-                '\\',
-                '.',
+            $prefix = $this->normalizePrefixName(
                 $instance->getReflection()->getName() . $instance->getMethod()->getName()
             );
         }
@@ -199,11 +202,18 @@ trait CacheTagsTrait
             ? $member->getValue($object)
             : $member->invoke($object, []);
 
+        $memberPrefix = str_replace(
+            ['get', 'has', 'is'],
+            ['', '', ''],
+            mb_strtolower($member->getName())
+        );
         if ($tagAttribute?->newInstance()?->prefix !== null) {
-            return $tagAttribute->newInstance()->prefix . '.' . $value;
+            return $this->normalizePrefixName(
+                $tagAttribute->newInstance()->prefix
+            ) . '.' . $memberPrefix . '.' . $value;
         }
 
-        return $prefix . '.' . $member->getName() . '.' . $value;
+        return $prefix . '.' . $memberPrefix . '.' . $value;
     }
 
     /**

@@ -240,7 +240,7 @@ final class CacheInterceptorTest extends TestCase
         $this->assertNotEmpty($this->cacheInterceptor::getHits());
         $this->assertEmpty($this->cacheInterceptor::getMisses());
 
-        $tagToInvalidate = str_replace('\\', '.', ResponseStub::class) . '.getId.' . ResponseStub::ID;
+        $tagToInvalidate = str_replace('\\', '.', ResponseStub::class) . '.id.' . ResponseStub::ID;
 
         $this->cacheHandlerMock->invalidateTags('default', [$tagToInvalidate]);
 
@@ -784,13 +784,13 @@ final class CacheInterceptorTest extends TestCase
         $this->assertEquals(new ResponseStub(), $result);
         $this->assertNotEmpty(CacheInterceptor::getHits());
         $this->assertEquals([
-                                'OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.getId.12',
-                                'OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.getName.test',
-                                'OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.getUserId.1111',
-                                'OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.age.10',
-                                'prefix.paris',
-                                'OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.id.1',
-                            ], CacheInterceptor::getHits()[0]['tags']);
+            'OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.id.12',
+            'OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.name.test',
+            'OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.userid.1111',
+            'OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.age.10',
+            'prefix.city.paris',
+            'OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.id.1',
+        ], CacheInterceptor::getHits()[0]['tags']);
         $this->assertEmpty(CacheInterceptor::getMisses());
     }
 }

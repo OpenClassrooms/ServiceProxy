@@ -23,7 +23,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     private const DEFAULT_POOL_NAME = 'default';
 
     /**
-     * @var string[][]
+     * @var array<string, array<int, array{key: string, tags: array<int, string>}>>
      */
     private static array $hits = [];
 
@@ -44,7 +44,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     }
 
     /**
-     * @return array<int, string>
+     * @return array<int, array{key: string, tags: array<int, string>}>
      */
     public static function getHits(?string $poolName = null): array
     {
@@ -103,12 +103,11 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
                 continue;
             }
 
-
             $data = $data->get();
             $tags = $this->getTags($instance, $attribute, $data);
             self::$hits[$pool] = self::$hits[$pool] ?? [];
             self::$hits[$pool][] = [
-                'key'  => $cacheKey,
+                'key' => $cacheKey,
                 'tags' => $tags,
             ];
             foreach ($missedPools as $missedPool) {
