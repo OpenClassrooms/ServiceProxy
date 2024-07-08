@@ -189,7 +189,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
                 $instance->getMethod()
                     ->getName(),
                 $this->getParametersHash($instance->getMethod()->getParameters()),
-                ...$this->getTags($instance, $attribute),
+                ...$this->getAttributeTags($instance->getMethod()->getParameters(), $attribute),
                 $attribute->ttl,
                 $this->getInnerCode($instance->getMethod()->getReflection()),
                 $this->getTypesInnerCode($instance->getMethod()->getReflection()),

@@ -10,7 +10,6 @@ use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 use OpenClassrooms\ServiceProxy\Model\Response\Response;
-use OpenClassrooms\ServiceProxy\Util\Expression;
 
 final class InvalidateCacheInterceptor extends AbstractInterceptor implements SuffixInterceptor
 {
@@ -35,10 +34,7 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
         ;
         $response = $instance->getMethod()->getResponse();
 
-        $tags = array_map(
-            static fn (string $expression) => Expression::evaluateToString($expression, $parameters),
-            $attribute->tags
-        );
+        $tags = $this->getAttributeTags($parameters, $attribute);
 
         if (\count($tags) === 0) {
             $tags = $this->getTags($instance, $attribute, $response);

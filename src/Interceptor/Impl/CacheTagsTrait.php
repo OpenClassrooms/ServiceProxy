@@ -13,6 +13,19 @@ use OpenClassrooms\ServiceProxy\Util\Expression;
 
 trait CacheTagsTrait
 {
+    /**
+     * @param array<mixed> $parameters
+     *
+     * @return array<int, string>
+     */
+    private function getAttributeTags(array $parameters, Cache|InvalidateCache $attribute): array
+    {
+        return array_map(
+            static fn (string $expression) => Expression::evaluateToString($expression, $parameters),
+            $attribute->tags
+        );
+    }
+
     private function normalizePrefixName(string $name): string
     {
         return str_replace(
@@ -36,10 +49,7 @@ trait CacheTagsTrait
             ->getParameters()
         ;
 
-        $tags = array_map(
-            static fn (string $expression) => Expression::evaluateToString($expression, $parameters),
-            $attribute->tags
-        );
+        $tags = $this->getAttributeTags($parameters, $attribute);
 
         /** @noinspection PhpConditionCheckedByNextConditionInspection */
         if ($response !== null && \is_object($response)) {
