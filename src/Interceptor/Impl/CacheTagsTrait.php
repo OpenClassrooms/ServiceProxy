@@ -55,11 +55,11 @@ trait CacheTagsTrait
                     prefix: $prefix,
                     excludedClasses: $this->getAutoTagsExcludedClasses(),
                 ),
-                ...array_merge(...array_map(fn ($param) => $this->guessObjectsTags(
+                ...array_merge(...array_values(array_map(fn ($param) => $this->guessObjectsTags(
                     $param,
                     prefix: $prefix,
                     excludedClasses: $this->getAutoTagsExcludedClasses(),
-                ), $parameters)),
+                ), $parameters))),
             ])
         );
     }
