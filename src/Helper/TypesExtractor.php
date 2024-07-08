@@ -131,10 +131,11 @@ final class TypesExtractor
                 $types = $this->typeHelper->getTypes($tag->value, $nameScope);
                 foreach ($types as $type) {
                     $classNames[] = $type->getClassName() ?? $type->getBuiltinType();
-                    if ($type->isCollection()) {
-                        foreach ($type->getCollectionValueTypes() as $collectionValueType) {
-                            $classNames[] = $collectionValueType->getClassName() ?? $collectionValueType->getBuiltinType();
-                        }
+                    foreach ($type->getCollectionValueTypes() as $collectionType) {
+                        $classNames[] = $collectionType->getClassName() ?? $collectionType->getBuiltinType();
+                    }
+                    foreach ($type->getCollectionKeyTypes() as $collectionType) {
+                        $classNames[] = $collectionType->getClassName() ?? $collectionType->getBuiltinType();
                     }
                 }
             }
