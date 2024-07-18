@@ -9,6 +9,7 @@ use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\CacheInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\EventInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Impl\InvalidateCacheInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\SecurityInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\TransactionInterceptor;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
@@ -35,6 +36,7 @@ final class ProxyFactoryTest extends TestCase
                 new EventInterceptor([new EventHandlerMock()]),
                 new TransactionInterceptor([new TransactionHandlerMock()]),
                 new SecurityInterceptor([new SecurityHandlerMock()]),
+                new InvalidateCacheInterceptor(),
             ]
         );
     }
@@ -93,9 +95,9 @@ final class ProxyFactoryTest extends TestCase
         $this->assertEquals(
             [
                 TransactionInterceptor::class,
+                InvalidateCacheInterceptor::class,
                 CacheInterceptor::class,
                 EventInterceptor::class,
-                SecurityInterceptor::class,
             ],
             $suffixInterceptorsClasses
         );

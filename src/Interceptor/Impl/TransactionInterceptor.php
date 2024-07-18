@@ -69,7 +69,7 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
 
     public function getSuffixPriority(): int
     {
-        return 30;
+        return 40;
     }
 
     /**

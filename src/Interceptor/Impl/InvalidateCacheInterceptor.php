@@ -45,7 +45,7 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
 
     public function getSuffixPriority(): int
     {
-        return 40;
+        return 30;
     }
 
     /**
