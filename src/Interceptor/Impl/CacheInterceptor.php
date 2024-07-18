@@ -14,6 +14,8 @@ use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Exception\InternalCodeRetrievalException;
 use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 use OpenClassrooms\ServiceProxy\Model\Response\Response;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Symfony\Component\PropertyInfo\Type;
 
 final class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
@@ -34,10 +36,14 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
     private TypesExtractor $typesExtractor;
 
+    private LoggerInterface $logger;
+
     public function __construct(
         private readonly CacheInterceptorConfig $config,
         iterable                                $handlers = [],
+        ?LoggerInterface $logger = null,
     ) {
+        $this->logger = $logger ?? new NullLogger();
         parent::__construct($handlers);
 
         $this->typesExtractor = new TypesExtractor();
@@ -92,32 +98,42 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $missedPools = [];
 
         foreach ($pools as $pool) {
-            $data = $handler->fetch($pool, $cacheKey);
+            try {
+                $data = $handler->fetch($pool, $cacheKey);
+                if (!$data->isHit()) {
+                    $missedPools[] = $pool;
 
-            if (!$data->isHit()) {
+                    self::$misses[$pool] = self::$misses[$pool] ?? [];
+                    self::$misses[$pool][] = $cacheKey;
+
+                    continue;
+                }
+
+                $data = $data->get();
+                $tags = $this->getTags($instance, $attribute, $data);
+            } catch (\Throwable $e) {
+                $this->logger->error($e->getMessage(), ['exception' => $e]);
                 $missedPools[] = $pool;
-
-                self::$misses[$pool] = self::$misses[$pool] ?? [];
-                self::$misses[$pool][] = $cacheKey;
 
                 continue;
             }
-
-            $data = $data->get();
-            $tags = $this->getTags($instance, $attribute, $data);
             self::$hits[$pool] = self::$hits[$pool] ?? [];
             self::$hits[$pool][] = [
                 'key' => $cacheKey,
                 'tags' => $tags,
             ];
             foreach ($missedPools as $missedPool) {
-                $handler->save(
-                    $missedPool,
-                    $cacheKey,
-                    $data,
-                    $attribute->ttl ?? $this->config->defaultTtl,
-                    $tags
-                );
+                try {
+                    $handler->save(
+                        $missedPool,
+                        $cacheKey,
+                        $data,
+                        $attribute->ttl ?? $this->config->defaultTtl,
+                        $tags
+                    );
+                } catch (\Throwable $e) {
+                    $this->logger->error($e->getMessage(), ['exception' => $e]);
+                }
             }
 
             return new Response($data, true);

@@ -12,12 +12,25 @@ use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 use OpenClassrooms\ServiceProxy\Model\Response\Response;
 use OpenClassrooms\ServiceProxy\Util\Expression;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * @deprecated use CacheHandler instead
  */
 final class LegacyCacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
+    private LoggerInterface $logger;
+
+    public function __construct(
+        iterable $handlers = [],
+        ?LoggerInterface $logger = null
+    ) {
+        $this->logger = $logger ?? new NullLogger();
+        parent::__construct($handlers);
+
+    }
+
     public function prefix(Instance $instance): Response
     {
         $annotation = $instance->getMethod()
@@ -37,15 +50,19 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
         $handler = $this->getHandlers(CacheHandler::class, $annotation)[0];
 
         array_unshift($tags, $proxyId);
-        $data = $handler->fetch('default', implode('|', $tags));
+        try {
+            $data = $handler->fetch('default', implode('|', $tags));
+            // this is needed to solve a bug (when the false is stored in the cache)
+            if (!$data->isHit()) {
+                return new Response(null, false);
+            }
 
-        // this is needed to solve a bug (when the false is stored in the cache)
+            return new Response($data->get(), true);
+        } catch (\Throwable $e) {
+            $this->logger->error($e->getMessage(), ['exception' => $e]);
 
-        if (!$data->isHit()) {
             return new Response(null, false);
         }
-
-        return new Response($data->get(), true);
     }
 
     public function suffix(Instance $instance): Response
