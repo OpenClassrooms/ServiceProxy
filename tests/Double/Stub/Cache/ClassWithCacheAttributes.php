@@ -107,4 +107,10 @@ class ClassWithCacheAttributes
     {
         return self::DATA;
     }
+
+    #[Cache]
+    public function methodWithTaggedRequest(Request1Stub $request1Stub): ResponseStub
+    {
+        return new ResponseStub();
+    }
 }
