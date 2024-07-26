@@ -53,7 +53,7 @@ final class CacheInterceptorTest extends TestCase
     public function testSupportsCacheAttribute(): void
     {
         $method = Instance::createFromMethod(
-            new ClassWithCacheAttributes(),
+            ClassWithCacheAttributes::class,
             'methodWithoutAttribute'
         );
 
@@ -61,7 +61,7 @@ final class CacheInterceptorTest extends TestCase
         $this->assertFalse($this->cacheInterceptor->supportsSuffix($method));
 
         $method = Instance::createFromMethod(
-            new ClassWithCacheAttributes(),
+            ClassWithCacheAttributes::class,
             'methodWithAttribute'
         );
 
@@ -72,7 +72,7 @@ final class CacheInterceptorTest extends TestCase
     public function testNotSupportsCacheAnnotation(): void
     {
         $method = Instance::createFromMethod(
-            new LegacyCacheAnnotatedClass(),
+            LegacyCacheAnnotatedClass::class,
             'annotatedMethod'
         );
 
@@ -82,14 +82,14 @@ final class CacheInterceptorTest extends TestCase
 
     public function testMethodWithoutCache(): void
     {
-        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy = $this->proxyFactory->createInstance(ClassWithCacheAttributes::class);
 
         $this->assertEquals(ClassWithCacheAttributes::DATA, $proxy->methodWithAttribute());
     }
 
     public function testNotInCacheReturnData(): void
     {
-        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy = $this->proxyFactory->createInstance(ClassWithCacheAttributes::class);
 
         $this->assertEquals(ClassWithCacheAttributes::DATA, $proxy->methodWithAttribute());
         $this->assertEmpty($this->cacheInterceptor->getHits());
@@ -98,7 +98,7 @@ final class CacheInterceptorTest extends TestCase
 
     public function testInCacheReturnData(): void
     {
-        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy = $this->proxyFactory->createInstance(ClassWithCacheAttributes::class);
         $proxy->methodWithAttribute();
 
         $this->assertEmpty($this->cacheInterceptor::getHits());
@@ -113,7 +113,7 @@ final class CacheInterceptorTest extends TestCase
 
     public function testMethodWithVoidReturnIsNotCached(): void
     {
-        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy = $this->proxyFactory->createInstance(ClassWithCacheAttributes::class);
         $proxy->methodWithVoidReturn();
 
         $this->assertEmpty($this->cacheInterceptor->getHits());
@@ -128,7 +128,7 @@ final class CacheInterceptorTest extends TestCase
 
     public function testCachedMethodWithArguments(): void
     {
-        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy = $this->proxyFactory->createInstance(ClassWithCacheAttributes::class);
         $proxy->methodWithArguments('value1', 'value2');
 
         $this->assertEmpty($this->cacheInterceptor->getHits());
@@ -152,7 +152,7 @@ final class CacheInterceptorTest extends TestCase
 
     public function testOnExceptionDontSave(): void
     {
-        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy = $this->proxyFactory->createInstance(ClassWithCacheAttributes::class);
 
         try {
             $proxy->methodWithException();
@@ -173,7 +173,7 @@ final class CacheInterceptorTest extends TestCase
 
     public function testWithLifeTimeReturnData(): void
     {
-        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy = $this->proxyFactory->createInstance(ClassWithCacheAttributes::class);
 
         $data = $proxy->methodWithLifetime();
 
@@ -183,7 +183,7 @@ final class CacheInterceptorTest extends TestCase
 
     public function testWithTagsReturnDataAndCanBeInvalidated(): void
     {
-        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy = $this->proxyFactory->createInstance(ClassWithCacheAttributes::class);
         $proxy->methodWithTaggedCache();
 
         $this->assertEmpty($this->cacheInterceptor->getHits());
@@ -206,7 +206,7 @@ final class CacheInterceptorTest extends TestCase
 
     public function testWithTagsAndParameterReturnDataAndCanBeInvalidated(): void
     {
-        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy = $this->proxyFactory->createInstance(ClassWithCacheAttributes::class);
         $proxy->methodWithResolvedTag(new ParameterClassStub());
 
         $this->assertEmpty($this->cacheInterceptor->getHits());
@@ -227,7 +227,7 @@ final class CacheInterceptorTest extends TestCase
 
     public function testMethodCacheIsAutoTaggedFromResponse(): void
     {
-        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy = $this->proxyFactory->createInstance(ClassWithCacheAttributes::class);
         $proxy->methodWithAttributeReturningObject();
 
         $this->assertEmpty($this->cacheInterceptor::getHits());
@@ -251,7 +251,7 @@ final class CacheInterceptorTest extends TestCase
 
     public function testMethodWithPhpDoc(): void
     {
-        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy = $this->proxyFactory->createInstance(ClassWithCacheAttributes::class);
         $proxy->methodWithAttributeAndPhpDoc();
 
         $this->assertEmpty($this->cacheInterceptor::getHits());
@@ -266,35 +266,42 @@ final class CacheInterceptorTest extends TestCase
     public function testUnknownHandlerThrowsException(): void
     {
         $this->expectException(HandlerNotFound::class);
-        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy = $this->proxyFactory->createInstance(ClassWithCacheAttributes::class);
         $proxy->invalidHandler();
     }
 
     public function testUnknownPoolThrowsException(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy = $this->proxyFactory->createInstance(ClassWithCacheAttributes::class);
         $proxy->invalidPool();
     }
 
     public function testPool(): void
     {
-        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy = $this->proxyFactory->createInstance(ClassWithCacheAttributes::class);
 
         $this->assertEquals(ClassWithCacheAttributes::DATA, $proxy->methodWithPool());
         $this->assertEmpty($this->cacheInterceptor::getHits());
         $this->assertNotEmpty($this->cacheInterceptor::getMisses());
     }
 
+    public function testProperties(): void
+    {
+        $proxy = $this->proxyFactory->createInstance(ClassWithCacheAttributes::class, 'world');
+
+        $this->assertEquals('world', $proxy->data);
+    }
+
     public function testBothHandlerAndPool(): void
     {
-        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy = $this->proxyFactory->createInstance(ClassWithCacheAttributes::class);
         $this->assertEquals(ClassWithCacheAttributes::DATA, $proxy->bothHandlerAndPool());
     }
 
     public function testMethodWithMultiplePools(): void
     {
-        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy = $this->proxyFactory->createInstance(ClassWithCacheAttributes::class);
         $proxy->methodWithMultiplePools();
 
         $this->assertEmpty($this->cacheInterceptor->getHits('foo'));
@@ -316,7 +323,7 @@ final class CacheInterceptorTest extends TestCase
 
     public function testMethodWithNoPoolUsesDefaultPool(): void
     {
-        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy = $this->proxyFactory->createInstance(ClassWithCacheAttributes::class);
         $proxy->methodWithAttribute();
 
         $this->assertNotEmpty($this->cacheInterceptor->getMisses('default'));

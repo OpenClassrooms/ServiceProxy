@@ -49,6 +49,10 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
     }
 
     /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     *
      * @return array<int, string>
      */
     private function getTags(Instance $instance, InvalidateCache $attribute): array
