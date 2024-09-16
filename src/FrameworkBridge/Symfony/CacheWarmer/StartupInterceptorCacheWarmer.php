@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\Subscriber;
+namespace OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\CacheWarmer;
 
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\Reader;
@@ -10,10 +10,9 @@ use OpenClassrooms\ServiceProxy\Interceptor\Contract\StartUpInterceptor;
 use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 use OpenClassrooms\ServiceProxy\Model\Request\Method;
 use ProxyManager\Proxy\ValueHolderInterface;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\HttpKernel\CacheWarmer\CacheWarmerInterface;
 
-final class ServiceProxySubscriber implements EventSubscriberInterface
+final class StartupInterceptorCacheWarmer implements CacheWarmerInterface
 {
     /**
      * @var array<StartUpInterceptor>
@@ -23,15 +22,16 @@ final class ServiceProxySubscriber implements EventSubscriberInterface
     private Reader $annotationReader;
 
     /**
+     * @param iterable<Object> $proxies
      * @param iterable<StartUpInterceptor> $startUpInterceptors
-     * @param iterable<object>             $proxies
+     * @param Reader|null $annotationReader
      *
      * @throws \Doctrine\Common\Annotations\AnnotationException
      */
     public function __construct(
         private readonly iterable $proxies,
-        iterable          $startUpInterceptors,
-        Reader|null       $annotationReader = null,
+        iterable $startUpInterceptors,
+        Reader|null $annotationReader = null,
     ) {
         if (!\is_array($startUpInterceptors)) {
             $this->startUpInterceptors = iterator_to_array($startUpInterceptors);
@@ -40,20 +40,15 @@ final class ServiceProxySubscriber implements EventSubscriberInterface
         $this->annotationReader = $annotationReader ?? new AnnotationReader();
     }
 
-    /**
-     * @return array<string, string>
-     */
-    public static function getSubscribedEvents(): array
+    public function isOptional(): bool
     {
-        return [
-            'kernel.request' => 'startUp',
-        ];
+        return false;
     }
 
-    public function startUp(RequestEvent $event): void
+    public function warmUp(string $cacheDir): array
     {
         if (\count($this->startUpInterceptors) === 0) {
-            return;
+            return [];
         }
 
         usort(
@@ -70,12 +65,14 @@ final class ServiceProxySubscriber implements EventSubscriberInterface
                 }
             }
         }
+
+        return [];
     }
 
     /**
      * @return iterable<Instance>
      */
-    public function getInstances(): iterable
+    private function getInstances(): iterable
     {
         foreach ($this->proxies as $proxy) {
             $object = $proxy;
