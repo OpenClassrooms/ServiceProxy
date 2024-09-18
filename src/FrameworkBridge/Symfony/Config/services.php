@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\Messenger\Transport\Serialization\MessageSerializer;
-use OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\CacheWarmer\StartupInterceptorCacheWarmer;
 use OpenClassrooms\ServiceProxy\Handler\Impl\Cache\SymfonyCacheHandler;
 use OpenClassrooms\ServiceProxy\Invoker\Impl\AggregateMethodInvoker;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
@@ -65,11 +64,4 @@ return static function (ContainerConfigurator $containerConfigurator) {
         ->autowire()
         ->autoconfigure()
     ;
-
-    $services->set(StartupInterceptorCacheWarmer::class)
-        ->args([
-            tagged_iterator('openclassrooms.service_proxy'),
-            tagged_iterator('openclassrooms.service_proxy.start_up_interceptor'),
-            service('annotation_reader')->nullOnInvalid(),
-        ]);
 };
