@@ -23,6 +23,11 @@ final class ServiceProxySubscriber implements EventSubscriberInterface
     private Reader $annotationReader;
 
     /**
+     * @var array<Instance>
+     */
+    private array $instances = [];
+
+    /**
      * @param iterable<StartUpInterceptor> $startUpInterceptors
      * @param iterable<object>             $proxies
      *
@@ -63,7 +68,7 @@ final class ServiceProxySubscriber implements EventSubscriberInterface
                 StartUpInterceptor $b
             ) => $a->getStartUpPriority() <=> $b->getStartUpPriority()
         );
-        foreach ($this->getInstances() as $instance) {
+        foreach ($this->instances as $instance) {
             foreach ($this->startUpInterceptors as $interceptor) {
                 if ($interceptor->supportsStartUp($instance)) {
                     $interceptor->startUp($instance);
@@ -73,9 +78,17 @@ final class ServiceProxySubscriber implements EventSubscriberInterface
     }
 
     /**
+     * @param array<Instance> $instances
+     */
+    public function setInstances(array $instances): void
+    {
+        $this->instances = $instances;
+    }
+
+    /**
      * @return iterable<Instance>
      */
-    public function getInstances(): iterable
+    /*public function getInstances(): iterable
     {
         foreach ($this->proxies as $proxy) {
             $object = $proxy;
@@ -100,5 +113,5 @@ final class ServiceProxySubscriber implements EventSubscriberInterface
                 yield $instance;
             }
         }
-    }
+    }*/
 }
