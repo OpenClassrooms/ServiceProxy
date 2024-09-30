@@ -351,7 +351,11 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
     private function buildTag(AutoTaggable $object): string
     {
-        return str_replace('\\', '.', \get_class($object)) . '.' . str_replace(self::$reservedCharacters, '', (string)$object->getId());
+        return str_replace('\\', '.', \get_class($object)) . '.' . str_replace(
+            self::$reservedCharacters,
+            '',
+            (string) $object->getId()
+        );
     }
 
     /**
