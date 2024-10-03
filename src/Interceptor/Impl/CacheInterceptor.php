@@ -34,6 +34,9 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
     private TypesExtractor $typesExtractor;
 
+    /**
+     * @var string[]
+     */
     private static array $reservedCharacters = ['{', '}', '(', ')', '/', '@', ':'];
 
     public function __construct(
