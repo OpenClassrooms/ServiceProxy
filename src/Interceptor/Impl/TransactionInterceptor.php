@@ -39,12 +39,20 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
         foreach ($handlers as $handler) {
             if ($instance->getMethod()->threwException()) {
                 $handler->rollback($attribute->entityManagers);
-
-                if ($attribute->hasMappedExceptions()) {
-                    $this->handleMappedException($instance, $attribute);
+                $thrownException = $instance->getMethod()->getException();
+                if ($thrownException instanceof \Exception && $attribute->hasMappedExceptions()) {
+                    $this->handleMappedException($thrownException, $attribute);
                 }
             } else {
-                $handler->commit($attribute->entityManagers);
+                try {
+                    $handler->commit($attribute->entityManagers);
+                } catch (\Exception $e) {
+                    $handler->rollback($attribute->entityManagers);
+                    if ($attribute->hasMappedExceptions()) {
+                        $this->handleMappedException($e, $attribute);
+                    }
+                    throw $e;
+                }
             }
         }
 
@@ -75,19 +83,14 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
     /**
      * @throws \Exception
      */
-    private function handleMappedException(Instance $instance, Transaction $attribute): void
+    private function handleMappedException(\Exception $thrownException, Transaction $attribute): void
     {
-        $thrownException = $instance->getMethod()
-            ->getException();
+        foreach ($attribute->exceptions as $fromException => $toException) {
+            if (is_a($thrownException, $fromException)) {
+                $toThrow = new $toException();
 
-        if ($thrownException instanceof \Exception) {
-            foreach ($attribute->exceptions as $fromException => $toException) {
-                if (is_a($thrownException, $fromException)) {
-                    $toThrow = new $toException();
-
-                    if ($toThrow instanceof \Exception) {
-                        throw $toThrow;
-                    }
+                if ($toThrow instanceof \Exception) {
+                    throw $toThrow;
                 }
             }
         }
