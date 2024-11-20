@@ -6,6 +6,7 @@ namespace OpenClassrooms\ServiceProxy\Interceptor\Impl;
 
 use OpenClassrooms\ServiceProxy\Attribute\Security;
 use OpenClassrooms\ServiceProxy\Handler\Contract\SecurityHandler;
+use OpenClassrooms\ServiceProxy\Interceptor\Config\SecurityInterceptorConfig;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Model\Request\Instance;
@@ -14,6 +15,13 @@ use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 final class SecurityInterceptor extends AbstractInterceptor implements PrefixInterceptor
 {
+    public function __construct(
+        iterable                                   $handlers = [],
+        private readonly ?SecurityInterceptorConfig $config = null,
+    ) {
+        parent::__construct($handlers);
+    }
+
     public function getPrefixPriority(): int
     {
         return 30;
@@ -31,6 +39,11 @@ final class SecurityInterceptor extends AbstractInterceptor implements PrefixInt
         $parameters = $instance->getMethod()
             ->getParameters()
         ;
+
+        if ($this->config?->bypassSecurity) {
+            return new Response();
+        }
+
         $expression = $attribute->expression;
         if ($expression === null) {
             $role = $this->guessRoleName($instance);
