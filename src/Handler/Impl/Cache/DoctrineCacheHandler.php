@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Handler\Impl\Cache;
 
-use Doctrine\Common\Cache\ArrayCache;
 use Doctrine\Common\Cache\Psr6\CacheItem;
 use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Handler\Impl\ConfigurableHandler;
+use OpenClassrooms\ServiceProxy\Util\ArrayCache;
 use Psr\Cache\CacheItemInterface;
 
 /**
