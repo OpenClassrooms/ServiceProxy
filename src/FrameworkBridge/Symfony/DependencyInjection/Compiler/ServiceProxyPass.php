@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\DependencyInjection\Compiler;
 
+use Doctrine\Common\Annotations\AnnotationException;
+use Doctrine\Common\Annotations\AnnotationReader;
+use OpenClassrooms\ServiceProxy\Attribute\Event\Listen;
+use OpenClassrooms\ServiceProxy\Model\Request\Method;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use Symfony\Component\DependencyInjection\Compiler\Compiler;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
@@ -23,6 +27,7 @@ final class ServiceProxyPass implements CompilerPassInterface
         $this->compiler = $container->getCompiler();
 
         $this->buildServiceProxies();
+        $this->addStartupListeners();
     }
 
     private function buildServiceProxies(): void
@@ -48,5 +53,58 @@ final class ServiceProxyPass implements CompilerPassInterface
         $factoryDefinition->setPublic($definition->isPublic());
         $factoryDefinition->setLazy($definition->isLazy());
         $factoryDefinition->setTags($definition->getTags());
+    }
+
+    private function addStartupListeners(): void
+    {
+        if (!$this->container->findDefinition('event_dispatcher')) {
+            return;
+        }
+
+        $eventDispatcherDefinition = $this->container->findDefinition('event_dispatcher');
+        $proxies = $this->container->findTaggedServiceIds('openclassrooms.service_proxy');
+
+        foreach (\array_keys($proxies) as $proxy) {
+            $definition = $this->container->findDefinition($proxy);
+            $class = $definition->getClass();
+            $instanceRef = new \ReflectionClass($class);
+            $methods = $instanceRef->getMethods(\ReflectionMethod::IS_PUBLIC);
+            foreach ($methods as $methodRef) {
+
+                try {
+                    $methodAnnotations = (new AnnotationReader())->getMethodAnnotations($methodRef);
+                } catch (AnnotationException) {
+                    continue;
+                }
+
+                $method = Method::create(
+                    $methodRef,
+                    $methodAnnotations,
+                );
+
+                if ($method->hasAttribute(Listen::class)) {
+                    $attributes = $method->getAttributesInstances(Listen::class);
+
+                    foreach ($attributes as $attribute) {
+                        /**
+                         * @var Listen $attribute
+                         */
+                        $name = $attribute->name;
+                        $transport = $attribute->transport;
+
+                        if ($transport !== null) {
+                            $name .= '.' . $transport->value;
+                        }
+
+                        $eventDispatcherDefinition->addMethodCall('addListener', [
+                            $name,
+                            [new Reference($proxy), $method->getName()],
+                            $attribute->priority
+                        ]);
+                    }
+
+                }
+            }
+        }
     }
 }
