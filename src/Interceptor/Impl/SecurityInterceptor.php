@@ -108,12 +108,12 @@ final class SecurityInterceptor extends AbstractInterceptor implements PrefixInt
         $expressionLanguage = new ExpressionLanguage();
         $expressionLanguage->register(
             'is_granted',
-            static fn ($attributes, string $object = 'null') => sprintf(
+            static fn (string $attributes, string $object = 'null') => sprintf(
                 'return $handler->checkAccess(%s, %s)',
                 $attributes,
                 $object
             ),
-            static fn (array $variables, $attributes, $object = null) => $handler->checkAccess(
+            static fn (array $variables, string $attributes, $object = null) => $handler->checkAccess(
                 $attributes,
                 $object
             )

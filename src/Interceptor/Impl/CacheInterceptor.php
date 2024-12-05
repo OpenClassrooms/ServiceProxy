@@ -49,7 +49,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     }
 
     /**
-     * @return array<int, string>
+     * @return array<string>
      */
     public static function getHits(?string $poolName = self::DEFAULT_POOL_NAME): array
     {
@@ -57,7 +57,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     }
 
     /**
-     * @return array<int, string>
+     * @return array<string>
      */
     public static function getMisses(?string $poolName = self::DEFAULT_POOL_NAME): array
     {
@@ -383,7 +383,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     }
 
     /**
-     * @param array<string, mixed> $parameters
+     * @param array<mixed> $parameters
      */
     private function getParametersHash(array $parameters): string
     {

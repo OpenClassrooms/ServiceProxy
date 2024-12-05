@@ -8,7 +8,7 @@ namespace OpenClassrooms\ServiceProxy\Attribute;
 final class Security extends Attribute
 {
     /**
-     * @param array<string>|string|null       $handlers
+     * @param array<string, string>|string|null       $handlers
      * @param class-string<\RuntimeException> $exception
      */
     public function __construct(

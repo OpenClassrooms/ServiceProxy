@@ -10,7 +10,7 @@ use OpenClassrooms\ServiceProxy\Attribute\Attribute;
 final class Method
 {
     /**
-     * @var array<int, object>
+     * @var array<object>
      */
     private array $annotations = [];
 
@@ -20,7 +20,7 @@ final class Method
     private array $definedValues = [];
 
     /**
-     * @var array<string, mixed>
+     * @var array<mixed>
      */
     private array $parameters;
 
@@ -33,7 +33,7 @@ final class Method
     }
 
     /**
-     * @param array<int, object> $annotations
+     * @param array<object> $annotations
      */
     public static function create(\ReflectionMethod $reflection, array $annotations): self
     {
@@ -67,15 +67,15 @@ final class Method
     }
 
     /**
-     * @template T
+     * @template T of object
      *
      * @param class-string<T>|null $annotationClass
      *
-     * @return array<int, T>
+     * @return array<T>
      */
     public function getAnnotations(?string $annotationClass = null): array
     {
-        /** @var array<int, T> $annotations */
+        /** @var array<T> $annotations */
         $annotations = array_filter(
             $this->annotations,
             static function ($annotation) use ($annotationClass) {
@@ -114,7 +114,7 @@ final class Method
      *
      * @param class-string<T>|null $attributeClass
      *
-     * @return array<int, \ReflectionAttribute<T>>
+     * @return array<\ReflectionAttribute<T>>
      */
     public function getAttributes(?string $attributeClass = null): array
     {
@@ -132,7 +132,7 @@ final class Method
      *
      * @param class-string<T>|null $attributeClass
      *
-     * @return array<int, T>
+     * @return array<T>
      */
     public function getAttributesInstances(?string $attributeClass = null): array
     {
@@ -217,7 +217,7 @@ final class Method
     }
 
     /**
-     * @param array<string, mixed> $parameters
+     * @param array<mixed> $parameters
      */
     public function setParameters(array $parameters): void
     {

@@ -215,7 +215,7 @@ final class ProxyFactory
         Instance $instance
     ): \Closure {
         if ($type === PrefixInterceptor::PREFIX_TYPE) {
-            return function ($proxy, $object, $methodName, $params, &$returnEarly) use (
+            return function ($proxy, $object, $methodName, array $params, bool &$returnEarly) use (
                 $instance,
                 $type,
                 $interceptors
@@ -232,7 +232,7 @@ final class ProxyFactory
             };
         }
 
-        return function ($proxy, $object, $methodName, $params, $response, &$returnEarly) use (
+        return function ($proxy, $object, $methodName, array $params, $response, bool &$returnEarly) use (
             $instance,
             $type,
             $interceptors

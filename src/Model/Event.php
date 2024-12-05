@@ -30,7 +30,7 @@ final class Event
         Moment $moment = Moment::SUFFIX,
         ?string $name = null
     ): self {
-        /** @var class-string $className */
+        /** @var class-string<object> $className */
         $className = $instance->getReflection()->getName();
 
         return new self(

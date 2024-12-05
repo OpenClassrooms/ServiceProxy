@@ -10,7 +10,7 @@ use Doctrine\Common\Cache\CacheProvider;
 final class ArrayCache extends CacheProvider
 {
     /**
-     * @psalm-var array<string, array{mixed, int|bool}>> $data each element being a tuple of [$data, $expiration], where the expiration is int|bool
+     * @var array<string, array{0: mixed, 1: int|bool}> each element being a tuple of [$data, $expiration], where the expiration is int|bool
      */
     private array $data = [];
 
@@ -85,9 +85,9 @@ final class ArrayCache extends CacheProvider
     }
 
     /**
-     * {@inheritdoc}
+     * @return array<Cache::*, int|null>
      */
-    protected function doGetStats(): ?array
+    protected function doGetStats(): array
     {
         return [
             Cache::STATS_HITS => $this->hitsCount,

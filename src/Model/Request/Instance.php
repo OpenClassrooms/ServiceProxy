@@ -65,7 +65,7 @@ final class Instance
     }
 
     /**
-     * @param array<string, mixed> $parameters
+     * @param array<mixed> $parameters
      */
     public function setParameters(array $parameters): self
     {

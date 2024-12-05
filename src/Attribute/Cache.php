@@ -8,7 +8,7 @@ namespace OpenClassrooms\ServiceProxy\Attribute;
 final class Cache extends Attribute
 {
     /**
-     * @param array<string>|string|null $handler
+     * @param array<string, string>|string|null $handler
      * @param array<int, string> $pools
      * @param array<int, string> $tags
      */

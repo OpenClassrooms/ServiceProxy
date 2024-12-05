@@ -9,6 +9,7 @@ use PHPStan\PhpDocParser\Parser\ConstExprParser;
 use PHPStan\PhpDocParser\Parser\PhpDocParser;
 use PHPStan\PhpDocParser\Parser\TokenIterator;
 use PHPStan\PhpDocParser\Parser\TypeParser;
+use PHPStan\PhpDocParser\ParserConfig;
 use Symfony\Component\PropertyInfo\PhpStan\NameScope;
 use Symfony\Component\PropertyInfo\PhpStan\NameScopeFactory;
 use Symfony\Component\PropertyInfo\Util\PhpStanTypeHelper;
@@ -30,19 +31,21 @@ final class TypesExtractor
 
     public function __construct()
     {
-        $this->lexer = new Lexer();
+        $config = new ParserConfig([]);
+        $this->lexer = new Lexer($config);
         $this->nameScopeFactory = new NameScopeFactory();
         $this->typeHelper = new PhpStanTypeHelper();
 
-        $constExprParser = new ConstExprParser();
+        $constExprParser = new ConstExprParser($config);
         $this->phpDocParser = new PhpDocParser(
-            new TypeParser($constExprParser),
+            $config,
+            new TypeParser(new ParserConfig([]), $constExprParser),
             $constExprParser
         );
     }
 
     /**
-     * @return array<string, string>
+     * @return array<string>
      */
     public function extractFromMethod(\ReflectionMethod $method): array
     {
