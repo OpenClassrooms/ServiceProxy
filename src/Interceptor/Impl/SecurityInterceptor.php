@@ -11,15 +11,21 @@ use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 use OpenClassrooms\ServiceProxy\Model\Response\Response;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 final class SecurityInterceptor extends AbstractInterceptor implements PrefixInterceptor
 {
+    private readonly LoggerInterface $logger;
+
     public function __construct(
-        iterable                                   $handlers = [],
+        iterable                                    $handlers = [],
         private readonly ?SecurityInterceptorConfig $config = null,
+        ?LoggerInterface $logger = null,
     ) {
         parent::__construct($handlers);
+        $this->logger = $logger ?? new NullLogger();
     }
 
     public function getPrefixPriority(): int
@@ -41,6 +47,7 @@ final class SecurityInterceptor extends AbstractInterceptor implements PrefixInt
         ;
 
         if ($this->config?->bypassSecurity) {
+            $this->logger->error('Security is bypassed.');
             return new Response();
         }
 
