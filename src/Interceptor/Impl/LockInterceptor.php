@@ -48,10 +48,15 @@ final class LockInterceptor extends AbstractInterceptor implements PrefixInterce
         $key = $this->computeLockingKey($instance);
         try {
             foreach ($handlers as $handler) {
-                $handler->acquire($attribute->key);
+                $handler->acquire($key);
+                if (!$handler->isAcquired($key)) {
+                    $this->logger->error('Failed to acquire lock, for key: ' . $key, [
+                        'handler' => $handler->getName(),
+                    ]);
+                }
             }
         } catch (LockException $e) {
-            $this->logger->error('Failed to acquire lock, for key:' . $key, [
+            $this->logger->error('Failed to acquire lock, for key: ' . $key, [
                 'exception' => $e,
             ]);
         }
@@ -67,9 +72,14 @@ final class LockInterceptor extends AbstractInterceptor implements PrefixInterce
         try {
             foreach ($handlers as $handler) {
                 $handler->release($key);
+                if ($handler->isAcquired($key)) {
+                    $this->logger->error('Failed to release lock, for key: ' . $key, [
+                        'handler' => $handler->getName(),
+                    ]);
+                }
             }
         } catch (LockException $e) {
-            $this->logger->error('Failed to release lock, for key:' . $key, [
+            $this->logger->error('Failed to release lock, for key: ' . $key, [
                 'exception' => $e,
             ]);
         }

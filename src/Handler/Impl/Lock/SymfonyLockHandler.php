@@ -23,7 +23,8 @@ final class SymfonyLockHandler implements LockHandler
     private array $locks = [];
 
     public function __construct(
-        private readonly LockFactory $lockFactory
+        private readonly LockFactory $lockFactory,
+        private readonly bool $blocking = true,
     ) {
     }
 
@@ -33,11 +34,18 @@ final class SymfonyLockHandler implements LockHandler
     public function acquire(string $key): void
     {
         try {
-            $this->locks[$key] = $this->lockFactory->createLock($key);
-            $this->locks[$key]->acquire(true);
+            if (!isset($this->locks[$key])) {
+                $this->locks[$key] = $this->lockFactory->createLock($key);
+            }
+            $this->locks[$key]->acquire($this->blocking);
         } catch (LockAcquiringException|LockConflictedException $e) {
             throw new LockException($e->getMessage(), $e->getCode(), $e);
         }
+    }
+
+    public function isAcquired(string $key): bool
+    {
+        return isset($this->locks[$key]) && $this->locks[$key]->isAcquired();
     }
 
     public function getName(): string
