@@ -4,19 +4,16 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests;
 
-use OpenClassrooms\ServiceProxy\Interceptor\Config\CacheInterceptorConfig;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\CacheInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\EventInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\InvalidateCacheInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Impl\LegacyCacheInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Impl\LockInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\SecurityInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\TransactionInterceptor;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
-use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
-use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event\EventHandlerMock;
-use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Security\SecurityHandlerMock;
-use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Transaction\TransactionHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ClassWithCacheAttributes;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\WithConstructorAnnotationClass;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\WithoutAnnotationClass;
@@ -30,15 +27,22 @@ final class ProxyFactoryTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->factory = $this->getProxyFactory(
-            [
-                new CacheInterceptor(new CacheInterceptorConfig(), [new CacheHandlerMock()]),
-                new EventInterceptor([new EventHandlerMock()]),
-                new TransactionInterceptor([new TransactionHandlerMock()]),
-                new SecurityInterceptor([new SecurityHandlerMock()]),
-                new InvalidateCacheInterceptor(),
-            ]
-        );
+        //auto load all interceptors using glob from folder
+        $interceptorsFiles = glob(__DIR__ . '/../src/Interceptor/Impl/*Interceptor.php');
+        $interceptors = [];
+        foreach ($interceptorsFiles as $interceptorFile) {
+            require_once $interceptorFile;
+        }
+
+        $classes = get_declared_classes();
+
+        foreach ($classes as $class) {
+            if (is_subclass_of($class, PrefixInterceptor::class) || is_subclass_of($class, SuffixInterceptor::class)) {
+                $interceptors[] = new $class();
+            }
+        }
+
+        $this->factory = $this->getProxyFactory($interceptors);
     }
 
     public function testWithoutAnnotationReturnServiceProxyInterface(): void
@@ -88,6 +92,8 @@ final class ProxyFactoryTest extends TestCase
                 SecurityInterceptor::class,
                 EventInterceptor::class,
                 CacheInterceptor::class,
+                LegacyCacheInterceptor::class,
+                LockInterceptor::class,
                 TransactionInterceptor::class,
             ],
             $prefixInterceptorsClasses
@@ -95,8 +101,10 @@ final class ProxyFactoryTest extends TestCase
         $this->assertEquals(
             [
                 TransactionInterceptor::class,
+                LockInterceptor::class,
                 InvalidateCacheInterceptor::class,
                 CacheInterceptor::class,
+                LegacyCacheInterceptor::class,
                 EventInterceptor::class,
             ],
             $suffixInterceptorsClasses
