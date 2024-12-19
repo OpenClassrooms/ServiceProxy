@@ -33,7 +33,7 @@ final class LockInterceptor extends AbstractInterceptor implements PrefixInterce
 
     public function getPrefixPriority(): int
     {
-        return -10;
+        return 1;
     }
 
     public function getSuffixPriority(): int

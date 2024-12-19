@@ -37,6 +37,8 @@ class SymfonyLockHandlerTest extends TestCase
         $this->assertTrue($this->handler2->isAcquired('key2'));
         $this->handler1->release('key1');
         $this->assertFalse($this->handler1->isAcquired('key1'));
+        $this->handler2->release('key2');
+        $this->assertFalse($this->handler2->isAcquired('key2'));
     }
 
     public function test3(): void
