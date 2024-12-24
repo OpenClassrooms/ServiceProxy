@@ -9,7 +9,6 @@ use Doctrine\Common\Annotations\Reader;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\StartUpInterceptor;
 use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 use OpenClassrooms\ServiceProxy\Model\Request\Method;
-use ProxyManager\Proxy\ValueHolderInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 
@@ -73,24 +72,16 @@ final class ServiceProxySubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @return iterable<Instance>
+     * @return iterable<Instance<object>>
      */
     public function getInstances(): iterable
     {
         foreach ($this->proxies as $proxy) {
-            $object = $proxy;
-            if ($proxy instanceof ValueHolderInterface) {
-                $object = $proxy->getWrappedValueHolderValue();
-                if ($object === null) {
-                    continue;
-                }
-            }
-            $instanceRef = new \ReflectionObject($object);
-            $methods = $instanceRef->getMethods(\ReflectionMethod::IS_PUBLIC);
+            $instanceRef = new \ReflectionClass($proxy);
+            $methods = $instanceRef->getMethods(\ReflectionMethod::IS_PUBLIC | \ReflectionMethod::IS_PROTECTED);
             foreach ($methods as $methodRef) {
                 $methodAnnotations = $this->annotationReader->getMethodAnnotations($methodRef);
                 $instance = Instance::create(
-                    $proxy,
                     $instanceRef,
                     Method::create(
                         $methodRef,

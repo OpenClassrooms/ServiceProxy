@@ -81,6 +81,10 @@ final class TransactionInterceptor extends AbstractInterceptor implements Prefix
     }
 
     /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     *
      * @throws \Exception
      */
     private function handleMappedException(\Exception $thrownException, Transaction $attribute): void

@@ -34,13 +34,13 @@ final class LegacyCacheInterceptorTest extends TestCase
         $this->proxyFactory = $this->getProxyFactory([
             $this->cacheInterceptor,
         ]);
-        $this->proxy = $this->proxyFactory->createProxy(new CacheAnnotatedClass());
+        $this->proxy = $this->proxyFactory->createInstance(CacheAnnotatedClass::class);
     }
 
     public function testTooLongIdWithIdThrowException(): void
     {
         $this->expectException(AnnotationException::class);
-        $this->proxyFactory->createProxy(new InvalidIdCacheAnnotatedClass());
+        $this->proxyFactory->createInstance(InvalidIdCacheAnnotatedClass::class);
     }
 
     public function testTagsInvalidationThrowException(): void

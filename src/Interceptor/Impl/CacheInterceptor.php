@@ -181,6 +181,11 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         return 20;
     }
 
+    /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     */
     private function buildCacheKey(Instance $instance, Cache $attribute): string
     {
         $identifier = implode(
@@ -281,6 +286,10 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     }
 
     /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     *
      * @return array<int, string>
      */
     private function getTags(Instance $instance, Cache $attribute, mixed $response = null): array

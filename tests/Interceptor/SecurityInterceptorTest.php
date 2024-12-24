@@ -33,7 +33,7 @@ final class SecurityInterceptorTest extends TestCase
                 ),
             ]
         );
-        $this->proxy = $this->proxyFactory->createProxy(new SecurityAnnotatedClass());
+        $this->proxy = $this->proxyFactory->createInstance(SecurityAnnotatedClass::class);
     }
 
     public function testOnlyRoleNotAuthorizedThrowException(): void

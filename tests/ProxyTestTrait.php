@@ -6,11 +6,10 @@ namespace OpenClassrooms\ServiceProxy\Tests;
 
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
+use OpenClassrooms\ServiceProxy\Proxy\AccessInterceptorsInterface;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\ProxyFactoryConfiguration;
 use PHPUnit\Framework\TestCase as Assert;
-use ProxyManager\Proxy\AccessInterceptorInterface;
-use ProxyManager\Proxy\ValueHolderInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
 trait ProxyTestTrait
@@ -23,18 +22,22 @@ trait ProxyTestTrait
         $fs->remove(self::$cacheDir);
     }
 
-    protected function assertProxy(object $input, object $proxy): void
+    /**
+     * @param class-string $input
+     */
+    protected function assertProxy(string $input, object $proxy): void
     {
-        Assert::assertInstanceOf(\get_class($input), $proxy);
-        Assert::assertInstanceOf(ValueHolderInterface::class, $proxy);
-        Assert::assertInstanceOf(AccessInterceptorInterface::class, $proxy);
+        Assert::assertInstanceOf($input, $proxy);
+        Assert::assertInstanceOf(AccessInterceptorsInterface::class, $proxy);
     }
 
-    protected function assertNotProxy(object $input, object $proxy): void
+    /**
+     * @param class-string $class
+     */
+    protected function assertNotProxy(string $class, object $proxy): void
     {
-        Assert::assertInstanceOf(\get_class($input), $proxy);
-        Assert::assertNotInstanceOf(ValueHolderInterface::class, $proxy);
-        Assert::assertNotInstanceOf(AccessInterceptorInterface::class, $proxy);
+        Assert::assertInstanceOf($class, $proxy);
+        Assert::assertNotInstanceOf(AccessInterceptorsInterface::class, $proxy);
     }
 
     /**

@@ -26,7 +26,7 @@ final class AbstractInterceptorTest extends TestCase
         $this->expectException(HandlerNotFound::class);
         $this->getProxyFactory(
             [new CacheInterceptor($config, [new CacheHandlerMock()])]
-        )->createProxy(new ClassWithCacheAttributes())
+        )->createInstance(ClassWithCacheAttributes::class)
             ->invalidHandler();
     }
 

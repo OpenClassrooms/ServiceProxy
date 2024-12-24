@@ -8,7 +8,6 @@ use OpenClassrooms\ServiceProxy\ProxyFactory;
 use Symfony\Component\DependencyInjection\Compiler\Compiler;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 
 final class ServiceProxyPass implements CompilerPassInterface
@@ -30,23 +29,28 @@ final class ServiceProxyPass implements CompilerPassInterface
         $serviceProxyIds = [];
         $taggedServices = $this->container->findTaggedServiceIds('openclassrooms.service_proxy');
         foreach ($taggedServices as $taggedServiceId => $tagParameters) {
-            $this->buildServiceProxyFactoryDefinition($taggedServiceId);
+            $this->overrideServiceDefinition($taggedServiceId);
             $serviceProxyIds[] = $taggedServiceId;
-            $this->compiler->log($this, "Add proxy for {$taggedServiceId} service.");
+            $this->compiler->log($this, "Override service definition for {$taggedServiceId} service.");
         }
 
         $this->container->setParameter('openclassrooms.service_proxy.service_proxy_ids', $serviceProxyIds);
     }
 
-    private function buildServiceProxyFactoryDefinition(string $taggedServiceName): void
+    private function overrideServiceDefinition(string $taggedServiceName): void
     {
         $definition = $this->container->findDefinition($taggedServiceName);
-        $factoryDefinition = new Definition($definition->getClass());
-        $factoryDefinition->setFactory([new Reference(ProxyFactory::class), 'createProxy']);
-        $factoryDefinition->setArguments([$definition]);
-        $this->container->setDefinition($taggedServiceName, $factoryDefinition);
-        $factoryDefinition->setPublic($definition->isPublic());
-        $factoryDefinition->setLazy($definition->isLazy());
-        $factoryDefinition->setTags($definition->getTags());
+
+        if ($definition->getFactory() !== null) {
+            $this->compiler->log($this, "Service {$taggedServiceName} is not compatible with service proxy");
+
+            throw new \RuntimeException(
+                "Unable to override {$taggedServiceName}, remove the factory definition or the Interceptable interface."
+            );
+        }
+
+        $definition->setFactory([new Reference(ProxyFactory::class), 'createInstance']);
+
+        $definition->setArguments([$definition->getClass(), ...$definition->getArguments()]);
     }
 }

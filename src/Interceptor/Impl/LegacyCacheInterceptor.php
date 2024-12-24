@@ -18,6 +18,11 @@ use OpenClassrooms\ServiceProxy\Util\Expression;
  */
 final class LegacyCacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
+    /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     */
     public function prefix(Instance $instance): Response
     {
         $annotation = $instance->getMethod()
@@ -98,6 +103,11 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
         return 20;
     }
 
+    /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     */
     private function getNamespace(Instance $instance, Cache $annotation): ?string
     {
         $parameters = $instance->getMethod()
@@ -115,6 +125,11 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
         return null;
     }
 
+    /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     */
     private function getProxyId(Instance $instance, Cache $annotation): string
     {
         $parameters = $instance->getMethod()
@@ -139,6 +154,10 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
     }
 
     /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     *
      * @return array<int, string>
      */
     private function getTags(Instance $instance, Cache $annotation): array
