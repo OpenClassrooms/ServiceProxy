@@ -89,7 +89,7 @@ final class Event
 
     public function getUseCaseRequest(): mixed
     {
-        return $this->parameters['useCaseRequest'];
+        return $this->parameters['useCaseRequest'] ?? ($this->parameters['request'] ?? null);
     }
 
     public function getUseCaseResponse(): mixed
