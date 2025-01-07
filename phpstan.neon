@@ -19,6 +19,7 @@ parameters:
         - '/Call to static method Webmozart\\Assert\\Assert::allIsInstanceOf\(\) with/'
         - '/Function compact\(\) should not be used/'
         - '/In method .+, caught "Throwable" must be rethrown. Either catch a more specific exception or add a "throw" clause in the "catch" block to propagate the exception./'
+        - '/Class OpenClassrooms\\ServiceProxy\\Model\\Event is neither abstract nor final./'
     exceptions:
         check:
             missingCheckedExceptionInThrows: true

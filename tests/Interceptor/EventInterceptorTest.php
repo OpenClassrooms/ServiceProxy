@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests\Interceptor;
 
+use OpenClassrooms\ServiceProxy\Interceptor\Config\EventInterceptorConfig;
+use OpenClassrooms\ServiceProxy\Interceptor\Impl\Event\ServiceProxyEventFactory;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\EventInterceptor;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event\EventHandlerMock;
@@ -28,6 +30,8 @@ final class EventInterceptorTest extends TestCase
         $this->proxyFactory = $this->getProxyFactory(
             [
                 new EventInterceptor(
+                    new ServiceProxyEventFactory(),
+                    new EventInterceptorConfig(),
                     [$this->handler],
                 ),
             ]
