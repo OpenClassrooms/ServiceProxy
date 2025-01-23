@@ -5,6 +5,7 @@ declare(strict_types=1);
 use OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\Messenger\Transport\Serialization\MessageSerializer;
 use OpenClassrooms\ServiceProxy\FrameworkBridge\Symfony\Subscriber\ServiceProxySubscriber;
 use OpenClassrooms\ServiceProxy\Handler\Impl\Cache\SymfonyCacheHandler;
+use OpenClassrooms\ServiceProxy\Interceptor\Impl\Event\ServiceProxyEventFactory;
 use OpenClassrooms\ServiceProxy\Invoker\Impl\AggregateMethodInvoker;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\ProxyFactoryConfiguration;
@@ -74,4 +75,8 @@ return static function (ContainerConfigurator $containerConfigurator) {
             service('annotation_reader')->nullOnInvalid(),
         ])
         ->tag('kernel.event_subscriber');
+
+    $services->set(ServiceProxyEventFactory::class)
+        ->autowire()
+        ->autoconfigure();
 };

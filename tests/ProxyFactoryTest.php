@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests;
 
+use OpenClassrooms\ServiceProxy\Interceptor\Config\EventInterceptorConfig;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\SuffixInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\CacheInterceptor;
+use OpenClassrooms\ServiceProxy\Interceptor\Impl\Event\ServiceProxyEventFactory;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\EventInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\InvalidateCacheInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\LegacyCacheInterceptor;
@@ -37,7 +39,10 @@ final class ProxyFactoryTest extends TestCase
         $classes = get_declared_classes();
 
         foreach ($classes as $class) {
-            if (is_subclass_of($class, PrefixInterceptor::class) || is_subclass_of($class, SuffixInterceptor::class)) {
+            if ($class === EventInterceptor::class) {
+                $interceptors[] = new $class(new ServiceProxyEventFactory(), new EventInterceptorConfig());
+            } elseif (is_subclass_of($class, PrefixInterceptor::class)
+                || is_subclass_of($class, SuffixInterceptor::class)) {
                 $interceptors[] = new $class();
             }
         }

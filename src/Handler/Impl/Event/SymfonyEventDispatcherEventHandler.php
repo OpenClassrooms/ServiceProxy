@@ -26,7 +26,7 @@ final class SymfonyEventDispatcherEventHandler implements EventHandler
     {
         $this->eventDispatcher->dispatch(
             $event,
-            $event->name . '.' . Transport::SYNC->value,
+            $event->name,
         );
     }
 
