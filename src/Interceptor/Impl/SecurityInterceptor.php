@@ -51,10 +51,25 @@ final class SecurityInterceptor extends AbstractInterceptor implements PrefixInt
             return new Response();
         }
 
+        $rolesExpressions = null;
+        if ($attribute->roles !== null) {
+            if ($attribute->expression !== null) {
+                throw new \RuntimeException('You cannot use both roles and expression in the Security attribute.');
+            }
+            $rolesExpressions = array_map(
+                static fn (string $role) => "is_granted('{$role}')",
+                $attribute->roles
+            );
+        }
+
         $expression = $attribute->expression;
         if ($expression === null) {
-            $role = $this->guessRoleName($instance);
-            $expression = "is_granted('{$role}')";
+            if ($rolesExpressions !== null) {
+                $expression = implode(' or ', $rolesExpressions);
+            } else {
+                $role = $this->guessRoleName($instance);
+                $expression = "is_granted('{$role}')";
+            }
         }
         $handlers = $this->getHandlers(SecurityHandler::class, $attribute);
         foreach ($handlers as $handler) {
