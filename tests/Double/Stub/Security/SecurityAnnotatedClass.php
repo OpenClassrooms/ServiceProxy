@@ -61,4 +61,19 @@ class SecurityAnnotatedClass
     public function accessDeniedWithException(): void
     {
     }
+
+    #[Security(roles: ['ROLE_1'])]
+    public function rolesParamOne(): void
+    {
+    }
+
+    #[Security(roles: ['ROLE_3', 'ROLE_1'])]
+    public function rolesParamMultiple(): void
+    {
+    }
+
+    #[Security("is_granted('ROLE_1')", roles: ['ROLE_1', 'ROLE_2'])]
+    public function conflict(): void
+    {
+    }
 }
