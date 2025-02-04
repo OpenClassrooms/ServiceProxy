@@ -22,7 +22,7 @@ final class DoctrineCacheHandler implements CacheHandler
 
     public function __construct(?CacheProviderDecorator $cacheProvider = null, ?string $name = null)
     {
-        $this->cacheProvider = $cacheProvider ?? new CacheProviderDecorator(new ArrayAdapter());
+        $this->cacheProvider = $cacheProvider ?? new CacheProviderDecorator(new ArrayAdapter(storeSerialized: false));
         $this->name = $name;
     }
 
