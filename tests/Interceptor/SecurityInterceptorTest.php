@@ -111,4 +111,22 @@ final class SecurityInterceptorTest extends TestCase
         $this->expectExceptionMessage('Invalid argument.');
         $this->proxy->accessDeniedWithException();
     }
+
+    public function testWithRolesParamOne(): void
+    {
+        $this->proxy->rolesParamOne();
+        $this->assertSame(['ROLE_1'], $this->handler->attributes);
+    }
+
+    public function testWithRolesParamMultiple(): void
+    {
+        $this->proxy->rolesParamMultiple();
+        $this->assertSame(['ROLE_3', 'ROLE_1'], $this->handler->attributes);
+    }
+
+    public function testWithRolesAndExpressionShouldThrow(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->proxy->conflict();
+    }
 }
