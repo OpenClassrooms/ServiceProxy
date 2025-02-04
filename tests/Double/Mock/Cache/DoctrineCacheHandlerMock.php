@@ -7,16 +7,14 @@ namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache;
 use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Handler\Impl\Cache\DoctrineCacheHandler;
-use OpenClassrooms\ServiceProxy\Util\ArrayCache;
 use Psr\Cache\CacheItemInterface;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
 
 final class DoctrineCacheHandlerMock implements CacheHandler
 {
     public static ?int $lifeTime = null;
 
     private CacheHandler $wrappedHandler;
-
-    private CacheProviderDecorator $cacheProvider;
 
     private bool $default;
 
@@ -27,7 +25,7 @@ final class DoctrineCacheHandlerMock implements CacheHandler
         $this->name = $name ?? 'array';
         $this->default = $default;
 
-        $cacheProvider = new CacheProviderDecorator(new ArrayCache());
+        $cacheProvider = new CacheProviderDecorator(new ArrayAdapter());
         $this->wrappedHandler = new DoctrineCacheHandler($cacheProvider, $name);
     }
 

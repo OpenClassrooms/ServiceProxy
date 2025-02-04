@@ -8,8 +8,8 @@ use Doctrine\Common\Cache\Psr6\CacheItem;
 use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Handler\Impl\ConfigurableHandler;
-use OpenClassrooms\ServiceProxy\Util\ArrayCache;
 use Psr\Cache\CacheItemInterface;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
 
 /**
  * @deprecated use SymfonyCacheHandler instead
@@ -22,7 +22,7 @@ final class DoctrineCacheHandler implements CacheHandler
 
     public function __construct(?CacheProviderDecorator $cacheProvider = null, ?string $name = null)
     {
-        $this->cacheProvider = $cacheProvider ?? new CacheProviderDecorator(new ArrayCache());
+        $this->cacheProvider = $cacheProvider ?? new CacheProviderDecorator(new ArrayAdapter());
         $this->name = $name;
     }
 
