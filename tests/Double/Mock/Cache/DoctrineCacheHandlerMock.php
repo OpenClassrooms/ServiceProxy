@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache;
 
-use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Handler\Impl\Cache\DoctrineCacheHandler;
 use Psr\Cache\CacheItemInterface;
@@ -25,8 +24,7 @@ final class DoctrineCacheHandlerMock implements CacheHandler
         $this->name = $name ?? 'array';
         $this->default = $default;
 
-        $cacheProvider = new CacheProviderDecorator(new ArrayAdapter());
-        $this->wrappedHandler = new DoctrineCacheHandler($cacheProvider, $name);
+        $this->wrappedHandler = new DoctrineCacheHandler(new ArrayAdapter(storeSerialized: false), $name);
     }
 
     public function fetch(string $poolName, string $id): CacheItemInterface

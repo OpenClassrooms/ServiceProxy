@@ -46,12 +46,6 @@ final class SymfonyCacheHandler implements CacheHandler
         $pool->save($item);
     }
 
-    public function contains(string $poolName, string $id): bool
-    {
-        return $this->getPool($poolName)
-            ->hasItem($id);
-    }
-
     public function invalidateTags(string $poolName, array $tags): void
     {
         $this->getPool($poolName)
