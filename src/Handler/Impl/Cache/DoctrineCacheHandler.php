@@ -33,33 +33,20 @@ final class DoctrineCacheHandler implements CacheHandler
         return $this->fetchWithNamespace($id, $tags[0] ?? null);
     }
 
-    private function fetchWithNamespace(string $id, string $namespaceId = null): CacheItemInterface
-    {
-        if (null !== $namespaceId) {
-            $namespace = $this->doFetch($namespaceId);
-
-            if ($namespace->isHit()) {
-                $id = $namespace->get().$id;
-            }
-        }
-
-        return $this->doFetch($id);
-    }
-
     public function save(string $poolName, string $id, $data, ?int $lifeTime = null, array $tags = []): void
     {
         $namespaceId = $tags[0] ?? null;
 
-        if (null !== $namespaceId) {
+        if ($namespaceId !== null) {
             $namespace = $this->doFetch($namespaceId);
-            if (! $namespace->isHit()) {
-                $namespace->set($namespaceId.'_'.rand(0, 1000000))
+            if (!$namespace->isHit()) {
+                $namespace->set($namespaceId . '_' . mt_rand(0, 1000000))
                     // 7 days as no expiration can prevent cache eviction forever (like redis)
                     ->expiresAfter(7 * 24 * 60 * 60);
 
                 $this->pool->save($namespace);
             }
-            $id = $namespace->get().$id;
+            $id = $namespace->get() . $id;
         }
 
         $item = $this->doFetch($id);
@@ -75,13 +62,26 @@ final class DoctrineCacheHandler implements CacheHandler
         throw new \BadMethodCallException('Cache provider does not support tags invalidation');
     }
 
-    private function doFetch(string $id): CacheItemInterface
-    {
-        return $this->pool->getItem(rawurlencode($id));
-    }
-
     public function getName(): string
     {
         return $this->name ?? 'doctrine_array';
+    }
+
+    private function fetchWithNamespace(string $id, string $namespaceId = null): CacheItemInterface
+    {
+        if ($namespaceId !== null) {
+            $namespace = $this->doFetch($namespaceId);
+
+            if ($namespace->isHit()) {
+                $id = $namespace->get() . $id;
+            }
+        }
+
+        return $this->doFetch($id);
+    }
+
+    private function doFetch(string $id): CacheItemInterface
+    {
+        return $this->pool->getItem(rawurlencode($id));
     }
 }
