@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Handler\Impl\Cache;
 
-use Doctrine\Common\Cache\Psr6\CacheItem;
-use OpenClassrooms\DoctrineCacheExtension\CacheProviderDecorator;
 use OpenClassrooms\ServiceProxy\Handler\Contract\CacheHandler;
 use OpenClassrooms\ServiceProxy\Handler\Impl\ConfigurableHandler;
-use OpenClassrooms\ServiceProxy\Util\ArrayCache;
 use Psr\Cache\CacheItemInterface;
+use Psr\Cache\CacheItemPoolInterface;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
 
 /**
  * @deprecated use SymfonyCacheHandler instead
@@ -18,11 +17,11 @@ final class DoctrineCacheHandler implements CacheHandler
 {
     use ConfigurableHandler;
 
-    private CacheProviderDecorator $cacheProvider;
+    private CacheItemPoolInterface $pool;
 
-    public function __construct(?CacheProviderDecorator $cacheProvider = null, ?string $name = null)
+    public function __construct(CacheItemPoolInterface $pool = null, ?string $name = null)
     {
-        $this->cacheProvider = $cacheProvider ?? new CacheProviderDecorator(new ArrayCache());
+        $this->pool = $pool ?? new ArrayAdapter(storeSerialized: false);
         $this->name = $name;
     }
 
@@ -31,19 +30,31 @@ final class DoctrineCacheHandler implements CacheHandler
         $tags = explode('|', $id);
         $id = array_shift($tags);
 
-        $value = $this->cacheProvider->fetchWithNamespace($id, $tags[0] ?? null);
-
-        return new CacheItem($id, $value, $value !== false);
+        return $this->fetchWithNamespace($id, $tags[0] ?? null);
     }
 
     public function save(string $poolName, string $id, $data, ?int $lifeTime = null, array $tags = []): void
     {
-        $this->cacheProvider->saveWithNamespace($id, $data, $tags[0] ?? null, $lifeTime);
-    }
+        $namespaceId = $tags[0] ?? null;
 
-    public function contains(string $poolName, string $id): bool
-    {
-        return $this->cacheProvider->contains($id);
+        if ($namespaceId !== null) {
+            $namespace = $this->doFetch($namespaceId);
+            if (!$namespace->isHit()) {
+                $namespace->set($namespaceId . '_' . mt_rand(0, 1000000))
+                    // 7 days as no expiration can prevent cache eviction forever (like redis)
+                    ->expiresAfter(7 * 24 * 60 * 60);
+
+                $this->pool->save($namespace);
+            }
+            $id = $namespace->get() . $id;
+        }
+
+        $item = $this->doFetch($id);
+
+        $item->set($data)
+            ->expiresAfter($lifeTime ?? 3600);
+
+        $this->pool->save($item);
     }
 
     public function invalidateTags(string $poolName, array $tags): void
@@ -54,5 +65,23 @@ final class DoctrineCacheHandler implements CacheHandler
     public function getName(): string
     {
         return $this->name ?? 'doctrine_array';
+    }
+
+    private function fetchWithNamespace(string $id, string $namespaceId = null): CacheItemInterface
+    {
+        if ($namespaceId !== null) {
+            $namespace = $this->doFetch($namespaceId);
+
+            if ($namespace->isHit()) {
+                $id = $namespace->get() . $id;
+            }
+        }
+
+        return $this->doFetch($id);
+    }
+
+    private function doFetch(string $id): CacheItemInterface
+    {
+        return $this->pool->getItem(rawurlencode($id));
     }
 }

@@ -11,6 +11,10 @@ use Symfony\Component\Lock\Store\FlockStore;
 
 class SymfonyLockHandlerTest extends TestCase
 {
+    private SymfonyLockHandler $handler1;
+
+    private SymfonyLockHandler $handler2;
+
     protected function setUp(): void
     {
         $factory1 = new LockFactory(new FlockStore());
