@@ -14,6 +14,7 @@ final class Event extends Attribute
      * @param array<On>          $dispatch
      * @param array<string>|string|null $handler
      * @param array<string>|string|null $transport
+     * @param class-string|null $messageClass
      */
     public function __construct(
         array|string|null                 $handler = null,
@@ -21,6 +22,7 @@ final class Event extends Attribute
         public readonly ?string $name = null,
         public readonly ?string  $queue = null,
         public readonly array   $dispatch = [On::POST],
+        public readonly ?string $messageClass = null,
     ) {
         parent::__construct();
         Assert::allIsInstanceOf($dispatch, On::class);

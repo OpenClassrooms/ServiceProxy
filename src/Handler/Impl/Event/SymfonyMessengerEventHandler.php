@@ -29,9 +29,14 @@ final class SymfonyMessengerEventHandler implements EventHandler
         $this->logger = $logger ?? new NullLogger();
     }
 
-    public function dispatch(Event $event, ?string $queue = null): void
+    public function dispatch(object $event, ?string $queue = null): void
     {
-        $message = $this->createMessage($event, $queue);
+        if ($event instanceof Event) {
+            $message = $this->createMessage($event, $queue);
+        } else {
+            $message = $event;
+        }
+
         try {
             $this->bus->dispatch($message);
         } catch (\Throwable $exception) {

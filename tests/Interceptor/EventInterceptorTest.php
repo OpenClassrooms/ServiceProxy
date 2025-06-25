@@ -9,8 +9,11 @@ use OpenClassrooms\ServiceProxy\Interceptor\Impl\Event\ServiceProxyEventFactory;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\EventInterceptor;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event\EventHandlerMock;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\CustomMessage;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\EventAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\InvalidMethodEventAnnotatedClass;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\InvalidResponseMessageClassAnnotatedClass;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\MessageClassAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
 use PHPUnit\Framework\TestCase;
 
@@ -112,6 +115,28 @@ final class EventInterceptorTest extends TestCase
             6,
             $data
         );
+    }
+
+    public function testMessageClassEventDispatched(): void
+    {
+        $proxy = $this->proxyFactory->createProxy(new MessageClassAnnotatedClass());
+        $result = $proxy->handle('hello');
+
+        $this->assertSame(['content' => 'hello'], $result);
+
+        $this->assertEventsCount(1);
+
+        $event = $this->handler->getEvents()[0];
+        $this->assertInstanceOf(CustomMessage::class, $event);
+        $this->assertSame('hello', $event->content);
+    }
+
+    public function testInvalidResponseForMessageClassThrowsException(): void
+    {
+        $proxy = $this->proxyFactory->createProxy(new InvalidResponseMessageClassAnnotatedClass());
+
+        $this->expectException(\InvalidArgumentException::class);
+        $proxy->invalid('test');
     }
 
     private function assertEventsCount(int $count): void

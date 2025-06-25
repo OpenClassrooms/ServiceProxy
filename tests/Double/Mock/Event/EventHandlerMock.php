@@ -6,7 +6,6 @@ namespace OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event;
 
 use OpenClassrooms\ServiceProxy\Attribute\Event\Transport;
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
-use OpenClassrooms\ServiceProxy\Model\Event;
 use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 
 final class EventHandlerMock implements EventHandler
@@ -26,7 +25,7 @@ final class EventHandlerMock implements EventHandler
         return 'array';
     }
 
-    public function dispatch(Event $event, ?string $queue = null): void
+    public function dispatch(object $event, ?string $queue = null): void
     {
         $this->events[] = $event;
     }
