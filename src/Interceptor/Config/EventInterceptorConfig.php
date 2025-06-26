@@ -13,6 +13,7 @@ final class EventInterceptorConfig
      */
     public function __construct(
         public readonly string $eventInstanceClassName = Event::class,
+        public readonly ?string $mapperCacheDir = null,
     ) {
     }
 }

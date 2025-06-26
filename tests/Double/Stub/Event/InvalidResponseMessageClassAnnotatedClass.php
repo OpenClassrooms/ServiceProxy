@@ -13,4 +13,4 @@ class InvalidResponseMessageClassAnnotatedClass
     {
         return 42;
     }
-} 
+}

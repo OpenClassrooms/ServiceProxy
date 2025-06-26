@@ -27,7 +27,8 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
         iterable $handlers = [],
     ) {
         parent::__construct($handlers);
-        $this->mapper = AutoMapper::create();
+        $tmpDir = $this->config->mapperCacheDir ?? sys_get_temp_dir() . '/mapper-cache';
+        $this->mapper = AutoMapper::create(cacheDirectory: $tmpDir);
     }
 
     public function getPrefixPriority(): int
@@ -126,17 +127,14 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
     {
         if (!\is_object($response) && !\is_array($response)) {
             throw new \InvalidArgumentException(
-                \sprintf(
-                    'The response must be an object|array to guess arguments for message class "%s".',
+                sprintf(
+                    'The response must be an object to guess arguments for message class "%s".',
                     $messageClass
                 )
             );
         }
 
-        if (\is_array($response)) {
-            $response = (object) $response;
-        }
-
+        /** @var T */
         return $this->mapper->map($response, $messageClass);
     }
 }
