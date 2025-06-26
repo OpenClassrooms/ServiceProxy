@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Interceptor\Impl;
 
+use AutoMapper\AutoMapper;
+use AutoMapper\AutoMapperInterface;
 use OpenClassrooms\ServiceProxy\Attribute\Event;
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Config\EventInterceptorConfig;
@@ -17,12 +19,16 @@ use OpenClassrooms\ServiceProxy\Model\Response\Response;
 
 final class EventInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
+    private AutoMapperInterface $mapper;
+
     public function __construct(
         private readonly EventFactory $eventFactory,
         private readonly EventInterceptorConfig $config,
         iterable $handlers = [],
     ) {
         parent::__construct($handlers);
+        $tmpDir = $this->config->mapperCacheDir ?? sys_get_temp_dir() . '/mapper-cache';
+        $this->mapper = AutoMapper::create(cacheDirectory: $tmpDir);
     }
 
     public function getPrefixPriority(): int
@@ -68,12 +74,19 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
             $handlers = $this->getHandlers(EventHandler::class, $attribute);
             foreach ($handlers as $handler) {
                 if ($attribute->isPost() && !$instance->getMethod()->threwException()) {
-                    $event = $this->eventFactory->createFromSenderInstance(
-                        $instance,
-                        Moment::SUFFIX,
-                        $attribute->name,
-                        $this->config->eventInstanceClassName,
-                    );
+                    if ($attribute->messageClass) {
+                        $event = $this->createMessage(
+                            $attribute->messageClass,
+                            $instance->getMethod()->getReturnedValue(),
+                        );
+                    } else {
+                        $event = $this->eventFactory->createFromSenderInstance(
+                            $instance,
+                            Moment::SUFFIX,
+                            $attribute->name,
+                            $this->config->eventInstanceClassName,
+                        );
+                    }
                     $handler->dispatch($event, $attribute->queue);
                 }
 
@@ -101,5 +114,27 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
     {
         return $instance->getMethod()
             ->hasAttribute(Event::class);
+    }
+
+    /**
+     * @template T of object
+     * @param class-string<T> $messageClass
+     * @return T
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function createMessage(string $messageClass, mixed $response): object
+    {
+        if (!\is_object($response) && !\is_array($response)) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    'The response must be an object to guess arguments for message class "%s".',
+                    $messageClass
+                )
+            );
+        }
+
+        /** @var T */
+        return $this->mapper->map($response, $messageClass);
     }
 }

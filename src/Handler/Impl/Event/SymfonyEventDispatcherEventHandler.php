@@ -22,8 +22,11 @@ final class SymfonyEventDispatcherEventHandler implements EventHandler
     ) {
     }
 
-    public function dispatch(Event $event, ?string $queue = null): void
+    public function dispatch(object $event, ?string $queue = null): void
     {
+        if (!$event instanceof Event) {
+            throw new \InvalidArgumentException('Event must be an instance of ' . Event::class);
+        }
         $this->eventDispatcher->dispatch(
             $event,
             $event->name,

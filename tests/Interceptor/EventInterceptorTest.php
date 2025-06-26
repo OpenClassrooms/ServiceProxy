@@ -9,8 +9,13 @@ use OpenClassrooms\ServiceProxy\Interceptor\Impl\Event\ServiceProxyEventFactory;
 use OpenClassrooms\ServiceProxy\Interceptor\Impl\EventInterceptor;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Event\EventHandlerMock;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\CustomMessage;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\EventAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\InvalidMethodEventAnnotatedClass;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\InvalidResponseMessageClassAnnotatedClass;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\Metadata;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\ObjectResponseMessageClassAnnotatedClass;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Event\ResponseObject;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
 use PHPUnit\Framework\TestCase;
 
@@ -112,6 +117,39 @@ final class EventInterceptorTest extends TestCase
             6,
             $data
         );
+    }
+
+    public function testMessageClassEventDispatchedWithObjectResponse(): void
+    {
+        $proxy = $this->proxyFactory->createProxy(new ObjectResponseMessageClassAnnotatedClass());
+        $result = $proxy->handle('world');
+
+        $this->assertInstanceOf(ResponseObject::class, $result);
+        $this->assertSame('world', $result->content);
+        $this->assertIsInt($result->id);
+        $this->assertInstanceOf(Metadata::class, $result->meta);
+        $this->assertInstanceOf(\DateTimeImmutable::class, $result->createdAt);
+
+        $this->assertEventsCount(1);
+        $event = $this->handler->getEvents()[0];
+        $this->assertInstanceOf(CustomMessage::class, $event);
+        $this->assertSame('world', $event->content);
+        $this->assertSame($result->id, $event->id);
+        $this->assertInstanceOf(\DateTimeImmutable::class, $event->createdAt);
+        $this->assertSame(
+            $result->createdAt->format(\DateTimeInterface::ATOM),
+            $event->createdAt->format(\DateTimeInterface::ATOM)
+        );
+        $this->assertInstanceOf(Metadata::class, $event->meta);
+        $this->assertTrue($event->meta->active);
+    }
+
+    public function testInvalidResponseForMessageClassThrowsException(): void
+    {
+        $proxy = $this->proxyFactory->createProxy(new InvalidResponseMessageClassAnnotatedClass());
+
+        $this->expectException(\InvalidArgumentException::class);
+        $proxy->invalid('test');
     }
 
     private function assertEventsCount(int $count): void
