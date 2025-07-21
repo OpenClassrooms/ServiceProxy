@@ -9,7 +9,7 @@ use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 
 interface EventHandler extends AnnotationHandler
 {
-    public function dispatch(object $event, ?string $queue = null): void;
+    public function dispatch(object $event, ?string $queue = null, ?int $delay = null): void;
 
     public function listen(Instance $instance, string $name, Transport $transport = null, int $priority = 0): void;
 }

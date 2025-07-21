@@ -25,7 +25,7 @@ final class EventHandlerMock implements EventHandler
         return 'array';
     }
 
-    public function dispatch(object $event, ?string $queue = null): void
+    public function dispatch(object $event, ?string $queue = null, ?int $delay = null): void
     {
         $this->events[] = $event;
     }

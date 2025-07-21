@@ -56,7 +56,7 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
             );
             foreach ($handlers as $handler) {
                 if ($attribute->isPre()) {
-                    $handler->dispatch($event, $attribute->queue);
+                    $handler->dispatch($event, $attribute->queue, $attribute->delay);
                 }
             }
         }
@@ -87,7 +87,7 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
                             $this->config->eventInstanceClassName,
                         );
                     }
-                    $handler->dispatch($event, $attribute->queue);
+                    $handler->dispatch($event, $attribute->queue, $attribute->delay);
                 }
 
                 if ($attribute->isOnException() && $instance->getMethod()->threwException()) {
@@ -97,7 +97,7 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
                         $attribute->name,
                         $this->config->eventInstanceClassName,
                     );
-                    $handler->dispatch($event, $attribute->queue);
+                    $handler->dispatch($event, $attribute->queue, $attribute->delay);
                 }
             }
         }
