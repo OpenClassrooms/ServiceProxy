@@ -23,6 +23,7 @@ final class Event extends Attribute
         public readonly ?string  $queue = null,
         public readonly array   $dispatch = [On::POST],
         public readonly ?string $messageClass = null,
+        public readonly ?int $delay = null,
     ) {
         parent::__construct();
         Assert::allIsInstanceOf($dispatch, On::class);

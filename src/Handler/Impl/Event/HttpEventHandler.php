@@ -39,7 +39,7 @@ final class HttpEventHandler implements EventHandler
      * @throws \Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
-    public function dispatch(object $event, ?string $queue = null): void
+    public function dispatch(object $event, ?string $queue = null, ?int $delay = null): void
     {
         if (!$event instanceof Event) {
             throw new \InvalidArgumentException('Event must be an instance of ' . Event::class);
