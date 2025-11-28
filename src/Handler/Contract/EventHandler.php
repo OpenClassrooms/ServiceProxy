@@ -16,5 +16,5 @@ interface EventHandler extends AnnotationHandler
      *
      * @param Instance<T> $instance
      */
-    public function listen(Instance $instance, string $name, Transport $transport = null, int $priority = 0): void;
+    public function listen(Instance $instance, string $name, ?Transport $transport = null, int $priority = 0): void;
 }

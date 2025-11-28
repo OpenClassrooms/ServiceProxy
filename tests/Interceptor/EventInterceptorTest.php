@@ -121,7 +121,7 @@ final class EventInterceptorTest extends TestCase
 
     public function testMessageClassEventDispatchedWithObjectResponse(): void
     {
-        $proxy = $this->proxyFactory->createProxy(new ObjectResponseMessageClassAnnotatedClass());
+        $proxy = $this->proxyFactory->createInstance(ObjectResponseMessageClassAnnotatedClass::class);
         $result = $proxy->handle('world');
 
         $this->assertInstanceOf(ResponseObject::class, $result);
@@ -146,7 +146,7 @@ final class EventInterceptorTest extends TestCase
 
     public function testInvalidResponseForMessageClassThrowsException(): void
     {
-        $proxy = $this->proxyFactory->createProxy(new InvalidResponseMessageClassAnnotatedClass());
+        $proxy = $this->proxyFactory->createInstance(InvalidResponseMessageClassAnnotatedClass::class);
 
         $this->expectException(\InvalidArgumentException::class);
         $proxy->invalid('test');

@@ -39,7 +39,7 @@ final class LockInterceptorTest extends TestCase
                 ),
             ]
         );
-        $this->proxy = $this->proxyFactory->createProxy(new LockAnnotatedStub());
+        $this->proxy = $this->proxyFactory->createInstance(LockAnnotatedStub::class);
     }
 
     public function test(): void
