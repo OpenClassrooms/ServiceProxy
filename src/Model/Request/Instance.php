@@ -104,4 +104,12 @@ final class Instance
     {
         return $this->reflection;
     }
+
+    /**
+     * @param class-string $class
+     */
+    public function isInstanceOf(string $class): bool
+    {
+        return $this->reflection->isSubclassOf($class);
+    }
 }
