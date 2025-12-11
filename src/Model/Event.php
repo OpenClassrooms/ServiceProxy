@@ -25,13 +25,7 @@ class Event
         public readonly mixed $exception = null,
         public readonly Moment $type = Moment::SUFFIX
     ) {
-        $this->name = self::getName(
-            className: $class,
-            moment: $type,
-            transport: Transport::SYNC,
-            method: $method,
-            name: $name
-        );
+        $this->name = self::getName($class, $type, Transport::SYNC, $method, $name);
     }
 
     public function getUseCaseRequest(): mixed

@@ -1,58 +1,70 @@
 name: Code Analysis
 
 on:
-    pull_request: ~
-    push:
-        branches:
-            - main
+  pull_request: ~
+  push:
+    branches:
+      - main
 
 jobs:
-    code-validation:
-        name: ${{ matrix.actions.name }}
-        runs-on: ubuntu-latest
-        strategy:
-            fail-fast: false
-            matrix:
-                actions:
-                    -   name: Composer validate
-                        run: composer validate --ansi --strict
+  code-validation:
+    name: ${{ matrix.actions.name }} - PHP ${{ matrix.php }} - Symfony ${{ matrix.symfony }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: [8.3, 8.4, 8.5]
+        symfony: [6.4, 7.4]
+        actions:
+          - name: Composer validate
+            run: composer validate --ansi --strict
 
-                    -   name: Static analysis
-                        run: composer phpstan
+          - name: Static analysis
+            run: composer phpstan
 
-                    -   name: Style check
-                        run: composer check-cs
+          - name: Style check
+            run: composer check-cs
 
-                    -   name: Unit tests
-                        run: composer coverage
-        steps:
-            -   uses: actions/checkout@v2
+          - name: Unit tests
+            run: composer coverage
+    steps:
+      - uses: actions/checkout@v6
 
-            -   uses: shivammathur/setup-php@v2
-                with:
-                    php-version: 8.2
-                    coverage: pcov
-                    tools: composer:v2
-                env:
-                    COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: pcov
+          tools: composer:v2
+        env:
+          COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-            -   name: Install dependencies
-                uses: "ramsey/composer-install@v2"
+      - name: symfony/flex is required to install the correct symfony version
+        if: ${{ matrix.symfony }}
+        run: |
+          composer global config --no-plugins allow-plugins.symfony/flex true
+          composer global require symfony/flex
 
-            -   run: ${{ matrix.actions.run }}
+      - name: Configure Symfony version for symfony/flex
+        if: ${{ matrix.symfony }}
+        run: composer config extra.symfony.require "${{ matrix.symfony }}.*"
 
-            -   name: Coverage diff
-                uses: OpenClassrooms/coverage-checker@v1.7.0
-                if: ${{ hashFiles('build/coverage/coverage.xml') != '' && github.event_name == 'pull_request' }}
-                with:
-                    action: check
-                    files: '[{"coverage": "build/coverage/coverage.xml", "summary": "coverage-summary.json", "label": "Coverage", "badge": "coverage.svg"}]'
-                    token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
-            -   name: Coverage update
-                uses: OpenClassrooms/coverage-checker@v1.7.0
-                if: ${{ hashFiles('build/coverage/coverage.xml') != '' && github.event_name == 'push' && github.ref_name == 'main' }}
-                with:
-                    action: update
-                    files: '[{"coverage": "build/coverage/coverage.xml", "summary": "coverage-summary.json", "label": "Coverage", "badge": "coverage.svg"}]'
-                    token: ${{ secrets.GITHUB_TOKEN }}
+      - run: ${{ matrix.actions.run }}
+
+      - name: Coverage diff
+        uses: OpenClassrooms/coverage-checker@v1.7.0
+        if: ${{ hashFiles('build/coverage/coverage.xml') != '' && github.event_name == 'pull_request' }}
+        with:
+          action: check
+          files: '[{"coverage": "build/coverage/coverage.xml", "summary": "coverage-summary.json", "label": "Coverage", "badge": "coverage.svg"}]'
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Coverage update
+        uses: OpenClassrooms/coverage-checker@v1.7.0
+        if: ${{ hashFiles('build/coverage/coverage.xml') != '' && github.event_name == 'push' && github.ref_name == 'main' }}
+        with:
+          action: update
+          files: '[{"coverage": "build/coverage/coverage.xml", "summary": "coverage-summary.json", "label": "Coverage", "badge": "coverage.svg"}]'
+          token: ${{ secrets.GITHUB_TOKEN }}

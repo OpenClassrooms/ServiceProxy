@@ -13,6 +13,7 @@ final class ServiceProxyEventFactory implements EventFactory
 {
     /**
      * @template T of Event
+     * @param Instance<object> $instance
      * @param class-string<T> $eventClassName
      * @return T
      */

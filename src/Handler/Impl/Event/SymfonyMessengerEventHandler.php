@@ -24,8 +24,8 @@ final class SymfonyMessengerEventHandler implements EventHandler
 
     public function __construct(
         private readonly MessageBusInterface $bus,
-        private readonly ?RequestStack       $request = null,
-        ?LoggerInterface                     $logger = null
+        private readonly ?RequestStack $request = null,
+        ?LoggerInterface $logger = null
     ) {
         $this->logger = $logger ?? new NullLogger();
     }
@@ -44,7 +44,7 @@ final class SymfonyMessengerEventHandler implements EventHandler
             } else {
                 $this->bus->dispatch($message);
             }
-        } catch (\Throwable $exception) {
+        } catch (\Throwable $exception) { // @ignoreException
             $this->logger->error($exception->getMessage(), compact('message', 'exception'));
         }
     }

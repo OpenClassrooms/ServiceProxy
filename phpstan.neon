@@ -18,8 +18,11 @@ parameters:
         - '/Method .+ServiceProxy.+ has a parameter \$container/'
         - '/Call to static method Webmozart\\Assert\\Assert::allIsInstanceOf\(\) with/'
         - '/Function compact\(\) should not be used/'
-        - '/In method .+, caught "Throwable" must be rethrown. Either catch a more specific exception or add a "throw" clause in the "catch" block to propagate the exception./'
         - '/Class OpenClassrooms\\ServiceProxy\\Model\\Event is neither abstract nor final./'
+        - '/Closure has parameter .* that is passed by reference./'
+        - '/Method .* has parameter .* that is passed by reference./'
+        - '/Call to function array_filter\(\) requires parameter #2 to be passed to avoid loose comparison semantics./'
+        - '/Binary operation "." between .* results in an error./'
     exceptions:
         check:
             missingCheckedExceptionInThrows: true

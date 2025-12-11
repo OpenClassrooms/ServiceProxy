@@ -16,7 +16,6 @@ use OpenClassrooms\ServiceProxy\Interceptor\Exception\InternalCodeRetrievalExcep
 use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 use OpenClassrooms\ServiceProxy\Model\Response\Response;
 use OpenClassrooms\ServiceProxy\Util\Expression;
-use Symfony\Component\PropertyInfo\Type;
 
 final class CacheInterceptor extends AbstractInterceptor implements SuffixInterceptor, PrefixInterceptor
 {
@@ -43,7 +42,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
     public function __construct(
         ?CacheInterceptorConfig $config = null,
-        iterable                $handlers = [],
+        iterable $handlers = [],
     ) {
         parent::__construct($handlers);
 
@@ -54,7 +53,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     /**
      * @return array<int, string>
      */
-    public static function getHits(?string $poolName = self::DEFAULT_POOL_NAME): array
+    public static function getHits(string $poolName = self::DEFAULT_POOL_NAME): array
     {
         return self::$hits[$poolName] ?? [];
     }
@@ -62,11 +61,14 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     /**
      * @return array<int, string>
      */
-    public static function getMisses(?string $poolName = self::DEFAULT_POOL_NAME): array
+    public static function getMisses(string $poolName = self::DEFAULT_POOL_NAME): array
     {
         return self::$misses[$poolName] ?? [];
     }
 
+    /**
+     * @throws \ValueError
+     */
     public function prefix(Instance $instance): Response
     {
         self::$hits = [];
@@ -181,6 +183,11 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         return 20;
     }
 
+    /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     */
     private function buildCacheKey(Instance $instance, Cache $attribute): string
     {
         $identifier = implode(
@@ -217,7 +224,28 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
     private function getTypeInnerCode(string $type, string $code): string
     {
-        if (\in_array($type, Type::$builtinTypes, true)) {
+        if (\in_array(
+            $type,
+            [
+                'int',
+                'string',
+                'bool',
+                'float',
+                'array',
+                'object',
+                'callable',
+                'iterable',
+                'mixed',
+                'void',
+                'null',
+                'false',
+                'true',
+                'self',
+                'static',
+                'parent',
+            ],
+            true
+        )) {
             return $code . '.' . $type;
         }
 
@@ -270,7 +298,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         $code = preg_replace('/\s+/', '', implode('', $code));
 
         if ($code === null) {
-            throw new \RuntimeException(sprintf(
+            throw new \RuntimeException(\sprintf(
                 'An error occurred while cleaning %s %s\'s code.',
                 $name,
                 $reflection instanceof \ReflectionMethod ? 'method' : 'class',
@@ -281,6 +309,10 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     }
 
     /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     *
      * @return array<int, string>
      */
     private function getTags(Instance $instance, Cache $attribute, mixed $response = null): array
@@ -365,7 +397,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     }
 
     /**
-     * @param \ReflectionClass<object> $ref
+     * @param \ReflectionClass<AutoTaggable> $ref
      */
     private function getPropertyValue(\ReflectionClass $ref, object $object, string $propertyName): mixed
     {
@@ -379,8 +411,6 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
         if (!$propRef->isInitialized($object)) {
             return null;
         }
-
-        $propRef->setAccessible(true);
 
         return $propRef->getValue($object);
     }

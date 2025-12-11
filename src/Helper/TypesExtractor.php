@@ -4,14 +4,23 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Helper;
 
+use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode;
+use PHPStan\PhpDocParser\Ast\PhpDoc\ReturnTagValueNode;
+use PHPStan\PhpDocParser\Ast\PhpDoc\VarTagValueNode;
+use PHPStan\PhpDocParser\Ast\Type\ArrayTypeNode;
+use PHPStan\PhpDocParser\Ast\Type\GenericTypeNode;
+use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
+use PHPStan\PhpDocParser\Ast\Type\IntersectionTypeNode;
+use PHPStan\PhpDocParser\Ast\Type\NullableTypeNode;
+use PHPStan\PhpDocParser\Ast\Type\ThisTypeNode;
+use PHPStan\PhpDocParser\Ast\Type\TypeNode;
+use PHPStan\PhpDocParser\Ast\Type\UnionTypeNode;
 use PHPStan\PhpDocParser\Lexer\Lexer;
 use PHPStan\PhpDocParser\Parser\ConstExprParser;
 use PHPStan\PhpDocParser\Parser\PhpDocParser;
 use PHPStan\PhpDocParser\Parser\TokenIterator;
 use PHPStan\PhpDocParser\Parser\TypeParser;
-use Symfony\Component\PropertyInfo\PhpStan\NameScope;
-use Symfony\Component\PropertyInfo\PhpStan\NameScopeFactory;
-use Symfony\Component\PropertyInfo\Util\PhpStanTypeHelper;
+use PHPStan\PhpDocParser\ParserConfig;
 
 final class TypesExtractor
 {
@@ -19,30 +28,16 @@ final class TypesExtractor
 
     private PhpDocParser $phpDocParser;
 
-    private PhpStanTypeHelper $typeHelper;
-
-    private NameScopeFactory $nameScopeFactory;
-
-    /**
-     * @var array<class-string, NameScope>
-     */
-    private array $resolvedNameScopes = [];
-
     public function __construct()
     {
-        $this->lexer = new Lexer();
-        $this->nameScopeFactory = new NameScopeFactory();
-        $this->typeHelper = new PhpStanTypeHelper();
-
-        $constExprParser = new ConstExprParser();
-        $this->phpDocParser = new PhpDocParser(
-            new TypeParser($constExprParser),
-            $constExprParser
-        );
+        $config = new ParserConfig([]);
+        $this->lexer = new Lexer($config);
+        $constExprParser = new ConstExprParser($config);
+        $this->phpDocParser = new PhpDocParser($config, new TypeParser($config, $constExprParser), $constExprParser);
     }
 
     /**
-     * @return array<string, string>
+     * @return array<string>
      */
     public function extractFromMethod(\ReflectionMethod $method): array
     {
@@ -65,10 +60,6 @@ final class TypesExtractor
             ? $member->getReturnType()
             : $member->getType();
 
-        $docComment = $member->getDocComment() !== false
-            ? $member->getDocComment()
-            : null;
-
         $types = [];
 
         if ($type !== null) {
@@ -78,19 +69,17 @@ final class TypesExtractor
             );
         }
 
+        // Parse PHPDoc (@return, @var) with PHPStan PhpDocParser
+        $docComment = $member->getDocComment() !== false ? $member->getDocComment() : null;
         if ($docComment !== null) {
+            $declaringNs = $member->getDeclaringClass()->getNamespaceName();
             $types = array_merge(
                 $types,
-                $this->getPhpDocTypesNames(
-                    $member->getDeclaringClass()
-                        ->getName(),
-                    $docComment,
-                    ['@var', '@return'],
-                )
+                $this->getPhpDocTypesNames($declaringNs, $docComment, ['@var', '@return'])
             );
         }
 
-        return array_unique($types);
+        return array_values(array_unique($types));
     }
 
     /**
@@ -113,41 +102,112 @@ final class TypesExtractor
     }
 
     /**
+     * Extract type names from PHPDoc tags using PHPStan PhpDocParser.
      * @param array<string> $tagNames
-     * @param class-string  $classContext
-     *
      * @return array<int, string>
      */
-    private function getPhpDocTypesNames(string $classContext, string $docComment, array $tagNames = []): array
+    private function getPhpDocTypesNames(string $namespace, string $docComment, array $tagNames): array
     {
-        $classNames = [];
-        $nameScope = $this->getNameScope($classContext);
+        $results = [];
         $tokens = new TokenIterator($this->lexer->tokenize($docComment));
-
         $phpDocNode = $this->phpDocParser->parse($tokens);
-        foreach ($tagNames as $tagName) {
-            $tags = $phpDocNode->getTagsByName($tagName);
-            foreach ($tags as $tag) {
-                $types = $this->typeHelper->getTypes($tag->value, $nameScope);
-                foreach ($types as $type) {
-                    $classNames[] = $type->getClassName() ?? $type->getBuiltinType();
-                    foreach ($type->getCollectionValueTypes() as $collectionType) {
-                        $classNames[] = $collectionType->getClassName() ?? $collectionType->getBuiltinType();
-                    }
-                    foreach ($type->getCollectionKeyTypes() as $collectionType) {
-                        $classNames[] = $collectionType->getClassName() ?? $collectionType->getBuiltinType();
-                    }
-                }
+
+        foreach ($phpDocNode->getTags() as $tagNode) {
+            if (!\in_array($tagNode->name, $tagNames, true)) {
+                continue;
             }
+            $results = array_merge($results, $this->extractFromTagNode($tagNode, $namespace));
         }
 
-        return array_filter($classNames);
+        return array_values(array_unique(array_filter($results)));
     }
 
     /**
-     * @param string[] $registeredTypes
-     *
-     * @return string[]
+     * @return array<int, string>
+     */
+    private function extractFromTagNode(PhpDocTagNode $tagNode, string $namespace): array
+    {
+        $builtins = [
+            'int', 'string', 'bool', 'float', 'array', 'object', 'callable', 'iterable', 'mixed', 'void', 'null', 'false', 'true', 'self', 'static', 'parent',
+        ];
+
+        $typeNode = $tagNode->value instanceof ReturnTagValueNode || $tagNode->value instanceof VarTagValueNode
+            ? $tagNode->value->type
+            : null;
+
+        if ($typeNode === null) {
+            return [];
+        }
+
+        return $this->collectTypeNames($typeNode, $namespace, $builtins);
+    }
+
+    /**
+     * Walk a TypeNode tree and collect class-like names.
+     * @param array<string> $builtins
+     * @return array<int, string>
+     */
+    private function collectTypeNames(TypeNode $typeNode, string $namespace, array $builtins): array
+    {
+        $names = [];
+
+        if ($typeNode instanceof IdentifierTypeNode) {
+            $names = array_merge($names, $this->resolveClassName($typeNode->name, $namespace, $builtins));
+        } elseif ($typeNode instanceof NullableTypeNode) {
+            $names = array_merge($names, $this->collectTypeNames($typeNode->type, $namespace, $builtins));
+        } elseif ($typeNode instanceof ArrayTypeNode) {
+            $names = array_merge($names, $this->collectTypeNames($typeNode->type, $namespace, $builtins));
+        } elseif ($typeNode instanceof UnionTypeNode) {
+            foreach ($typeNode->types as $t) {
+                $names = array_merge($names, $this->collectTypeNames($t, $namespace, $builtins));
+            }
+        } elseif ($typeNode instanceof IntersectionTypeNode) {
+            foreach ($typeNode->types as $t) {
+                $names = array_merge($names, $this->collectTypeNames($t, $namespace, $builtins));
+            }
+        } elseif ($typeNode instanceof GenericTypeNode) {
+            $names = array_merge($names, $this->collectTypeNames($typeNode->type, $namespace, $builtins));
+            foreach ($typeNode->genericTypes as $gt) {
+                $names = array_merge($names, $this->collectTypeNames($gt, $namespace, $builtins));
+            }
+        } elseif ($typeNode instanceof ThisTypeNode) {
+            // ignore $this type
+        }
+
+        return $names;
+    }
+
+    /**
+     * @param array<string> $builtins
+     * @return array<int, string>
+     */
+    private function resolveClassName(string $token, string $namespace, array $builtins): array
+    {
+        $token = mb_trim($token);
+        if ($token === '') {
+            return [];
+        }
+
+        $isFqcn = str_starts_with($token, '\\');
+        $normalized = $isFqcn ? mb_substr($token, 1) : $token;
+        if (\in_array(mb_strtolower($normalized), $builtins, true)) {
+            return [];
+        }
+
+        if ($isFqcn || str_contains($normalized, '\\')) {
+            return [$normalized];
+        }
+
+        if ($namespace !== '') {
+            return [$namespace . '\\' . $normalized];
+        }
+
+        return [$normalized];
+    }
+
+    /**
+     * @param class-string[] $registeredTypes
+     * @return class-string[]
      */
     private function getClassMembersTypes(string $type, array $registeredTypes = []): array
     {
@@ -159,12 +219,10 @@ final class TypesExtractor
 
         $ref = new \ReflectionClass($type);
 
-        $subTypes = $this->getMembersTypes(
-            [
-                ...$ref->getMethods(\ReflectionMethod::IS_PUBLIC),
-                ...$ref->getProperties(\ReflectionProperty::IS_PUBLIC),
-            ]
-        );
+        $subTypes = $this->getMembersTypes([
+            ...$ref->getMethods(\ReflectionMethod::IS_PUBLIC),
+            ...$ref->getProperties(\ReflectionProperty::IS_PUBLIC),
+        ]);
 
         foreach ($subTypes as $subType) {
             $registeredTypes = $this->getClassMembersTypes($subType, $registeredTypes);
@@ -185,17 +243,5 @@ final class TypesExtractor
         }
 
         return array_unique(array_merge(...$types));
-    }
-
-    /**
-     * @param class-string $className
-     */
-    private function getNameScope(string $className): NameScope
-    {
-        if (!isset($this->resolvedNameScopes[$className])) {
-            $this->resolvedNameScopes[$className] = $this->nameScopeFactory->create($className);
-        }
-
-        return $this->resolvedNameScopes[$className];
     }
 }

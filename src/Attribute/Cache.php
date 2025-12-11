@@ -13,9 +13,9 @@ final class Cache extends Attribute
      * @param array<int, string> $tags
      */
     public function __construct(
-        array|string|null     $handler = null,
+        array|string|null $handler = null,
         public readonly array $pools = [],
-        public readonly ?int  $ttl = null,
+        public readonly ?int $ttl = null,
         public readonly array $tags = [],
     ) {
         parent::__construct();

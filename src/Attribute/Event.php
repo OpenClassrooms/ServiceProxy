@@ -17,17 +17,17 @@ final class Event extends Attribute
      * @param class-string|null $messageClass
      */
     public function __construct(
-        array|string|null                 $handler = null,
-        array|string|null                 $transport = null,
+        array|string|null $handler = null,
+        array|string|null $transport = null,
         public readonly ?string $name = null,
-        public readonly ?string  $queue = null,
-        public readonly array   $dispatch = [On::POST],
+        public readonly ?string $queue = null,
+        public readonly array $dispatch = [On::POST],
         public readonly ?string $messageClass = null,
         public readonly ?int $delay = null,
     ) {
         parent::__construct();
         Assert::allIsInstanceOf($dispatch, On::class);
-        $this->setHandlers(aliases: compact('handler', 'transport'));
+        $this->setHandlers(null, compact('handler', 'transport'));
     }
 
     public function isOnException(): bool

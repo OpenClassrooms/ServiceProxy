@@ -11,8 +11,18 @@ interface PrefixInterceptor
 {
     public const PREFIX_TYPE = 'prefix';
 
+    /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     */
     public function prefix(Instance $instance): Response;
 
+    /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     */
     public function supportsPrefix(Instance $instance): bool;
 
     public function getPrefixPriority(): int;

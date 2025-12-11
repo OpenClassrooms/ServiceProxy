@@ -49,6 +49,10 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
     }
 
     /**
+     * @template T of object
+     *
+     * @param Instance<T> $instance
+     *
      * @return array<int, string>
      */
     private function getTags(Instance $instance, InvalidateCache $attribute): array
@@ -68,7 +72,7 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
 
         $guessedTags = array_values(
             array_filter(
-                $this->guessObjectsTags($instance->getMethod()->getResponse())
+                $this->guessObjectsTags($instance->getMethod()->getResponse()),
             )
         );
 
@@ -120,7 +124,6 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
         if (!$propRef->isInitialized($object)) {
             return false;
         }
-        $propRef->setAccessible(true);
 
         return $propRef->getValue($object);
     }

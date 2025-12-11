@@ -9,7 +9,7 @@ final class InternalCodeRetrievalException extends \RuntimeException
     public function __construct(string $name)
     {
         parent::__construct(
-            sprintf(
+            \sprintf(
                 'Unable to retrieve code for method or class "%s".',
                 $name,
             )

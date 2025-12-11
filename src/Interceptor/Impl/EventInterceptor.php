@@ -6,6 +6,7 @@ namespace OpenClassrooms\ServiceProxy\Interceptor\Impl;
 
 use AutoMapper\AutoMapper;
 use AutoMapper\AutoMapperInterface;
+use AutoMapper\Configuration;
 use OpenClassrooms\ServiceProxy\Attribute\Event;
 use OpenClassrooms\ServiceProxy\Handler\Contract\EventHandler;
 use OpenClassrooms\ServiceProxy\Interceptor\Config\EventInterceptorConfig;
@@ -28,7 +29,10 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
     ) {
         parent::__construct($handlers);
         $tmpDir = $this->config->mapperCacheDir ?? sys_get_temp_dir() . '/mapper-cache';
-        $this->mapper = AutoMapper::create(cacheDirectory: $tmpDir);
+        $this->mapper = AutoMapper::create(
+            new Configuration(),
+            $tmpDir
+        );
     }
 
     public function getPrefixPriority(): int
@@ -127,7 +131,7 @@ final class EventInterceptor extends AbstractInterceptor implements SuffixInterc
     {
         if (!\is_object($response) && !\is_array($response)) {
             throw new \InvalidArgumentException(
-                sprintf(
+                \sprintf(
                     'The response must be an object to guess arguments for message class "%s".',
                     $messageClass
                 )

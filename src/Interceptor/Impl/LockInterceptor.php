@@ -24,7 +24,7 @@ final class LockInterceptor extends AbstractInterceptor implements PrefixInterce
      * @param iterable<LockHandler> $handlers
      */
     public function __construct(
-        iterable         $handlers = [],
+        iterable $handlers = [],
         ?LoggerInterface $logger = null,
     ) {
         $this->logger = $logger ?? new NullLogger();
@@ -41,6 +41,9 @@ final class LockInterceptor extends AbstractInterceptor implements PrefixInterce
         return 39;
     }
 
+    /**
+     * @param Instance<object> $instance
+     */
     public function prefix(Instance $instance): Response
     {
         $attribute = $instance->getMethod()->getAttribute(Lock::class);
@@ -64,6 +67,9 @@ final class LockInterceptor extends AbstractInterceptor implements PrefixInterce
         return new Response();
     }
 
+    /**
+     * @param Instance<object> $instance
+     */
     public function suffix(Instance $instance): Response
     {
         $key = $this->computeLockingKey($instance);
@@ -99,6 +105,9 @@ final class LockInterceptor extends AbstractInterceptor implements PrefixInterce
         ;
     }
 
+    /**
+     * @param Instance<object> $instance
+     */
     private function computeLockingKey(Instance $instance): string
     {
         $key = $instance->getMethod()->getAttribute(Lock::class)->key;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OpenClassrooms\ServiceProxy\Generator\Method;
+namespace OpenClassrooms\ServiceProxy\Generator\AccessInterceptorGenerator\Method;
 
 use Laminas\Code\Generator\Exception\InvalidArgumentException;
 use Laminas\Code\Generator\PropertyGenerator;
@@ -20,7 +20,6 @@ final class InterceptedMethod extends MethodGenerator
      */
     public static function generateMethod(
         MethodReflection $originalMethod,
-        PropertyGenerator $valueHolderProperty,
         PropertyGenerator $prefixInterceptors,
         PropertyGenerator $suffixInterceptors
     ): self {
@@ -32,10 +31,9 @@ final class InterceptedMethod extends MethodGenerator
         }
 
         $method->setBody(InterceptorGenerator::createInterceptedMethodBody(
-            '$returnValue = $this->' . $valueHolderProperty->getName() . '->'
+            '$returnValue = parent::'
             . $originalMethod->getName() . '(' . implode(', ', $forwardedParams) . ');',
             $method,
-            $valueHolderProperty,
             $prefixInterceptors,
             $suffixInterceptors,
             $originalMethod
