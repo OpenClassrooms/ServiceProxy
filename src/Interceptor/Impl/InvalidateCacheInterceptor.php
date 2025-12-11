@@ -124,7 +124,6 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
         if (!$propRef->isInitialized($object)) {
             return false;
         }
-        $propRef->setAccessible(true);
 
         return $propRef->getValue($object);
     }

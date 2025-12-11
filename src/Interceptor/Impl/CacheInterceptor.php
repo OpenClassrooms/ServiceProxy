@@ -412,8 +412,6 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
             return null;
         }
 
-        $propRef->setAccessible(true);
-
         return $propRef->getValue($object);
     }
 
