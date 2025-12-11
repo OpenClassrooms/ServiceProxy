@@ -15,6 +15,7 @@ final class MessageSerializer extends Serializer
      */
     public function encode(Envelope $envelope): array
     {
+        /** @var array{body: string, headers?: array<string, string>} $result */
         $result = parent::encode($envelope);
         $message = $envelope->getMessage();
         if ($message instanceof Message) {
