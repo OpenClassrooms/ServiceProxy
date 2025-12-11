@@ -224,7 +224,28 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
     private function getTypeInnerCode(string $type, string $code): string
     {
-        if (\in_array($type, ['int', 'string', 'bool', 'float', 'array', 'object', 'callable', 'iterable', 'mixed', 'void', 'null', 'false', 'true', 'self', 'static', 'parent',], true)) {
+        if (\in_array(
+            $type,
+            [
+                'int',
+                'string',
+                'bool',
+                'float',
+                'array',
+                'object',
+                'callable',
+                'iterable',
+                'mixed',
+                'void',
+                'null',
+                'false',
+                'true',
+                'self',
+                'static',
+                'parent',
+            ],
+            true
+        )) {
             return $code . '.' . $type;
         }
 
