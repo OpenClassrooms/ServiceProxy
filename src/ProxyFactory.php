@@ -36,9 +36,9 @@ final class ProxyFactory
      */
     public function __construct(
         ProxyFactoryConfiguration $configuration,
-        iterable                  $prefixInterceptors,
-        iterable                  $suffixInterceptors,
-        Reader|null               $annotationReader = null,
+        iterable $prefixInterceptors,
+        iterable $suffixInterceptors,
+        Reader|null $annotationReader = null,
     ) {
         $this->configuration = $configuration;
         $this->interceptors = [
@@ -68,7 +68,7 @@ final class ProxyFactory
         $instanceRef = new \ReflectionClass($class);
 
         if ($instanceRef->isFinal()) {
-            throw new \LogicException(sprintf(
+            throw new \LogicException(\sprintf(
                 'Unable to proxify final class %s. Hint: replace final keywords with a @final annotation',
                 $instanceRef->getName()
             ));
@@ -94,7 +94,7 @@ final class ProxyFactory
                 $interceptors = $this->filterInterceptors($instance, $type);
                 if (\count($interceptors) > 0) {
                     if ($methodRef->isFinal()) {
-                        throw new \LogicException(sprintf(
+                        throw new \LogicException(\sprintf(
                             'Unable to proxify a final method %s on class %s. Hint: replace final keywords with a @final annotation',
                             $methodRef->getName(),
                             $methodRef->getDeclaringClass()
@@ -102,7 +102,7 @@ final class ProxyFactory
                     }
 
                     if ($methodRef->isPrivate()) {
-                        throw new \LogicException(sprintf(
+                        throw new \LogicException(\sprintf(
                             'Unable to attach an interceptor to a private method %s on class %s.',
                             $methodRef->getName(),
                             $methodRef->getDeclaringClass()
@@ -148,11 +148,11 @@ final class ProxyFactory
      * @param Instance<T> $instance
      */
     private function intercept(
-        string   $type,
-        array    $interceptors,
+        string $type,
+        array $interceptors,
         Instance $instance,
-        mixed    $response,
-        bool     &$returnEarly
+        mixed $response,
+        bool &$returnEarly
     ): mixed {
         foreach ($interceptors as $interceptor) {
             if ($type === PrefixInterceptor::PREFIX_TYPE && $interceptor instanceof PrefixInterceptor) {

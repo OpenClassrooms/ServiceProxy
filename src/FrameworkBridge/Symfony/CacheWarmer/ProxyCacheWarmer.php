@@ -25,8 +25,10 @@ final class ProxyCacheWarmer implements CacheWarmerInterface
 
     /**
      * {@inheritdoc}
+     * @param string $cacheDir
+     * @param string|null $buildDir
      */
-    public function warmUp(string $cacheDir): array
+    public function warmUp(string $cacheDir, ?string $buildDir = null): array
     {
         foreach ($this->proxies as $proxy) {
             if ($proxy instanceof LazyLoadingInterface && !$proxy->isProxyInitialized()) {
@@ -46,7 +48,7 @@ final class ProxyCacheWarmer implements CacheWarmerInterface
     /**
      * {@inheritdoc}
      */
-    public function isOptional()
+    public function isOptional(): bool
     {
         return true;
     }

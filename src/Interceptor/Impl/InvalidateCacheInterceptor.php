@@ -72,7 +72,7 @@ final class InvalidateCacheInterceptor extends AbstractInterceptor implements Su
 
         $guessedTags = array_values(
             array_filter(
-                $this->guessObjectsTags($instance->getMethod()->getResponse())
+                $this->guessObjectsTags($instance->getMethod()->getResponse()),
             )
         );
 

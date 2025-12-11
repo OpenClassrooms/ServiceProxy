@@ -16,8 +16,6 @@ use ProxyManager\Generator\MethodGenerator;
 class SetMethodPrefixInterceptors extends MethodGenerator
 {
     /**
-     * Constructor
-     *
      * @throws InvalidArgumentException
      */
     public function __construct(PropertyGenerator $prefixInterceptor)

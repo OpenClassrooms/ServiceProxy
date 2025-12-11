@@ -14,9 +14,9 @@ final class Listen extends Attribute
      */
     public function __construct(
         public readonly string $name,
-        ?array                 $handler = null,
-        public ?Transport       $transport = null,
-        public readonly int    $priority = 0,
+        ?array $handler = null,
+        public ?Transport $transport = null,
+        public readonly int $priority = 0,
     ) {
         $this->setHandlers($handler);
         parent::__construct();

@@ -63,7 +63,7 @@ final class SymfonyCacheHandler implements CacheHandler
 
         if (!isset($existingPools[$poolName])) {
             throw new \InvalidArgumentException(
-                sprintf(
+                \sprintf(
                     'No cache pool found for "%s". Available pools are: "%s".',
                     $poolName,
                     implode('", "', array_keys($existingPools))

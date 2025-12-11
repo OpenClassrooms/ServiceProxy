@@ -29,8 +29,8 @@ final class ServiceProxySubscriber implements EventSubscriberInterface
      */
     public function __construct(
         private readonly iterable $proxies,
-        iterable          $startUpInterceptors,
-        Reader|null       $annotationReader = null,
+        iterable $startUpInterceptors,
+        Reader|null $annotationReader = null,
     ) {
         if (!\is_array($startUpInterceptors)) {
             $this->startUpInterceptors = iterator_to_array($startUpInterceptors);

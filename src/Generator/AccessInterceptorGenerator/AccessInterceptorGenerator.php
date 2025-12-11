@@ -31,7 +31,7 @@ class AccessInterceptorGenerator implements ProxyGeneratorInterface
     public function generate(\ReflectionClass $originalClass, ClassGenerator $classGenerator, array $proxyOptions = [])
     {
         if (!\array_key_exists('methods', $proxyOptions)) {
-            throw new \InvalidArgumentException(sprintf('Missing methods options for %s.', __CLASS__));
+            throw new \InvalidArgumentException(\sprintf('Missing methods options for %s.', __CLASS__));
         }
 
         CanProxyAssertion::assertClassCanBeProxied($originalClass, false);
@@ -65,15 +65,10 @@ class AccessInterceptorGenerator implements ProxyGeneratorInterface
         MethodPrefixInterceptors $prefixInterceptors,
         MethodSuffixInterceptors $suffixInterceptors
     ): callable {
-        return static function (\ReflectionMethod $method) use (
+        return static fn (\ReflectionMethod $method): InterceptedMethod => InterceptedMethod::generateMethod(
+            new MethodReflection($method->getDeclaringClass()->getName(), $method->getName()),
             $prefixInterceptors,
             $suffixInterceptors
-        ): InterceptedMethod {
-            return InterceptedMethod::generateMethod(
-                new MethodReflection($method->getDeclaringClass()->getName(), $method->getName()),
-                $prefixInterceptors,
-                $suffixInterceptors
-            );
-        };
+        );
     }
 }

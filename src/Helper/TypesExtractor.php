@@ -13,27 +13,31 @@ use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\IntersectionTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\NullableTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\ThisTypeNode;
+use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use PHPStan\PhpDocParser\Ast\Type\UnionTypeNode;
 use PHPStan\PhpDocParser\Lexer\Lexer;
 use PHPStan\PhpDocParser\Parser\ConstExprParser;
 use PHPStan\PhpDocParser\Parser\PhpDocParser;
 use PHPStan\PhpDocParser\Parser\TokenIterator;
 use PHPStan\PhpDocParser\Parser\TypeParser;
+use PHPStan\PhpDocParser\ParserConfig;
 
 final class TypesExtractor
 {
     private Lexer $lexer;
+
     private PhpDocParser $phpDocParser;
 
     public function __construct()
     {
-        $this->lexer = new Lexer();
-        $constExprParser = new ConstExprParser();
-        $this->phpDocParser = new PhpDocParser(new TypeParser($constExprParser), $constExprParser);
+        $config = new ParserConfig([]);
+        $this->lexer = new Lexer($config);
+        $constExprParser = new ConstExprParser($config);
+        $this->phpDocParser = new PhpDocParser($config, new TypeParser($config, $constExprParser), $constExprParser);
     }
 
     /**
-     * @return array<string, class-string>
+     * @return array<string>
      */
     public function extractFromMethod(\ReflectionMethod $method): array
     {
@@ -44,7 +48,7 @@ final class TypesExtractor
             $types[] = $this->getClassMembersTypes($methodType);
         }
 
-        return array_unique(array_merge(...($types ?: [[]])));
+        return array_unique(array_merge(...$types));
     }
 
     /**
@@ -109,7 +113,7 @@ final class TypesExtractor
         $phpDocNode = $this->phpDocParser->parse($tokens);
 
         foreach ($phpDocNode->getTags() as $tagNode) {
-            if (!in_array($tagNode->name, $tagNames, true)) {
+            if (!\in_array($tagNode->name, $tagNames, true)) {
                 continue;
             }
             $results = array_merge($results, $this->extractFromTagNode($tagNode, $namespace));
@@ -124,7 +128,7 @@ final class TypesExtractor
     private function extractFromTagNode(PhpDocTagNode $tagNode, string $namespace): array
     {
         $builtins = [
-            'int','string','bool','float','array','object','callable','iterable','mixed','void','null','false','true','self','static','parent'
+            'int', 'string', 'bool', 'float', 'array', 'object', 'callable', 'iterable', 'mixed', 'void', 'null', 'false', 'true', 'self', 'static', 'parent',
         ];
 
         $typeNode = $tagNode->value instanceof ReturnTagValueNode || $tagNode->value instanceof VarTagValueNode
@@ -143,7 +147,7 @@ final class TypesExtractor
      * @param array<string> $builtins
      * @return array<int, string>
      */
-    private function collectTypeNames($typeNode, string $namespace, array $builtins): array
+    private function collectTypeNames(TypeNode $typeNode, string $namespace, array $builtins): array
     {
         $names = [];
 
@@ -179,12 +183,14 @@ final class TypesExtractor
      */
     private function resolveClassName(string $token, string $namespace, array $builtins): array
     {
-        $token = trim($token);
-        if ($token === '') { return []; }
+        $token = mb_trim($token);
+        if ($token === '') {
+            return [];
+        }
 
         $isFqcn = str_starts_with($token, '\\');
-        $normalized = $isFqcn ? substr($token, 1) : $token;
-        if (in_array(strtolower($normalized), $builtins, true)) {
+        $normalized = $isFqcn ? mb_substr($token, 1) : $token;
+        if (\in_array(mb_strtolower($normalized), $builtins, true)) {
             return [];
         }
 
@@ -200,8 +206,8 @@ final class TypesExtractor
     }
 
     /**
-     * @param string[] $registeredTypes
-     * @return string[]
+     * @param class-string[] $registeredTypes
+     * @return class-string[]
      */
     private function getClassMembersTypes(string $type, array $registeredTypes = []): array
     {
@@ -236,6 +242,6 @@ final class TypesExtractor
             $types[] = $this->getTypes($member);
         }
 
-        return array_unique(array_merge(...($types ?: [[]])));
+        return array_unique(array_merge(...$types));
     }
 }

@@ -21,7 +21,7 @@ final class DoctrineCacheHandler implements CacheHandler
 
     public function __construct(?CacheItemPoolInterface $pool = null, ?string $name = null)
     {
-        $this->pool = $pool ?? new ArrayAdapter(storeSerialized: false);
+        $this->pool = $pool ?? new ArrayAdapter(0, false);
         $this->name = $name;
     }
 

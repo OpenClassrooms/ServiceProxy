@@ -34,7 +34,7 @@ abstract class Annotation
     final public function __get(string $name): void
     {
         throw new \BadMethodCallException(
-            sprintf("Unknown property '%s' on annotation '%s'.", $name, static::class)
+            \sprintf("Unknown property '%s' on annotation '%s'.", $name, static::class)
         );
     }
 
@@ -44,7 +44,7 @@ abstract class Annotation
     final public function __isset(string $name): bool
     {
         throw new \BadMethodCallException(
-            sprintf("Unknown property '%s' on annotation '%s'.", $name, static::class)
+            \sprintf("Unknown property '%s' on annotation '%s'.", $name, static::class)
         );
     }
 
@@ -54,7 +54,7 @@ abstract class Annotation
     final public function __set(string $name, mixed $value): void
     {
         throw new \BadMethodCallException(
-            sprintf("Unknown property '%s' on annotation '%s'.", $name, static::class)
+            \sprintf("Unknown property '%s' on annotation '%s'.", $name, static::class)
         );
     }
 

@@ -25,20 +25,9 @@ class Event
         public readonly mixed $exception = null,
         public readonly Moment $type = Moment::SUFFIX
     ) {
-        $this->name = self::getName(
-            className: $class,
-            moment: $type,
-            transport: Transport::SYNC,
-            method: $method,
-            name: $name
-        );
+        $this->name = self::getName($class, $type, Transport::SYNC, $method, $name);
     }
 
-    /**
-     * @template T of object
-     *
-     * @param Instance<T> $instance
-     */
     public function getUseCaseRequest(): mixed
     {
         return $this->parameters['useCaseRequest'] ?? ($this->parameters['request'] ?? null);

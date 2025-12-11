@@ -38,6 +38,7 @@ final class HttpEventHandler implements EventHandler
      * @throws \Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface
      * @throws \Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
+     * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
      */
     public function dispatch(object $event, ?string $queue = null, ?int $delay = null): void
     {

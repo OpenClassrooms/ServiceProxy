@@ -20,7 +20,7 @@ final class SecurityInterceptor extends AbstractInterceptor implements PrefixInt
     private readonly LoggerInterface $logger;
 
     public function __construct(
-        iterable                                    $handlers = [],
+        iterable $handlers = [],
         private readonly ?SecurityInterceptorConfig $config = null,
         ?LoggerInterface $logger = null,
     ) {
@@ -128,14 +128,14 @@ final class SecurityInterceptor extends AbstractInterceptor implements PrefixInt
      */
     private function resolveExpression(
         SecurityHandler $handler,
-        string          $expression,
-        array           $parameters,
-        Security        $attribute,
+        string $expression,
+        array $parameters,
+        Security $attribute,
     ): void {
         $expressionLanguage = new ExpressionLanguage();
         $expressionLanguage->register(
             'is_granted',
-            static fn ($attributes, string $object = 'null') => sprintf(
+            static fn ($attributes, string $object = 'null') => \sprintf(
                 'return $handler->checkAccess(%s, %s)',
                 $attributes,
                 $object
@@ -151,7 +151,7 @@ final class SecurityInterceptor extends AbstractInterceptor implements PrefixInt
         if (!$authorized) {
             if ($attribute->exception !== null) {
                 $exception = $attribute->exception;
-                throw new $exception($attribute->message);
+                throw new $exception($attribute->message ?? 'Access denied.');
             }
 
             throw $handler->getAccessDeniedException($attribute->message);
