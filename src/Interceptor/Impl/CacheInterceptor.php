@@ -53,7 +53,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     /**
      * @return array<int, string>
      */
-    public static function getHits(?string $poolName = self::DEFAULT_POOL_NAME): array
+    public static function getHits(string $poolName = self::DEFAULT_POOL_NAME): array
     {
         return self::$hits[$poolName] ?? [];
     }
@@ -61,7 +61,7 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
     /**
      * @return array<int, string>
      */
-    public static function getMisses(?string $poolName = self::DEFAULT_POOL_NAME): array
+    public static function getMisses(string $poolName = self::DEFAULT_POOL_NAME): array
     {
         return self::$misses[$poolName] ?? [];
     }
