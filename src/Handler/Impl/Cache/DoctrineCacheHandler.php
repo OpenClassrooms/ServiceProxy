@@ -19,7 +19,7 @@ final class DoctrineCacheHandler implements CacheHandler
 
     private CacheItemPoolInterface $pool;
 
-    public function __construct(CacheItemPoolInterface $pool = null, ?string $name = null)
+    public function __construct(?CacheItemPoolInterface $pool = null, ?string $name = null)
     {
         $this->pool = $pool ?? new ArrayAdapter(storeSerialized: false);
         $this->name = $name;
@@ -67,7 +67,7 @@ final class DoctrineCacheHandler implements CacheHandler
         return $this->name ?? 'doctrine_array';
     }
 
-    private function fetchWithNamespace(string $id, string $namespaceId = null): CacheItemInterface
+    private function fetchWithNamespace(string $id, ?string $namespaceId = null): CacheItemInterface
     {
         if ($namespaceId !== null) {
             $namespace = $this->doFetch($namespaceId);
