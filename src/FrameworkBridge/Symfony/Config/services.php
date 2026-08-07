@@ -70,7 +70,7 @@ return static function (ContainerConfigurator $containerConfigurator) {
     $services->set(ServiceProxySubscriber::class)
         ->public()
         ->args([
-            tagged_iterator('openclassrooms.service_proxy'),
+            tagged_iterator('openclassrooms.service_proxy.proxy_method_instance'),
             tagged_iterator('openclassrooms.service_proxy.start_up_interceptor'),
             service('annotation_reader')->nullOnInvalid(),
         ])
