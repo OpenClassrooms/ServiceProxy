@@ -1,26 +1,24 @@
 { pkgs, lib, config, inputs, ... }:
 
 {
- languages.php = {
-     enable = true;
-     version = lib.mkDefault "8.2";
-     extensions = [ "xdebug" ];
+  languages.php = {
+    enable = true;
 
-     ini = ''
-       memory_limit = -1
-       opcache.enable = 1
-       opcache.revalidate_freq = 0
-       opcache.validate_timestamps = 1
-       opcache.max_accelerated_files = 30000
-       opcache.memory_consumption = 256M
-       opcache.interned_strings_buffer = 20
-       realpath_cache_ttl = 3600
-       xdebug.idekey = "PHPSTORM"
-       xdebug.start_with_request = "yes"
-       zend.assertions = 1
-       date.timezone = "Europe/Paris"
-       xdebug.output_dir = ".devenv/state/xdebug"
-       xdebug.mode = "off"
-     '';
-   };
+    ini = ''
+      memory_limit = -1
+    '';
+  };
+
+  pre-commit.hooks = {
+    phpstan = {
+        enable = true;
+        entry = "vendor/phpstan/phpstan/phpstan analyze -c phpstan.neon";
+        pass_filenames = false;
+    };
+    phpunit = {
+        enable = true;
+        entry = "vendor/phpunit/phpunit/phpunit";
+        pass_filenames = false;
+      };
+    };
 }

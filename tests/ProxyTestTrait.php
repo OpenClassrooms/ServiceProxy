@@ -42,10 +42,12 @@ trait ProxyTestTrait
      */
     private function getProxyFactory(array $interceptors): ProxyFactory
     {
+        $filter = static fn (string $type) => static fn (object $interceptor) => is_a($interceptor, $type);
+
         return new ProxyFactory(
             new ProxyFactoryConfiguration(self::$cacheDir),
-            $interceptors,
-            $interceptors,
+            array_filter($interceptors, $filter(PrefixInterceptor::class)),
+            array_filter($interceptors, $filter(SuffixInterceptor::class))
         );
     }
 }

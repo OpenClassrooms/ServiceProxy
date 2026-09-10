@@ -28,7 +28,6 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
     ) {
         $this->logger = $logger ?? new NullLogger();
         parent::__construct($handlers);
-
     }
 
     public function prefix(Instance $instance): Response
@@ -59,7 +58,9 @@ final class LegacyCacheInterceptor extends AbstractInterceptor implements Suffix
 
             return new Response($data->get(), true);
         } catch (\Throwable $e) {
-            $this->logger->error($e->getMessage(), ['exception' => $e]);
+            $this->logger->error($e->getMessage(), [
+                'exception' => $e,
+            ]);
 
             return new Response(null, false);
         }

@@ -6,14 +6,28 @@ namespace OpenClassrooms\ServiceProxy\Interceptor\Impl;
 
 use OpenClassrooms\ServiceProxy\Attribute\Security;
 use OpenClassrooms\ServiceProxy\Handler\Contract\SecurityHandler;
+use OpenClassrooms\ServiceProxy\Interceptor\Config\SecurityInterceptorConfig;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\AbstractInterceptor;
 use OpenClassrooms\ServiceProxy\Interceptor\Contract\PrefixInterceptor;
 use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 use OpenClassrooms\ServiceProxy\Model\Response\Response;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 final class SecurityInterceptor extends AbstractInterceptor implements PrefixInterceptor
 {
+    private readonly LoggerInterface $logger;
+
+    public function __construct(
+        iterable                                    $handlers = [],
+        private readonly ?SecurityInterceptorConfig $config = null,
+        ?LoggerInterface $logger = null,
+    ) {
+        parent::__construct($handlers);
+        $this->logger = $logger ?? new NullLogger();
+    }
+
     public function getPrefixPriority(): int
     {
         return 30;
@@ -31,10 +45,31 @@ final class SecurityInterceptor extends AbstractInterceptor implements PrefixInt
         $parameters = $instance->getMethod()
             ->getParameters()
         ;
+
+        if ($this->config?->bypassSecurity) {
+            $this->logger->error('Security is bypassed.');
+            return new Response();
+        }
+
+        $rolesExpressions = null;
+        if ($attribute->roles !== null) {
+            if ($attribute->expression !== null) {
+                throw new \RuntimeException('You cannot use both roles and expression in the Security attribute.');
+            }
+            $rolesExpressions = array_map(
+                static fn (string $role) => "is_granted('{$role}')",
+                $attribute->roles
+            );
+        }
+
         $expression = $attribute->expression;
         if ($expression === null) {
-            $role = $this->guessRoleName($instance);
-            $expression = "is_granted('{$role}')";
+            if ($rolesExpressions !== null) {
+                $expression = implode(' or ', $rolesExpressions);
+            } else {
+                $role = $this->guessRoleName($instance);
+                $expression = "is_granted('{$role}')";
+            }
         }
         $handlers = $this->getHandlers(SecurityHandler::class, $attribute);
         foreach ($handlers as $handler) {

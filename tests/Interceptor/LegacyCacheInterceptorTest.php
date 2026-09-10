@@ -95,7 +95,12 @@ final class LegacyCacheInterceptorTest extends TestCase
         $inCacheData = 'InCacheData';
         $this->cacheHandlerMock->save(
             'default',
-            md5(CacheAnnotatedClass::class . '::cacheWithNamespace'),
+            md5('test-namespace'),
+            '12345'
+        );
+        $this->cacheHandlerMock->save(
+            'default',
+            '12345' . md5(CacheAnnotatedClass::class . '::cacheWithNamespace'),
             $inCacheData
         );
         $data = $this->proxy->cacheWithNamespace();

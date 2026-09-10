@@ -109,6 +109,12 @@ class ClassWithCacheAttributes
     }
 
     #[Cache]
+    public function methodWithTaggedGraph(CacheGraphNodeStub $request): ResponseStub
+    {
+        return new ResponseStub();
+    }
+
+    #[Cache]
     public function methodWithTaggedRequest(Request1Stub $request1Stub): ResponseStub
     {
         return new ResponseStub();

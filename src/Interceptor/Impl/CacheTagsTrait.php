@@ -80,6 +80,7 @@ trait CacheTagsTrait
     /**
      * @param array<class-string>   $excludedClasses
      * @param array<string, string> $registeredTags
+     * @param \WeakMap<object, true>|null $visitedObjects
      *
      * @return array<string, string>
      */
@@ -87,7 +88,8 @@ trait CacheTagsTrait
         mixed  $object,
         string $prefix,
         array  $excludedClasses = [],
-        array  $registeredTags = []
+        array  $registeredTags = [],
+        ?\WeakMap $visitedObjects = null
     ): array {
         if ($object === null) {
             return $registeredTags;
@@ -103,9 +105,23 @@ trait CacheTagsTrait
             }
         }
 
+        $visitedObjects ??= new \WeakMap();
+        if (\is_object($object)) {
+            if (isset($visitedObjects[$object])) {
+                return $registeredTags;
+            }
+            $visitedObjects[$object] = true;
+        }
+
         if (is_iterable($object)) {
             foreach ($object as $item) {
-                $registeredTags = $this->guessObjectsTags($item, $prefix, $excludedClasses, $registeredTags);
+                $registeredTags = $this->guessObjectsTags(
+                    $item,
+                    $prefix,
+                    $excludedClasses,
+                    $registeredTags,
+                    $visitedObjects
+                );
             }
 
             return $registeredTags;
@@ -119,16 +135,19 @@ trait CacheTagsTrait
         $tags = $this->buildTags($object, $ref, $prefix);
 
         foreach ($tags as $tag) {
-            if (isset($registeredTags[$tag])) {
-                return $registeredTags;
-            }
             $registeredTags[$tag] = $tag;
         }
 
         foreach ($ref->getProperties() as $propRef) {
             $subObject = $this->getPropertyValue($ref, $object, $propRef->getName());
 
-            $registeredTags = $this->guessObjectsTags($subObject, $prefix, $excludedClasses, $registeredTags);
+            $registeredTags = $this->guessObjectsTags(
+                $subObject,
+                $prefix,
+                $excludedClasses,
+                $registeredTags,
+                $visitedObjects
+            );
         }
 
         return $registeredTags;
@@ -211,6 +230,10 @@ trait CacheTagsTrait
         $value = $member instanceof \ReflectionProperty
             ? $member->getValue($object)
             : $member->invoke($object, []);
+        if (!\is_scalar($value) && !$value instanceof \Stringable && $value !== null) {
+            throw new \LogicException('Cache tag values must be scalar, stringable, or null.');
+        }
+        $value = str_replace(['{', '}', '(', ')', '/', '\\', '@', ':'], '', (string) $value);
 
         $memberPrefix = str_replace(
             ['get', 'has', 'is'],

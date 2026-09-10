@@ -11,6 +11,7 @@ use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\CacheTestTrait;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\CacheGraphNodeStub;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ClassWithCacheAttributes;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\LegacyCacheAnnotatedClass;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\Request1Stub;
@@ -769,6 +770,54 @@ final class CacheInterceptorTest extends TestCase
 
         $this->executeAndAssertCacheMiss('ClassWithCache');
         $this->executeAndAssertCacheHit('ClassWithCache');
+    }
+
+    public function testObjectsSharingTagsStillRegisterTheirOtherTags(): void
+    {
+        $request = new CacheGraphNodeStub();
+        $first = new Request1Stub();
+        $second = new Request1Stub();
+        $second->city = 'lyon';
+        $request->children = [$first, $second];
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+
+        $proxy->methodWithTaggedGraph($request);
+        $proxy->methodWithTaggedGraph($request);
+        $this->assertNotEmpty(CacheInterceptor::getHits());
+
+        $this->cacheHandlerMock->invalidateTags('default', ['prefix.city.lyon']);
+        $proxy->methodWithTaggedGraph($request);
+        $this->assertNotEmpty(CacheInterceptor::getMisses());
+    }
+
+    public function testCyclicObjectsWithoutTagsCanBeCachedAndInvalidated(): void
+    {
+        $request = new CacheGraphNodeStub();
+        $request->children = [$request, new Request1Stub()];
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+
+        $proxy->methodWithTaggedGraph($request);
+        $proxy->methodWithTaggedGraph($request);
+        $this->assertNotEmpty(CacheInterceptor::getHits());
+
+        $this->cacheHandlerMock->invalidateTags('default', ['prefix.city.paris']);
+        $proxy->methodWithTaggedGraph($request);
+        $this->assertNotEmpty(CacheInterceptor::getMisses());
+    }
+
+    public function testReservedCharactersInAutomaticTagsCanBeCachedAndInvalidated(): void
+    {
+        $request = new Request1Stub();
+        $request->city = 'pa/ris@{}():';
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+
+        $proxy->methodWithTaggedRequest($request);
+        $proxy->methodWithTaggedRequest($request);
+        $this->assertNotEmpty(CacheInterceptor::getHits());
+
+        $this->cacheHandlerMock->invalidateTags('default', ['prefix.city.paris']);
+        $proxy->methodWithTaggedRequest($request);
+        $this->assertNotEmpty(CacheInterceptor::getMisses());
     }
 
     public function testRequestAndTagAttribute(): void

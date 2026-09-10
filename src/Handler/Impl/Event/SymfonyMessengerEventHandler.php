@@ -13,6 +13,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\DelayStamp;
 
 final class SymfonyMessengerEventHandler implements EventHandler
 {
@@ -29,11 +30,20 @@ final class SymfonyMessengerEventHandler implements EventHandler
         $this->logger = $logger ?? new NullLogger();
     }
 
-    public function dispatch(Event $event, ?string $queue = null): void
+    public function dispatch(object $event, ?string $queue = null, ?int $delay = null): void
     {
-        $message = $this->createMessage($event, $queue);
+        if ($event instanceof Event) {
+            $message = $this->createMessage($event, $queue);
+        } else {
+            $message = $event;
+        }
+
         try {
-            $this->bus->dispatch($message);
+            if ($delay !== null) {
+                $this->bus->dispatch($message, [new DelayStamp($delay)]);
+            } else {
+                $this->bus->dispatch($message);
+            }
         } catch (\Throwable $exception) {
             $this->logger->error($exception->getMessage(), compact('message', 'exception'));
         }

@@ -38,14 +38,17 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
 
     private LoggerInterface $logger;
 
+    private CacheInterceptorConfig $config;
+
     public function __construct(
-        private readonly CacheInterceptorConfig $config,
-        iterable                                $handlers = [],
+        ?CacheInterceptorConfig $config = null,
+        iterable                $handlers = [],
         ?LoggerInterface $logger = null,
     ) {
         $this->logger = $logger ?? new NullLogger();
         parent::__construct($handlers);
 
+        $this->config = $config ?? new CacheInterceptorConfig();
         $this->typesExtractor = new TypesExtractor();
     }
 
@@ -112,7 +115,9 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
                 $data = $data->get();
                 $tags = $this->getTags($instance, $attribute, $data);
             } catch (\Throwable $e) {
-                $this->logger->error($e->getMessage(), ['exception' => $e]);
+                $this->logger->error($e->getMessage(), [
+                    'exception' => $e,
+                ]);
                 $missedPools[] = $pool;
 
                 continue;
@@ -132,7 +137,9 @@ final class CacheInterceptor extends AbstractInterceptor implements SuffixInterc
                         $tags
                     );
                 } catch (\Throwable $e) {
-                    $this->logger->error($e->getMessage(), ['exception' => $e]);
+                    $this->logger->error($e->getMessage(), [
+                        'exception' => $e,
+                    ]);
                 }
             }
 
