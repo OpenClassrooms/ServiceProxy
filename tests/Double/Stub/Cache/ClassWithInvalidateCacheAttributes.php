@@ -47,7 +47,7 @@ class ClassWithInvalidateCacheAttributes
         return new ResponseStub();
     }
 
-    #[InvalidateCache(tags: ['"OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.12"'])]
+    #[InvalidateCache(tags: ['"OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.id.12"'])]
     public function methodWithInvalidateCacheAndExplicitTag(): ResponseStub
     {
         return new ResponseStub();
@@ -63,5 +63,16 @@ class ClassWithInvalidateCacheAttributes
     public function methodInvalidatingSubResource(): EmbeddedResponseStub
     {
         return new EmbeddedResponseStub();
+    }
+
+    #[Cache]
+    public function methodWithTaggedRequest(Request1Stub $request1Stub): ResponseStub
+    {
+        return new ResponseStub();
+    }
+
+    #[InvalidateCache]
+    public function methodWithInvalidateCacheButNoTagForRequest(Request2Stub $request2Stub): void
+    {
     }
 }

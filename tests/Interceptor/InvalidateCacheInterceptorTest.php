@@ -11,6 +11,8 @@ use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\CacheTestTrait;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ClassWithInvalidateCacheAttributes;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\Request1Stub;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\Request2Stub;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
 use PHPUnit\Framework\TestCase;
 
@@ -128,5 +130,18 @@ final class InvalidateCacheInterceptorTest extends TestCase
         $this->proxy->methodInvalidatingSubResource();
         $this->proxy->methodWithCachedEmbeddedResponse();
         $this->assertEmpty($this->cacheInterceptor->getHits());
+    }
+
+    public function testCacheInvalidationWithRequest(): void
+    {
+        $this->proxy->methodWithTaggedRequest(new Request1Stub());
+        $this->assertEmpty(CacheInterceptor::getHits());
+
+        $this->proxy->methodWithTaggedRequest(new Request1Stub());
+        $this->assertNotEmpty(CacheInterceptor::getHits());
+
+        $this->proxy->methodWithInvalidateCacheButNoTagForRequest(new Request2Stub());
+        $this->proxy->methodWithTaggedRequest(new Request1Stub());
+        $this->assertEmpty(CacheInterceptor::getHits());
     }
 }

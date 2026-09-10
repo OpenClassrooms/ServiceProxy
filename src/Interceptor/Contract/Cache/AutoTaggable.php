@@ -6,5 +6,4 @@ namespace OpenClassrooms\ServiceProxy\Interceptor\Contract\Cache;
 
 interface AutoTaggable
 {
-    public function getId(): string|int;
 }

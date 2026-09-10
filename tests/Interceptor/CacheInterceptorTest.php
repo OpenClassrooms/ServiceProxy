@@ -11,8 +11,10 @@ use OpenClassrooms\ServiceProxy\Model\Request\Instance;
 use OpenClassrooms\ServiceProxy\ProxyFactory;
 use OpenClassrooms\ServiceProxy\Tests\CacheTestTrait;
 use OpenClassrooms\ServiceProxy\Tests\Double\Mock\Cache\CacheHandlerMock;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\CacheGraphNodeStub;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ClassWithCacheAttributes;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\LegacyCacheAnnotatedClass;
+use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\Request1Stub;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\Cache\ResponseStub;
 use OpenClassrooms\ServiceProxy\Tests\Double\Stub\ParameterClassStub;
 use OpenClassrooms\ServiceProxy\Tests\ProxyTestTrait;
@@ -239,7 +241,7 @@ final class CacheInterceptorTest extends TestCase
         $this->assertNotEmpty($this->cacheInterceptor::getHits());
         $this->assertEmpty($this->cacheInterceptor::getMisses());
 
-        $tagToInvalidate = str_replace('\\', '.', ResponseStub::class) . '.' . ResponseStub::ID;
+        $tagToInvalidate = str_replace('\\', '.', ResponseStub::class) . '.id.' . ResponseStub::ID;
 
         $this->cacheHandlerMock->invalidateTags('default', [$tagToInvalidate]);
 
@@ -768,5 +770,76 @@ final class CacheInterceptorTest extends TestCase
 
         $this->executeAndAssertCacheMiss('ClassWithCache');
         $this->executeAndAssertCacheHit('ClassWithCache');
+    }
+
+    public function testObjectsSharingTagsStillRegisterTheirOtherTags(): void
+    {
+        $request = new CacheGraphNodeStub();
+        $first = new Request1Stub();
+        $second = new Request1Stub();
+        $second->city = 'lyon';
+        $request->children = [$first, $second];
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+
+        $proxy->methodWithTaggedGraph($request);
+        $proxy->methodWithTaggedGraph($request);
+        $this->assertNotEmpty(CacheInterceptor::getHits());
+
+        $this->cacheHandlerMock->invalidateTags('default', ['prefix.city.lyon']);
+        $proxy->methodWithTaggedGraph($request);
+        $this->assertNotEmpty(CacheInterceptor::getMisses());
+    }
+
+    public function testCyclicObjectsWithoutTagsCanBeCachedAndInvalidated(): void
+    {
+        $request = new CacheGraphNodeStub();
+        $request->children = [$request, new Request1Stub()];
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+
+        $proxy->methodWithTaggedGraph($request);
+        $proxy->methodWithTaggedGraph($request);
+        $this->assertNotEmpty(CacheInterceptor::getHits());
+
+        $this->cacheHandlerMock->invalidateTags('default', ['prefix.city.paris']);
+        $proxy->methodWithTaggedGraph($request);
+        $this->assertNotEmpty(CacheInterceptor::getMisses());
+    }
+
+    public function testReservedCharactersInAutomaticTagsCanBeCachedAndInvalidated(): void
+    {
+        $request = new Request1Stub();
+        $request->city = 'pa/ris@{}():';
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+
+        $proxy->methodWithTaggedRequest($request);
+        $proxy->methodWithTaggedRequest($request);
+        $this->assertNotEmpty(CacheInterceptor::getHits());
+
+        $this->cacheHandlerMock->invalidateTags('default', ['prefix.city.paris']);
+        $proxy->methodWithTaggedRequest($request);
+        $this->assertNotEmpty(CacheInterceptor::getMisses());
+    }
+
+    public function testRequestAndTagAttribute(): void
+    {
+        $proxy = $this->proxyFactory->createProxy(new ClassWithCacheAttributes());
+        $proxy->methodWithTaggedRequest(new Request1Stub());
+
+        $this->assertEmpty(CacheInterceptor::getHits());
+        $this->assertNotEmpty(CacheInterceptor::getMisses());
+
+        $result = $proxy->methodWithTaggedRequest(new Request1Stub());
+
+        $this->assertEquals(new ResponseStub(), $result);
+        $this->assertNotEmpty(CacheInterceptor::getHits());
+        $this->assertEquals([
+            'OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.id.12',
+            'OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.name.test',
+            'OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.userid.1111',
+            'OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.age.10',
+            'prefix.city.paris',
+            'OpenClassrooms.ServiceProxy.Tests.Double.Stub.Cache.ResponseStub.id.1',
+        ], CacheInterceptor::getHits()[0]['tags']);
+        $this->assertEmpty(CacheInterceptor::getMisses());
     }
 }
