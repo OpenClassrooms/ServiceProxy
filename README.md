@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/OpenClassrooms/ServiceProxy.svg?branch=master)](https://travis-ci.org/OpenClassrooms/ServiceProxy)
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/e0840e44-8f14-4620-96cf-76300727e808/mini.png)](https://insight.sensiolabs.com/projects/e0840e44-8f14-4620-96cf-76300727e808)
 ![PHPStan](https://img.shields.io/badge/PHPStan-level%207-brightgreen.svg?style=flat)
-![PHP](https://img.shields.io/badge/PHP-%3E=%207.4-brightgreen.svg?style=flat)
+![PHP](https://img.shields.io/badge/PHP-%3E=%208.4-brightgreen.svg?style=flat)
 ![Coverage](../coverage/coverage.svg?raw=true)
 
 Service Proxy is a library that provides functionality to manage technical code over a class:
@@ -13,6 +13,8 @@ Service Proxy is a library that provides functionality to manage technical code 
 - Logs (not implemented yet)
 
 ## Installation
+Requires PHP 8.4 or newer. Symfony integrations support Symfony 6.4 and 7.4. Webmozart Assert 1.x and 2.x are supported.
+
 The easiest way to install ServiceProxy is via [composer](http://getcomposer.org/).
 
 Create the following `composer.json` file and run the `php composer.phar install` command to install it.

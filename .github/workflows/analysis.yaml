@@ -4,7 +4,7 @@ on:
     pull_request: ~
     push:
         branches:
-            - main
+            - master
 
 jobs:
     code-validation:
@@ -26,7 +26,7 @@ jobs:
                     -   name: Unit tests
                         run: composer coverage
         steps:
-            -   uses: actions/checkout@v2
+            -   uses: actions/checkout@v6
 
             -   uses: shivammathur/setup-php@v2
                 with:
@@ -51,8 +51,53 @@ jobs:
 
             -   name: Coverage update
                 uses: OpenClassrooms/coverage-checker@v1.7.0
-                if: ${{ hashFiles('build/coverage/coverage.xml') != '' && github.event_name == 'push' && github.ref_name == 'main' }}
+                if: ${{ hashFiles('build/coverage/coverage.xml') != '' && github.event_name == 'push' && github.ref_name == 'master' }}
                 with:
                     action: update
                     files: '[{"coverage": "build/coverage/coverage.xml", "summary": "coverage-summary.json", "label": "Coverage", "badge": "coverage.svg"}]'
                     token: ${{ secrets.GITHUB_TOKEN }}
+
+    compatibility:
+        name: PHP ${{ matrix.php }} / Symfony ${{ matrix.symfony }} / Assert ${{ matrix.assert }}
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                php: ['8.4', '8.5']
+                symfony: ['6.4.*', '7.4.*']
+                assert: ['^1.11', '^2.0']
+        steps:
+            -   uses: actions/checkout@v6
+
+            -   uses: shivammathur/setup-php@v2
+                with:
+                    php-version: ${{ matrix.php }}
+                    coverage: none
+                    tools: composer:v2
+                env:
+                    COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            -   name: Select dependency versions
+                env:
+                    SYMFONY_VERSION: ${{ matrix.symfony }}
+                    ASSERT_VERSION: ${{ matrix.assert }}
+                run: |
+                    php <<'PHP'
+                    <?php
+                    $composer = json_decode(file_get_contents('composer.json'), true, 512, JSON_THROW_ON_ERROR);
+                    foreach (['require', 'require-dev'] as $section) {
+                        foreach ($composer[$section] as $package => $constraint) {
+                            if (str_starts_with($package, 'symfony/')) {
+                                $composer[$section][$package] = getenv('SYMFONY_VERSION');
+                            }
+                        }
+                    }
+                    $composer['require']['webmozart/assert'] = getenv('ASSERT_VERSION');
+                    file_put_contents('composer.json', json_encode($composer, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
+                    PHP
+
+            -   name: Install dependencies
+                run: composer update --no-interaction --prefer-dist --no-progress
+
+            -   name: Unit tests
+                run: composer test
