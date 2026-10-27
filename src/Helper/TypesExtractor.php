@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace OpenClassrooms\ServiceProxy\Helper;
 
+use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode;
 use PHPStan\PhpDocParser\Lexer\Lexer;
 use PHPStan\PhpDocParser\Parser\ConstExprParser;
 use PHPStan\PhpDocParser\Parser\PhpDocParser;
 use PHPStan\PhpDocParser\Parser\TokenIterator;
 use PHPStan\PhpDocParser\Parser\TypeParser;
 use PHPStan\PhpDocParser\ParserConfig;
-use Symfony\Component\PropertyInfo\PhpStan\NameScope;
 use Symfony\Component\PropertyInfo\PhpStan\NameScopeFactory;
+use Symfony\Component\PropertyInfo\Type;
 use Symfony\Component\PropertyInfo\Util\PhpStanTypeHelper;
+use Symfony\Component\TypeInfo\TypeContext\TypeContextFactory;
 
 final class TypesExtractor
 {
@@ -20,21 +22,35 @@ final class TypesExtractor
 
     private PhpDocParser $phpDocParser;
 
-    private PhpStanTypeHelper $typeHelper;
-
-    private NameScopeFactory $nameScopeFactory;
-
     /**
-     * @var array<class-string, NameScope>
+     * @var \Closure(PhpDocTagValueNode, class-string): array<Type>
      */
-    private array $resolvedNameScopes = [];
+    private \Closure $extractPhpDocTypes;
 
     public function __construct()
     {
         $parserConfig = new ParserConfig([]);
         $this->lexer = new Lexer($parserConfig);
-        $this->nameScopeFactory = new NameScopeFactory();
-        $this->typeHelper = new PhpStanTypeHelper();
+        $typeHelper = new PhpStanTypeHelper();
+        if (class_exists(NameScopeFactory::class)) {
+            $factory = new NameScopeFactory();
+            $this->extractPhpDocTypes = static function (PhpDocTagValueNode $node, string $classContext) use (
+                $typeHelper,
+                $factory
+            ): array {
+                static $nameScopes = [];
+
+                return $typeHelper->getTypes($node, $nameScopes[$classContext] ??= $factory->create($classContext));
+            };
+        } elseif (class_exists(TypeContextFactory::class)) {
+            $factory = new TypeContextFactory();
+            $this->extractPhpDocTypes = static fn (PhpDocTagValueNode $node, string $classContext): array => $typeHelper->getTypes(
+                $node,
+                $factory->createFromClassName($classContext)
+            );
+        } else {
+            throw new \LogicException('No supported Symfony type context factory is available.');
+        }
 
         $constExprParser = new ConstExprParser($parserConfig);
         $this->phpDocParser = new PhpDocParser(
@@ -124,14 +140,13 @@ final class TypesExtractor
     private function getPhpDocTypesNames(string $classContext, string $docComment, array $tagNames = []): array
     {
         $classNames = [];
-        $nameScope = $this->getNameScope($classContext);
         $tokens = new TokenIterator($this->lexer->tokenize($docComment));
 
         $phpDocNode = $this->phpDocParser->parse($tokens);
         foreach ($tagNames as $tagName) {
             $tags = $phpDocNode->getTagsByName($tagName);
             foreach ($tags as $tag) {
-                $types = $this->typeHelper->getTypes($tag->value, $nameScope);
+                $types = ($this->extractPhpDocTypes)($tag->value, $classContext);
                 foreach ($types as $type) {
                     $classNames[] = $type->getClassName() ?? $type->getBuiltinType();
                     foreach ($type->getCollectionValueTypes() as $collectionType) {
@@ -188,17 +203,5 @@ final class TypesExtractor
         }
 
         return array_unique(array_merge(...$types));
-    }
-
-    /**
-     * @param class-string $className
-     */
-    private function getNameScope(string $className): NameScope
-    {
-        if (!isset($this->resolvedNameScopes[$className])) {
-            $this->resolvedNameScopes[$className] = $this->nameScopeFactory->create($className);
-        }
-
-        return $this->resolvedNameScopes[$className];
     }
 }

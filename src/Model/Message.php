@@ -9,7 +9,7 @@ use OpenClassrooms\ServiceProxy\Attribute\Event\Transport;
 final class Message
 {
     /**
-     * @param array<mixed> $headers
+     * @param array<string, string> $headers
      */
     public function __construct(
         public readonly MessageContext $context,

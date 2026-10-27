@@ -11,14 +11,15 @@ use Symfony\Component\Messenger\Transport\Serialization\Serializer;
 final class MessageSerializer extends Serializer
 {
     /**
-     * @return array<string, mixed>
+     * @return array{body: string, headers?: array<string, string>}
      */
     public function encode(Envelope $envelope): array
     {
+        /** @var array{body: string, headers?: array<string, string>} $result */
         $result = parent::encode($envelope);
         $message = $envelope->getMessage();
         if ($message instanceof Message) {
-            $result['headers'] = [...$result['headers'], ...$message->headers];
+            $result['headers'] = [...($result['headers'] ?? []), ...$message->headers];
         }
 
         return $result;

@@ -34,6 +34,7 @@ final class HttpEventHandler implements EventHandler
     }
 
     /**
+     * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
      * @throws \Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface
      * @throws \Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface
      * @throws \Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface
